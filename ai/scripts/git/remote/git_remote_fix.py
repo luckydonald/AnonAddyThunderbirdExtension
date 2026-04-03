@@ -7,6 +7,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable, Literal, Sequence
@@ -16,7 +17,19 @@ from urllib.parse import SplitResult, urlsplit, urlunsplit
 PROMPT_TOOLKIT_PACKAGE = "prompt_toolkit"
 BOOTSTRAP_ENV = "GIT_REMOTE_FIX_BOOTSTRAPPED"
 DEFAULT_THEME_NAME = "rounded"
-INPUT_WIDTH = 42
+INPUT_WIDTH = 40
+FLASH_FEEDBACK_SECONDS = 0.25
+CURSOR_BAR = "▎"
+CURSOR_BLOCK = "▁"
+KEY_SEPARATOR = "⟯"
+TAB_KEY = "⇥"
+ENTER_KEY = "⏎"
+ESCAPE_KEY = "␛"
+UP_DOWN_KEYS = "↑|↓"
+LEFT_RIGHT_KEYS = "←|→"
+CHECK_ALL_KEY = "𝚊"
+CHECK_NONE_KEY = "𝚗"
+CANCEL_KEYS = f"𝚚|{ESCAPE_KEY}"
 
 
 class GitCommandError(RuntimeError):
@@ -498,9 +511,13 @@ def run_tui(
     from prompt_toolkit.formatted_text import StyleAndTextTuples
     from prompt_toolkit.key_binding import KeyBindings
     from prompt_toolkit.layout import DynamicContainer, HSplit, Layout, VSplit, Window
-    from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+    from prompt_toolkit.layout.controls import FormattedTextControl
     from prompt_toolkit.layout.dimension import Dimension
     from prompt_toolkit.styles import Style
+    try:
+        from prompt_toolkit.keys import Keys
+    except Exception:
+        Keys = None
 
     @dataclass(slots=True)
     class UiState:
@@ -513,6 +530,8 @@ def run_tui(
         preview_plan: ExecutionPlan | None = None
         status_message: str = ""
         status_is_error: bool = False
+        flash_target: str | None = None
+        flash_until: float = 0.0
 
         def clear_status(self) -> None:
             self.status_message = ""
@@ -555,6 +574,10 @@ def run_tui(
             self.selected_tree_index = clamp(self.selected_tree_index + delta, 0, len(rows) - 1)
             self.clear_status()
 
+        def last_tree_index(self) -> int:
+            rows = self.tree_rows()
+            return max(0, len(rows) - 1)
+
         def toggle_current_tree_row(self) -> None:
             row = self.current_tree_row()
             if row is None:
@@ -578,6 +601,34 @@ def run_tui(
 
         def current_username(self) -> str:
             return self.username_buffer.text.strip()
+
+        def move_cursor(self, delta: int) -> None:
+            position = self.username_buffer.cursor_position + delta
+            self.username_buffer.cursor_position = clamp(position, 0, len(self.username_buffer.text))
+
+        def insert_text(self, text: str) -> None:
+            if not text:
+                return
+            position = self.username_buffer.cursor_position
+            value = self.username_buffer.text
+            self.username_buffer.text = f"{value[:position]}{text}{value[position:]}"
+            self.username_buffer.cursor_position = position + len(text)
+
+        def delete_before_cursor(self) -> None:
+            position = self.username_buffer.cursor_position
+            if position == 0:
+                return
+            value = self.username_buffer.text
+            self.username_buffer.text = f"{value[:position - 1]}{value[position:]}"
+            self.username_buffer.cursor_position = position - 1
+
+        def delete_at_cursor(self) -> None:
+            position = self.username_buffer.cursor_position
+            value = self.username_buffer.text
+            if position >= len(value):
+                return
+            self.username_buffer.text = f"{value[:position]}{value[position + 1:]}"
+            self.username_buffer.cursor_position = position
 
         def can_check_all(self) -> bool:
             return any(
@@ -606,7 +657,7 @@ def run_tui(
         def build_preview(self) -> ExecutionPlan:
             return build_execution_plan(self.remotes, self.current_username())
 
-        def can_preview(self) -> bool:
+        def can_submit(self) -> bool:
             try:
                 plan = self.build_preview()
             except ValueError:
@@ -617,8 +668,6 @@ def run_tui(
             return [
                 ActionItem("check_all", "Check all", self.theme.select_all_icon, self.can_check_all()),
                 ActionItem("check_none", "Check none", self.theme.select_none_icon, self.can_check_none()),
-                ActionItem("preview", "Preview changes", "▶", self.can_preview()),
-                ActionItem("cancel", "Cancel", "✕", True),
             ]
 
         def preview_actions(self) -> list[ActionItem]:
@@ -628,24 +677,72 @@ def run_tui(
                 ActionItem("cancel", "Cancel", "✕", True),
             ]
 
-    def append_line(target: StyleAndTextTuples, fragments: StyleAndTextTuples) -> None:
+        def set_flash(self, target: str | None) -> None:
+            self.flash_target = target
+            self.flash_until = time.monotonic() + FLASH_FEEDBACK_SECONDS if target else 0.0
+
+        def is_flashing(self, target: str) -> bool:
+            if self.flash_target != target:
+                return False
+            if time.monotonic() >= self.flash_until:
+                self.flash_target = None
+                self.flash_until = 0.0
+                return False
+            return True
+
+    def append_row(target: StyleAndTextTuples, fragments: StyleAndTextTuples) -> None:
+        if target:
+            target.append(("", "\n"))
         target.extend(fragments)
-        target.append(("", "\n"))
 
     def line_prefix(selected: bool) -> StyleAndTextTuples:
         if selected:
             return [("class:selected-marker", f"{theme.cursor_marker}  ")]
         return [("", "   ")]
 
-    def icon_style(state_name: str) -> str:
-        if state_name in {"checked", "partial"}:
+    def remote_icon_style(state_name: str, *, selected: bool) -> str:
+        if not selected:
+            return ""
+        return "class:selected-marker"
+
+    def item_icon_style(state_name: str, *, selected: bool) -> str:
+        if selected:
+            return "class:selected-marker"
+        if state_name == "checked":
             return "class:icon-active"
-        if state_name == "disabled":
-            return "class:icon-disabled"
         return ""
 
     def url_style(selection: RemoteUrlSelection) -> str:
         return "class:url" if selection.eligible else "class:url-disabled"
+
+    def action_icon_style(*, selected: bool, flashing: bool) -> str:
+        if flashing:
+            return "class:flash"
+        if selected:
+            return "class:selected-marker"
+        return ""
+
+    def action_label_style(*, selected: bool, enabled: bool, flashing: bool) -> str:
+        if flashing:
+            return "class:flash"
+        if selected and enabled:
+            return "class:selected-marker"
+        if not enabled:
+            return "class:action-disabled"
+        return ""
+
+    def flash_feedback(target: str) -> None:
+        state.set_flash(target)
+        invalidate = getattr(app, "invalidate", None)
+        if callable(invalidate):
+            invalidate()
+        time.sleep(FLASH_FEEDBACK_SECONDS)
+        state.set_flash(None)
+        if callable(invalidate):
+            invalidate()
+
+    def key_hint(label: str) -> str:
+        return f"{label}{KEY_SEPARATOR}  "
 
     state = UiState(remotes=remotes, theme=theme, username_buffer=Buffer(multiline=False))
     state.username_buffer.text = username
@@ -656,20 +753,22 @@ def run_tui(
             "heading": "bold",
             "muted": "ansibrightblack",
             "selected-marker": "ansimagenta bold",
-            "icon-active": "ansicyan bold",
+            "icon-active": "ansimagenta bold",
             "icon-disabled": "ansibrightblack",
-            "remote-name": "ansiblue bold",
-            "url": "ansicyan underline",
+            "remote-name": "ansimagenta bold",
+            "url": "ansimagenta underline",
             "url-disabled": "ansibrightblack",
             "input-border": "ansibrightblack",
-            "input-border-active": "ansicyan bold",
-            "action-icon": "ansicyan bold",
+            "input-border-active": "ansimagenta bold",
+            "action-icon": "ansimagenta bold",
             "action-disabled": "ansibrightblack",
+            "code": "ansimagenta bold",
             "status": "ansiyellow",
             "error": "ansired bold",
-            "preview-label": "ansiblue bold",
+            "preview-label": "ansimagenta bold",
             "preview-old": "ansibrightblack",
-            "preview-new": "ansigreen bold",
+            "preview-new": "ansimagenta bold",
+            "flash": "reverse ansimagenta bold",
         }
     )
 
@@ -691,12 +790,34 @@ def run_tui(
             (style_name, right),
         ]
 
+    def get_username_fragments() -> StyleAndTextTuples:
+        fragments: StyleAndTextTuples = []
+        value = state.username_buffer.text
+        position = clamp(state.username_buffer.cursor_position, 0, len(value))
+        focused = app.layout.has_focus(username_window)
+
+        visible_length = len(value)
+        if focused:
+            if position < len(value):
+                fragments.append(("", value[:position]))
+                fragments.append(("class:selected-marker", CURSOR_BAR))
+                fragments.append(("", value[position + 1 :]))
+            else:
+                fragments.append(("", value))
+                fragments.append(("class:selected-marker", CURSOR_BLOCK))
+                visible_length += 1
+        else:
+            fragments.append(("", value))
+
+        fragments.append(("", " " * max(0, INPUT_WIDTH - visible_length)))
+        return fragments
+
     def get_edit_tree_text() -> StyleAndTextTuples:
         fragments: StyleAndTextTuples = []
         rows = state.tree_rows()
         if not rows:
-            append_line(fragments, [("", "  No remotes found.")])
-            return fragments[:-1]
+            append_row(fragments, [("", "  No remotes found.")])
+            return fragments
 
         tree_has_focus = app.layout.has_focus(tree_window)
         for index, row in enumerate(rows):
@@ -708,12 +829,12 @@ def run_tui(
 
             if row.kind == "remote":
                 remote_state = remote.state()
-                append_line(
+                append_row(
                     fragments,
                     prefix
                     + [
                         ("", "  "),
-                        (icon_style(remote_state), f"{theme.remote_icons[remote_state]} "),
+                        (remote_icon_style(remote_state, selected=selected), f"{theme.remote_icons[remote_state]} "),
                         ("class:remote-name", remote.name),
                     ],
                 )
@@ -723,12 +844,12 @@ def run_tui(
             if row.kind == "url":
                 branch = theme.branch_mid if row.url_kind == "fetch" else theme.branch_last
                 row_state = selection.state()
-                append_line(
+                append_row(
                     fragments,
                     prefix
                     + [
                         ("", f"  {branch} "),
-                        (icon_style(row_state), f"{theme.item_icons[row_state]} "),
+                        (item_icon_style(row_state, selected=selected), f"{theme.item_icons[row_state]} "),
                         ("", f"{selection.kind:<5}: "),
                         (url_style(selection), selection.original_url),
                     ],
@@ -737,36 +858,35 @@ def run_tui(
 
             child_prefix = f"  {theme.vertical}   " if row.url_kind == "fetch" else "      "
             git_state = "checked" if selection.add_git_suffix else "unchecked"
-            append_line(
+            append_row(
                 fragments,
                 prefix
                 + [
                     ("", child_prefix + theme.branch_last + " "),
-                    (icon_style(git_state), f"{theme.item_icons[git_state]} "),
+                    (item_icon_style(git_state, selected=selected), f"{theme.item_icons[git_state]} "),
                     ("", "Add "),
-                    ("class:icon-active", ".git"),
+                    ("class:code", ".git"),
                     ("", " suffix"),
                 ],
             )
 
-        return fragments[:-1] if fragments else fragments
+        return fragments
 
     def render_actions(actions: list[ActionItem], current_index: int, focused: bool) -> StyleAndTextTuples:
         fragments: StyleAndTextTuples = []
         for index, action in enumerate(actions):
-            if index > 0:
-                fragments.append(("", "\n"))
-            label_style = "" if action.enabled else "class:action-disabled"
-            append_line(
+            selected = focused and current_index == index
+            flashing = state.is_flashing(f"action:{action.action_id}")
+            append_row(
                 fragments,
-                line_prefix(focused and current_index == index)
+                line_prefix(selected)
                 + [
                     ("", " "),
-                    ("class:action-icon", f"{action.icon} "),
-                    (label_style, action.label),
+                    (action_icon_style(selected=selected, flashing=flashing), f"{action.icon} "),
+                    (action_label_style(selected=selected, enabled=action.enabled, flashing=flashing), action.label),
                 ],
             )
-        return fragments[:-1] if fragments else fragments
+        return fragments
 
     def get_edit_actions_text() -> StyleAndTextTuples:
         return render_actions(
@@ -775,16 +895,25 @@ def run_tui(
             app.layout.has_focus(edit_actions_window),
         )
 
+    def get_submit_text() -> StyleAndTextTuples:
+        focused = app.layout.has_focus(submit_window)
+        flashing = state.is_flashing("submit")
+        style_name = "class:flash" if flashing else ("class:selected-marker" if focused else "")
+        return line_prefix(focused) + [
+            ("", " "),
+            (style_name, "[ Submit → ]"),
+        ]
+
     def get_preview_text() -> StyleAndTextTuples:
         fragments: StyleAndTextTuples = []
         plan = state.preview_plan
         if not plan or not plan.previews:
-            append_line(fragments, [("", "  No changes selected.")])
-            return fragments[:-1]
+            append_row(fragments, [("", "  No changes selected.")])
+            return fragments
         for index, preview in enumerate(plan.previews):
             if index > 0:
                 fragments.append(("", "\n"))
-            append_line(
+            append_row(
                 fragments,
                 [
                     ("", "  "),
@@ -792,14 +921,14 @@ def run_tui(
                     ("class:preview-old", preview.old_url),
                 ],
             )
-            append_line(
+            append_row(
                 fragments,
                 [
                     ("", "    -> "),
                     ("class:preview-new", preview.new_url),
                 ],
             )
-        return fragments[:-1] if fragments else fragments
+        return fragments
 
     def get_preview_actions_text() -> StyleAndTextTuples:
         return render_actions(
@@ -814,15 +943,56 @@ def run_tui(
         return [("class:error" if state.status_is_error else "class:status", state.status_message)]
 
     def get_help_text() -> StyleAndTextTuples:
-        return [("class:muted", "Tab focus  Up/Down move  Space toggle  Enter action  a check all  n check none  q cancel")]
+        if state.preview_plan is not None:
+            text = "   ".join(
+                [
+                    f"{key_hint(TAB_KEY)}focus",
+                    f"{key_hint(UP_DOWN_KEYS)}move",
+                    f"{key_hint(ENTER_KEY)}next element/submit",
+                    f"{key_hint(CANCEL_KEYS)}cancel",
+                ]
+            )
+            return [("class:muted", text)]
 
-    username_control = BufferControl(buffer=state.username_buffer, focusable=True)
+        if app.layout.has_focus(username_window):
+            text = "   ".join(
+                [
+                    f"{key_hint(TAB_KEY)}focus",
+                    f"{key_hint(UP_DOWN_KEYS)}move",
+                    f"{key_hint(LEFT_RIGHT_KEYS)}move cursor",
+                    f"{key_hint(ENTER_KEY)}next element/submit",
+                ]
+            )
+            return [("class:muted", text)]
+
+        parts = [
+            f"{key_hint(TAB_KEY)}focus",
+            f"{key_hint(UP_DOWN_KEYS)}move",
+        ]
+        if app.layout.has_focus(tree_window):
+            parts.append(f"{key_hint('Space')}toggle")
+        parts.extend(
+            [
+                f"{key_hint(ENTER_KEY)}next element/submit",
+                f"{key_hint(CHECK_ALL_KEY)}check all",
+                f"{key_hint(CHECK_NONE_KEY)}check none",
+                f"{key_hint(CANCEL_KEYS)}cancel",
+            ]
+        )
+        return [("class:muted", "   ".join(parts))]
+
+    username_control = FormattedTextControl(get_username_fragments, focusable=True)
+    try:
+        setattr(username_control, "buffer", state.username_buffer)
+    except Exception:
+        pass
     username_window = Window(
         content=username_control,
         width=Dimension(preferred=INPUT_WIDTH, min=INPUT_WIDTH),
         height=1,
         wrap_lines=False,
         dont_extend_width=True,
+        always_hide_cursor=True,
     )
     tree_window = Window(
         content=FormattedTextControl(get_edit_tree_text, focusable=True),
@@ -831,7 +1001,12 @@ def run_tui(
     edit_actions_window = Window(
         content=FormattedTextControl(get_edit_actions_text, focusable=True),
         always_hide_cursor=True,
-        height=Dimension(min=4, max=4),
+        height=Dimension(min=2, max=2),
+    )
+    submit_window = Window(
+        content=FormattedTextControl(get_submit_text, focusable=True),
+        always_hide_cursor=True,
+        height=1,
     )
     preview_window = Window(
         content=FormattedTextControl(get_preview_text),
@@ -897,7 +1072,7 @@ def run_tui(
         ]
     )
 
-    edit_container = HSplit(
+    edit_body = HSplit(
         [
             Window(FormattedTextControl(lambda: [("class:heading", "Enter the git username to use:")]), height=1),
             input_container,
@@ -908,11 +1083,15 @@ def run_tui(
             edit_actions_window,
             Window(height=1, char=" "),
             status_window,
-            help_window,
+            submit_window,
         ]
     )
 
-    preview_container = HSplit(
+    footer_container = HSplit([help_window], height=1)
+
+    edit_container = HSplit([edit_body, footer_container])
+
+    preview_body = HSplit(
         [
             Window(FormattedTextControl(lambda: [("class:heading", "Preview changes:")]), height=1),
             preview_window,
@@ -920,9 +1099,10 @@ def run_tui(
             preview_actions_window,
             Window(height=1, char=" "),
             status_window,
-            help_window,
         ]
     )
+
+    preview_container = HSplit([preview_body, footer_container])
 
     root_container = DynamicContainer(lambda: preview_container if state.preview_plan is not None else edit_container)
     layout = Layout(root_container, focused_element=username_window)
@@ -938,6 +1118,8 @@ def run_tui(
             app.layout.focus(tree_window)
         elif current == tree_window:
             app.layout.focus(edit_actions_window)
+        elif current == edit_actions_window:
+            app.layout.focus(submit_window)
         else:
             app.layout.focus(username_window)
 
@@ -947,11 +1129,13 @@ def run_tui(
             return
         current = app.layout.current_window
         if current == username_window:
-            app.layout.focus(edit_actions_window)
+            app.layout.focus(submit_window)
         elif current == tree_window:
             app.layout.focus(username_window)
-        else:
+        elif current == edit_actions_window:
             app.layout.focus(tree_window)
+        else:
+            app.layout.focus(edit_actions_window)
 
     def open_preview() -> None:
         state.clear_status()
@@ -976,25 +1160,39 @@ def run_tui(
     def activate_action(action_id: str) -> None:
         state.clear_status()
         if action_id == "check_all":
+            flash_feedback("action:check_all")
             state.check_all()
             return
         if action_id == "check_none":
+            flash_feedback("action:check_none")
             state.check_none()
-            return
-        if action_id == "preview":
-            open_preview()
             return
         if action_id == "apply":
             if not state.preview_plan or not state.preview_plan.previews:
                 state.set_status("No changes to apply.", is_error=True)
                 return
+            flash_feedback("action:apply")
             app.exit(result=state.preview_plan)
             return
         if action_id == "back":
+            flash_feedback("action:back")
             leave_preview()
             return
         if action_id == "cancel":
+            flash_feedback("action:cancel")
             app.exit(result=None)
+
+    def activate_submit() -> None:
+        try:
+            plan = state.build_preview()
+        except ValueError as exc:
+            state.set_status(str(exc), is_error=True)
+            return
+        if not plan.previews:
+            state.set_status("No changes selected.", is_error=True)
+            return
+        flash_feedback("submit")
+        open_preview()
 
     @kb.add("tab")
     def _focus_next(event) -> None:
@@ -1006,32 +1204,85 @@ def run_tui(
 
     @kb.add("down", filter=has_focus(username_window))
     def _input_down(event) -> None:
-        app.layout.focus(tree_window if state.preview_plan is None else preview_actions_window)
+        app.layout.focus(tree_window)
 
-    @kb.add("up", filter=has_focus(username_window))
-    def _input_up(event) -> None:
-        app.layout.focus(edit_actions_window if state.preview_plan is None else preview_actions_window)
+    @kb.add("enter", filter=has_focus(username_window))
+    def _input_enter(event) -> None:
+        app.layout.focus(tree_window)
+
+    @kb.add("left", filter=has_focus(username_window))
+    def _input_left(event) -> None:
+        state.move_cursor(-1)
+
+    @kb.add("right", filter=has_focus(username_window))
+    def _input_right(event) -> None:
+        state.move_cursor(1)
+
+    @kb.add("home", filter=has_focus(username_window))
+    def _input_home(event) -> None:
+        state.username_buffer.cursor_position = 0
+
+    @kb.add("end", filter=has_focus(username_window))
+    def _input_end(event) -> None:
+        state.username_buffer.cursor_position = len(state.username_buffer.text)
+
+    @kb.add("backspace", filter=has_focus(username_window))
+    def _input_backspace(event) -> None:
+        state.delete_before_cursor()
+
+    @kb.add("delete", filter=has_focus(username_window))
+    def _input_delete(event) -> None:
+        state.delete_at_cursor()
+
+    @kb.add(Keys.Any if Keys is not None else "<any>", filter=has_focus(username_window))
+    def _input_text(event) -> None:
+        text = getattr(event, "data", "")
+        if text and text.isprintable() and text not in "\r\n\t":
+            state.insert_text(text)
 
     @kb.add("down", filter=has_focus(tree_window))
     def _tree_down(event) -> None:
+        if state.selected_tree_index >= state.last_tree_index():
+            state.action_index = 0
+            app.layout.focus(edit_actions_window)
+            state.clear_status()
+            return
         state.move_tree(1)
 
     @kb.add("up", filter=has_focus(tree_window))
     def _tree_up(event) -> None:
+        if state.selected_tree_index <= 0:
+            app.layout.focus(username_window)
+            state.clear_status()
+            return
         state.move_tree(-1)
 
     @kb.add("space", filter=has_focus(tree_window))
     def _tree_toggle(event) -> None:
         state.toggle_current_tree_row()
 
+    @kb.add("enter", filter=has_focus(tree_window))
+    def _tree_enter(event) -> None:
+        app.layout.focus(edit_actions_window)
+        state.action_index = 0
+
     @kb.add("down", filter=has_focus(edit_actions_window))
     def _edit_actions_down(event) -> None:
         actions = state.edit_actions()
+        if state.action_index >= len(actions) - 1:
+            app.layout.focus(submit_window)
+            state.clear_status()
+            return
         state.action_index = clamp(state.action_index + 1, 0, len(actions) - 1)
         state.clear_status()
 
     @kb.add("up", filter=has_focus(edit_actions_window))
     def _edit_actions_up(event) -> None:
+        if state.action_index <= 0:
+            state.selected_tree_index = state.last_tree_index()
+            app.layout.focus(tree_window)
+            state.clear_status()
+            return
         actions = state.edit_actions()
         state.action_index = clamp(state.action_index - 1, 0, len(actions) - 1)
         state.clear_status()
@@ -1045,6 +1296,16 @@ def run_tui(
             state.set_status(f"{action.label} has no effect right now.", is_error=True)
             return
         activate_action(action.action_id)
+
+    @kb.add("up", filter=has_focus(submit_window))
+    def _submit_up(event) -> None:
+        state.action_index = len(state.edit_actions()) - 1
+        app.layout.focus(edit_actions_window)
+
+    @kb.add("space", filter=has_focus(submit_window))
+    @kb.add("enter", filter=has_focus(submit_window))
+    def _submit_activate(event) -> None:
+        activate_submit()
 
     @kb.add("down", filter=has_focus(preview_actions_window))
     def _preview_actions_down(event) -> None:
@@ -1085,7 +1346,7 @@ def run_tui(
         state.clear_status()
 
     state.username_buffer.on_text_changed += on_text_changed
-    app = Application(layout=layout, key_bindings=kb, style=style, full_screen=True, mouse_support=False)
+    app = Application(layout=layout, key_bindings=kb, style=style, full_screen=True, mouse_support=True)
     return app.run()
 
 
