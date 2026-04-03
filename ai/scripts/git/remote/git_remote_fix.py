@@ -829,25 +829,66 @@ def run_tui(
         ]
 
     def get_username_fragments() -> StyleAndTextTuples:
-        fragments: StyleAndTextTuples = []
         value = state.username_buffer.text
         position = clamp(state.username_buffer.cursor_position, 0, len(value))
         focused = app.layout.has_focus(username_window)
+        width = current_input_width()
 
-        visible_length = len(value)
-        if focused:
-            if position < len(value):
-                fragments.append(("", value[:position]))
-                fragments.append(("class:selected-marker", CURSOR_BAR))
-                fragments.append(("", value[position + 1 :]))
-            else:
-                fragments.append(("", value))
-                fragments.append(("class:selected-marker", CURSOR_BLOCK))
-                visible_length += 1
+        if not focused and len(value) <= width:
+            return [("", value), ("", " " * max(0, width - len(value)))]
+
+        ellipsis = "…"
+        cursor_at_end = focused and position >= len(value)
+        total_cells = len(value) + int(cursor_at_end)
+
+        if total_cells <= width:
+            start = 0
+            end = len(value)
+            show_prefix = False
+            show_suffix = False
+        elif not focused or cursor_at_end:
+            show_prefix = True
+            show_suffix = False
+            visible_cells = max(1, width - 1)
+            start = max(0, total_cells - visible_cells)
+            end = len(value)
+        elif position <= 0:
+            show_prefix = False
+            show_suffix = True
+            visible_cells = max(1, width - 1)
+            start = 0
+            end = min(len(value), visible_cells)
         else:
-            fragments.append(("", value))
+            show_prefix = True
+            show_suffix = True
+            visible_cells = max(1, width - 2)
+            max_start = max(1, len(value) - visible_cells - 1)
+            start = clamp(position - (visible_cells // 2), 1, max_start)
+            end = min(len(value), start + visible_cells)
 
-        fragments.append(("", " " * max(0, current_input_width() - visible_length)))
+        fragments: StyleAndTextTuples = []
+        if show_prefix:
+            fragments.append(("", ellipsis))
+
+        if focused:
+            if cursor_at_end:
+                fragments.append(("", value[start:end]))
+                fragments.append(("class:selected-marker", CURSOR_BLOCK))
+            else:
+                cursor_visible = position - start
+                before_cursor = value[start:position]
+                after_cursor = value[position + 1 : end]
+                fragments.append(("", before_cursor))
+                fragments.append(("class:selected-marker", CURSOR_BAR))
+                fragments.append(("", after_cursor))
+        else:
+            fragments.append(("", value[start:end]))
+
+        if show_suffix:
+            fragments.append(("", ellipsis))
+
+        visible_length = sum(len(text) for _, text in fragments)
+        fragments.append(("", " " * max(0, width - visible_length)))
         return fragments
 
     def get_edit_tree_text() -> StyleAndTextTuples:
