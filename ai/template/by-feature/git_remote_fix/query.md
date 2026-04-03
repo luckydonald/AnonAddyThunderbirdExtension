@@ -38,3 +38,40 @@
 31. Use `⏎` (`RETURN SYMBOL`) for Enter
 32. Use `⇥` (`RIGHTWARDS ARROW TO BAR`) for Tab
 33. Use `⟯` (`MATHEMATICAL RIGHT FLATTENED PARENTHESIS`) instead of the normal `)` between character and label.
+
+> Already better. But there's still stuff to fixx; let's do round 3:
+1. Add a `r) refresh` command, which redraws the whole gui, in case something got stuck
+2. When quickly going past two lines always get stuck displaying something else:
+   - a) origin checkbox
+     - Directly under `Select the remote urls to change:`
+     1) unfocused
+        - unfocused should: `     ◎ empty`
+        - unfocused actual: `⋑      e◎ ty`
+     2) focused
+        - focused should: `⋑    ◎ empty`
+        - focused actual: `⋑    ◎ e◎ ty`
+     - Both issues appear after passing over it once.
+   - b) check all
+     - The first of the two
+     - but not "check none"
+     1) unfocused
+        - unfocused should: `    ◉ Check all`
+        - unfocused actual: `⋑      h◉ Check all`
+     2) focused
+        - focused should: `⋑   ◉ Check all`
+        - focused actual: `⋑   ◉ Check all all`
+   - c) Text box
+     - Direct after `Enter the git username to use:`
+       1) unfocused
+          - unfocused should (1/3): `  ╭───┬────────────────────────────────────────╮`
+          - unfocused should (2/3): `  │ ✎ │ luckydonald                            │`
+          - unfocused should (3/3): `  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯`
+          - unfocused actual (1/3): `  ╭╭───┬────────────────────────────────────────╮`
+          - unfocused actual (2/3): `  │ ✎ │ luckydonald                              │`
+          - unfocused actual (3/3): `  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯`
+       2) focused
+          - focused should: _(same as **unfocused should**)_
+          - focused actual (1/3): `  ╭╭───╭───┬────────────────────────────────────────╮`
+          - focused actual (2/3): `  │ ✎ │ luckydoonal▁▁                            │`
+          - focused actual (3/3): `  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯`
+3. I would expect `r` to completely clear the screen and draw it all from scratch, based on the current state.
