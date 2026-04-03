@@ -1,0 +1,1154 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Iterable, Literal, Sequence
+from urllib.parse import SplitResult, urlsplit, urlunsplit
+
+
+PROMPT_TOOLKIT_PACKAGE = "prompt_toolkit"
+BOOTSTRAP_ENV = "GIT_REMOTE_FIX_BOOTSTRAPPED"
+DEFAULT_THEME_NAME = "rounded"
+INPUT_WIDTH = 42
+
+
+class GitCommandError(RuntimeError):
+    pass
+
+
+@dataclass(slots=True)
+class GitHubUrlInfo:
+    original_url: str
+    split: SplitResult
+    username: str | None
+    owner: str
+    repo: str
+    path_without_suffix: str
+    has_git_suffix: bool
+
+
+@dataclass(slots=True)
+class RemoteUrlSelection:
+    kind: Literal["fetch", "push"]
+    original_url: str
+    github: GitHubUrlInfo | None
+    change_username: bool
+    add_git_suffix: bool
+
+    @property
+    def eligible(self) -> bool:
+        return self.github is not None
+
+    @property
+    def has_git_suffix_option(self) -> bool:
+        return self.github is not None and not self.github.has_git_suffix
+
+    def toggleable_count(self) -> int:
+        if not self.eligible:
+            return 0
+        return 1 + int(self.has_git_suffix_option)
+
+    def selected_count(self) -> int:
+        if not self.eligible:
+            return 0
+        return int(self.change_username) + int(self.has_git_suffix_option and self.add_git_suffix)
+
+    def state(self) -> Literal["unchecked", "checked", "partial", "disabled"]:
+        if not self.eligible:
+            return "disabled"
+        selected = self.selected_count()
+        total = self.toggleable_count()
+        if selected == 0:
+            return "unchecked"
+        if selected == total:
+            return "checked"
+        return "partial"
+
+    def set_all(self, value: bool) -> None:
+        if not self.eligible:
+            return
+        self.change_username = value
+        if self.has_git_suffix_option:
+            self.add_git_suffix = value
+
+
+@dataclass(slots=True)
+class RemoteSelection:
+    name: str
+    fetch: RemoteUrlSelection
+    push: RemoteUrlSelection
+    push_is_explicit: bool
+
+    def descendants(self) -> tuple[RemoteUrlSelection, RemoteUrlSelection]:
+        return (self.fetch, self.push)
+
+    def toggleable_count(self) -> int:
+        return self.fetch.toggleable_count() + self.push.toggleable_count()
+
+    def selected_count(self) -> int:
+        return self.fetch.selected_count() + self.push.selected_count()
+
+    def state(self) -> Literal["unchecked", "checked", "partial", "disabled"]:
+        total = self.toggleable_count()
+        if total == 0:
+            return "disabled"
+        selected = self.selected_count()
+        if selected == 0:
+            return "unchecked"
+        if selected == total:
+            return "checked"
+        return "partial"
+
+    def set_all(self, value: bool) -> None:
+        self.fetch.set_all(value)
+        self.push.set_all(value)
+
+
+@dataclass(slots=True)
+class UrlPreview:
+    remote_name: str
+    kind: Literal["fetch", "push"]
+    old_url: str
+    new_url: str
+
+
+@dataclass(slots=True)
+class ExecutionPlan:
+    previews: list[UrlPreview]
+    commands: list[list[str]]
+
+
+@dataclass(frozen=True, slots=True)
+class ThemeGlyphs:
+    name: str
+    remote_icons: dict[str, str]
+    item_icons: dict[str, str]
+    select_all_icon: str
+    select_none_icon: str
+    cursor_marker: str
+    input_top_left: str
+    input_top_joint: str
+    input_top_fill: str
+    input_top_right: str
+    input_mid_left: str
+    input_mid_prompt: str
+    input_mid_joint: str
+    input_mid_right: str
+    input_bottom_left: str
+    input_bottom_joint: str
+    input_bottom_fill: str
+    input_bottom_right: str
+    branch_mid: str
+    branch_last: str
+    vertical: str
+
+
+THEMES: dict[str, ThemeGlyphs] = {
+    "boxy": ThemeGlyphs(
+        name="boxy",
+        remote_icons={
+            "unchecked": "▽",
+            "checked": "⏷",
+            "partial": "⧩",
+            "disabled": "⥐",
+        },
+        item_icons={
+            "unchecked": "□",
+            "checked": "■",
+            "partial": "◪",
+            "disabled": "⬚",
+        },
+        select_all_icon="▣",
+        select_none_icon="⊡",
+        cursor_marker="⪢",
+        input_top_left="┌",
+        input_top_joint="┬",
+        input_top_fill="─",
+        input_top_right="┐",
+        input_mid_left="│",
+        input_mid_prompt="✎",
+        input_mid_joint="│",
+        input_mid_right="│",
+        input_bottom_left="╘",
+        input_bottom_joint="╧",
+        input_bottom_fill="═",
+        input_bottom_right="╛",
+        branch_mid="├─╴",
+        branch_last="└─╴",
+        vertical="│",
+    ),
+    "rounded": ThemeGlyphs(
+        name="rounded",
+        remote_icons={
+            "unchecked": "◎",
+            "checked": "◉",
+            "partial": "◑",
+            "disabled": "◠",
+        },
+        item_icons={
+            "unchecked": "○",
+            "checked": "●",
+            "partial": "◒",
+            "disabled": "◌",
+        },
+        select_all_icon="◉",
+        select_none_icon="◎",
+        cursor_marker="⋑",
+        input_top_left="╭",
+        input_top_joint="┬",
+        input_top_fill="─",
+        input_top_right="╮",
+        input_mid_left="│",
+        input_mid_prompt="✎",
+        input_mid_joint="│",
+        input_mid_right="│",
+        input_bottom_left="╰",
+        input_bottom_joint="┷",
+        input_bottom_fill="━",
+        input_bottom_right="╯",
+        branch_mid="├─╴",
+        branch_last="╰─╴",
+        vertical="│",
+    ),
+}
+
+
+@dataclass(slots=True)
+class TreeRow:
+    kind: Literal["remote", "url", "git"]
+    remote_index: int
+    url_kind: Literal["fetch", "push"] | None = None
+
+
+@dataclass(slots=True)
+class ActionItem:
+    action_id: str
+    label: str
+    icon: str
+    enabled: bool
+
+
+def run_command(
+    args: Sequence[str],
+    *,
+    cwd: Path | None = None,
+    check: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        list(args),
+        cwd=str(cwd) if cwd is not None else None,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if check and result.returncode != 0:
+        stderr = result.stderr.strip()
+        raise GitCommandError(stderr or f"Command failed: {shlex.join(args)}")
+    return result
+
+
+def git_output(args: Sequence[str], *, cwd: Path, check: bool = True) -> str:
+    return run_command(["git", *args], cwd=cwd, check=check).stdout.strip()
+
+
+def git_output_lines(args: Sequence[str], *, cwd: Path, check: bool = True) -> list[str]:
+    output = git_output(args, cwd=cwd, check=check)
+    return [line for line in output.splitlines() if line.strip()]
+
+
+def get_repo_root(cwd: Path) -> Path:
+    return Path(git_output(["rev-parse", "--show-toplevel"], cwd=cwd))
+
+
+def parse_github_https_url(url: str) -> GitHubUrlInfo | None:
+    split = urlsplit(url)
+    if split.scheme != "https" or (split.hostname or "").lower() != "github.com":
+        return None
+    if split.port not in (None, 443):
+        return None
+    path_parts = [part for part in split.path.split("/") if part]
+    if len(path_parts) != 2:
+        return None
+    owner, repo = path_parts
+    if not owner or not repo:
+        return None
+    has_git_suffix = repo.endswith(".git")
+    repo_name = repo[:-4] if has_git_suffix else repo
+    if not repo_name:
+        return None
+    return GitHubUrlInfo(
+        original_url=url,
+        split=split,
+        username=split.username,
+        owner=owner,
+        repo=repo_name,
+        path_without_suffix=f"/{owner}/{repo_name}",
+        has_git_suffix=has_git_suffix,
+    )
+
+
+def rewrite_github_https_url(
+    url: str,
+    *,
+    username: str,
+    set_username: bool,
+    add_git_suffix: bool,
+) -> str:
+    info = parse_github_https_url(url)
+    if info is None:
+        return url
+    if set_username and not username:
+        raise ValueError("Username is required when changing GitHub remote usernames.")
+
+    split = info.split
+    netloc = split.netloc
+    if set_username:
+        host = split.hostname or "github.com"
+        if split.port is not None:
+            host = f"{host}:{split.port}"
+        netloc = f"{username}@{host}"
+
+    path = info.path_without_suffix
+    if info.has_git_suffix or add_git_suffix:
+        path = f"{path}.git"
+
+    return urlunsplit(split._replace(netloc=netloc, path=path))
+
+
+def make_url_selection(kind: Literal["fetch", "push"], url: str) -> RemoteUrlSelection:
+    github = parse_github_https_url(url)
+    return RemoteUrlSelection(
+        kind=kind,
+        original_url=url,
+        github=github,
+        change_username=bool(github and not github.username),
+        add_git_suffix=bool(github and not github.has_git_suffix),
+    )
+
+
+def discover_remotes(repo_root: Path) -> list[RemoteSelection]:
+    names = git_output_lines(["remote"], cwd=repo_root)
+    remotes: list[RemoteSelection] = []
+    for name in names:
+        configured_fetch_urls = git_output_lines(
+            ["config", "--get-all", f"remote.{name}.url"],
+            cwd=repo_root,
+            check=False,
+        )
+        configured_push_urls = git_output_lines(
+            ["config", "--get-all", f"remote.{name}.pushurl"],
+            cwd=repo_root,
+            check=False,
+        )
+        if len(configured_fetch_urls) > 1 or len(configured_push_urls) > 1:
+            raise ValueError(
+                f"Remote {name!r} uses multiple URLs. This script supports one fetch URL and one optional push URL."
+            )
+        fetch_url = git_output(["remote", "get-url", name], cwd=repo_root)
+        push_url = git_output(["remote", "get-url", "--push", name], cwd=repo_root)
+        remotes.append(
+            RemoteSelection(
+                name=name,
+                fetch=make_url_selection("fetch", fetch_url),
+                push=make_url_selection("push", push_url),
+                push_is_explicit=bool(configured_push_urls),
+            )
+        )
+    return remotes
+
+
+def get_git_config_value(repo_root: Path, key: str) -> str | None:
+    result = run_command(["git", "config", "--get", key], cwd=repo_root, check=False)
+    value = result.stdout.strip()
+    return value or None
+
+
+def resolve_default_username(
+    cli_username: str | None,
+    remotes: Iterable[RemoteSelection],
+    config_getter: Callable[[str], str | None],
+) -> str:
+    if cli_username:
+        return cli_username
+    for remote in remotes:
+        for selection in remote.descendants():
+            if selection.github and selection.github.username:
+                return selection.github.username
+    for key in ("github.user", "user.name"):
+        value = config_getter(key)
+        if value:
+            return value
+    return ""
+
+
+def compute_target_url(selection: RemoteUrlSelection, username: str) -> str:
+    if not selection.eligible:
+        return selection.original_url
+    if not selection.change_username and not selection.add_git_suffix:
+        return selection.original_url
+    return rewrite_github_https_url(
+        selection.original_url,
+        username=username,
+        set_username=selection.change_username,
+        add_git_suffix=selection.add_git_suffix,
+    )
+
+
+def requires_username(remotes: Iterable[RemoteSelection]) -> bool:
+    return any(selection.change_username for remote in remotes for selection in remote.descendants())
+
+
+def build_execution_plan(remotes: Sequence[RemoteSelection], username: str) -> ExecutionPlan:
+    username = username.strip()
+    if requires_username(remotes) and not username:
+        raise ValueError("Enter a username before previewing or applying username changes.")
+
+    previews: list[UrlPreview] = []
+    commands: list[list[str]] = []
+    for remote in remotes:
+        old_fetch = remote.fetch.original_url
+        old_push = remote.push.original_url
+        new_fetch = compute_target_url(remote.fetch, username)
+        new_push = compute_target_url(remote.push, username)
+
+        if new_fetch != old_fetch:
+            previews.append(UrlPreview(remote.name, "fetch", old_fetch, new_fetch))
+        if new_push != old_push:
+            previews.append(UrlPreview(remote.name, "push", old_push, new_push))
+
+        if remote.push_is_explicit:
+            if new_fetch != old_fetch:
+                commands.append(["git", "remote", "set-url", remote.name, new_fetch])
+            if new_push != old_push:
+                commands.append(["git", "remote", "set-url", "--push", remote.name, new_push])
+            continue
+
+        if new_fetch == new_push:
+            if new_fetch != old_fetch:
+                commands.append(["git", "remote", "set-url", remote.name, new_fetch])
+            continue
+
+        if new_fetch != old_fetch:
+            commands.append(["git", "remote", "set-url", remote.name, new_fetch])
+        if new_push != new_fetch:
+            commands.append(["git", "remote", "set-url", "--push", remote.name, new_push])
+
+    return ExecutionPlan(previews=previews, commands=commands)
+
+
+def apply_execution_plan(plan: ExecutionPlan, repo_root: Path) -> None:
+    for command in plan.commands:
+        run_command(command, cwd=repo_root)
+
+
+def ensure_prompt_toolkit(argv: Sequence[str]) -> None:
+    try:
+        __import__(PROMPT_TOOLKIT_PACKAGE)
+        return
+    except ModuleNotFoundError as exc:
+        if exc.name != PROMPT_TOOLKIT_PACKAGE:
+            raise
+
+    fallback_command = [
+        "uv",
+        "run",
+        "--with",
+        PROMPT_TOOLKIT_PACKAGE,
+        "python",
+        str(Path(__file__).resolve()),
+        *argv,
+    ]
+    uv_binary = shutil.which("uv")
+    if uv_binary and not os.environ.get(BOOTSTRAP_ENV):
+        rerun_command = [uv_binary, *fallback_command[1:]]
+        env = os.environ.copy()
+        env[BOOTSTRAP_ENV] = "1"
+        rerun = subprocess.run(rerun_command, check=False, env=env)
+        if rerun.returncode == 0:
+            raise SystemExit(0)
+
+    print(
+        "prompt_toolkit is required to run the interactive UI.\n"
+        f"Run:\n  {shlex.join(fallback_command)}",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+
+
+def clamp(value: int, minimum: int, maximum: int) -> int:
+    return max(minimum, min(maximum, value))
+
+
+def run_tui(
+    remotes: list[RemoteSelection],
+    *,
+    theme: ThemeGlyphs,
+    username: str,
+) -> ExecutionPlan | None:
+    from prompt_toolkit.application import Application, get_app
+    from prompt_toolkit.buffer import Buffer
+    from prompt_toolkit.filters import Condition, has_focus
+    from prompt_toolkit.formatted_text import StyleAndTextTuples
+    from prompt_toolkit.key_binding import KeyBindings
+    from prompt_toolkit.layout import DynamicContainer, HSplit, Layout, VSplit, Window
+    from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+    from prompt_toolkit.layout.dimension import Dimension
+    from prompt_toolkit.styles import Style
+
+    @dataclass(slots=True)
+    class UiState:
+        remotes: list[RemoteSelection]
+        theme: ThemeGlyphs
+        username_buffer: Buffer
+        selected_tree_index: int = 0
+        action_index: int = 0
+        preview_action_index: int = 0
+        preview_plan: ExecutionPlan | None = None
+        status_message: str = ""
+        status_is_error: bool = False
+
+        def clear_status(self) -> None:
+            self.status_message = ""
+            self.status_is_error = False
+
+        def set_status(self, message: str, *, is_error: bool = False) -> None:
+            self.status_message = message
+            self.status_is_error = is_error
+
+        def tree_rows(self) -> list[TreeRow]:
+            rows: list[TreeRow] = []
+            for remote_index, remote in enumerate(self.remotes):
+                rows.append(TreeRow("remote", remote_index))
+                rows.append(TreeRow("url", remote_index, "fetch"))
+                if remote.fetch.has_git_suffix_option:
+                    rows.append(TreeRow("git", remote_index, "fetch"))
+                rows.append(TreeRow("url", remote_index, "push"))
+                if remote.push.has_git_suffix_option:
+                    rows.append(TreeRow("git", remote_index, "push"))
+            return rows
+
+        def clamp_tree_index(self) -> None:
+            rows = self.tree_rows()
+            if not rows:
+                self.selected_tree_index = 0
+                return
+            self.selected_tree_index = clamp(self.selected_tree_index, 0, len(rows) - 1)
+
+        def current_tree_row(self) -> TreeRow | None:
+            rows = self.tree_rows()
+            if not rows:
+                return None
+            self.clamp_tree_index()
+            return rows[self.selected_tree_index]
+
+        def move_tree(self, delta: int) -> None:
+            rows = self.tree_rows()
+            if not rows:
+                return
+            self.selected_tree_index = clamp(self.selected_tree_index + delta, 0, len(rows) - 1)
+            self.clear_status()
+
+        def toggle_current_tree_row(self) -> None:
+            row = self.current_tree_row()
+            if row is None:
+                return
+            self.clear_status()
+            remote = self.remotes[row.remote_index]
+            if row.kind == "remote":
+                total = remote.toggleable_count()
+                if total == 0:
+                    return
+                remote.set_all(remote.selected_count() != total)
+                return
+
+            selection = getattr(remote, row.url_kind)
+            if row.kind == "url":
+                if selection.eligible:
+                    selection.change_username = not selection.change_username
+                return
+            if selection.has_git_suffix_option:
+                selection.add_git_suffix = not selection.add_git_suffix
+
+        def current_username(self) -> str:
+            return self.username_buffer.text.strip()
+
+        def can_check_all(self) -> bool:
+            return any(
+                selection.eligible and selection.selected_count() < selection.toggleable_count()
+                for remote in self.remotes
+                for selection in remote.descendants()
+            )
+
+        def can_check_none(self) -> bool:
+            return any(
+                selection.eligible and selection.selected_count() > 0
+                for remote in self.remotes
+                for selection in remote.descendants()
+            )
+
+        def check_all(self) -> None:
+            for remote in self.remotes:
+                remote.set_all(True)
+            self.clear_status()
+
+        def check_none(self) -> None:
+            for remote in self.remotes:
+                remote.set_all(False)
+            self.clear_status()
+
+        def build_preview(self) -> ExecutionPlan:
+            return build_execution_plan(self.remotes, self.current_username())
+
+        def can_preview(self) -> bool:
+            try:
+                plan = self.build_preview()
+            except ValueError:
+                return False
+            return bool(plan.previews)
+
+        def edit_actions(self) -> list[ActionItem]:
+            return [
+                ActionItem("check_all", "Check all", self.theme.select_all_icon, self.can_check_all()),
+                ActionItem("check_none", "Check none", self.theme.select_none_icon, self.can_check_none()),
+                ActionItem("preview", "Preview changes", "▶", self.can_preview()),
+                ActionItem("cancel", "Cancel", "✕", True),
+            ]
+
+        def preview_actions(self) -> list[ActionItem]:
+            return [
+                ActionItem("apply", "Apply", "✔", bool(self.preview_plan and self.preview_plan.previews)),
+                ActionItem("back", "Back", "↩", True),
+                ActionItem("cancel", "Cancel", "✕", True),
+            ]
+
+    def append_line(target: StyleAndTextTuples, fragments: StyleAndTextTuples) -> None:
+        target.extend(fragments)
+        target.append(("", "\n"))
+
+    def line_prefix(selected: bool) -> StyleAndTextTuples:
+        if selected:
+            return [("class:selected-marker", f"{theme.cursor_marker}  ")]
+        return [("", "   ")]
+
+    def icon_style(state_name: str) -> str:
+        if state_name in {"checked", "partial"}:
+            return "class:icon-active"
+        if state_name == "disabled":
+            return "class:icon-disabled"
+        return ""
+
+    def url_style(selection: RemoteUrlSelection) -> str:
+        return "class:url" if selection.eligible else "class:url-disabled"
+
+    state = UiState(remotes=remotes, theme=theme, username_buffer=Buffer(multiline=False))
+    state.username_buffer.text = username
+    state.username_buffer.cursor_position = len(username)
+
+    style = Style.from_dict(
+        {
+            "heading": "bold",
+            "muted": "ansibrightblack",
+            "selected-marker": "ansimagenta bold",
+            "icon-active": "ansicyan bold",
+            "icon-disabled": "ansibrightblack",
+            "remote-name": "ansiblue bold",
+            "url": "ansicyan underline",
+            "url-disabled": "ansibrightblack",
+            "input-border": "ansibrightblack",
+            "input-border-active": "ansicyan bold",
+            "action-icon": "ansicyan bold",
+            "action-disabled": "ansibrightblack",
+            "status": "ansiyellow",
+            "error": "ansired bold",
+            "preview-label": "ansiblue bold",
+            "preview-old": "ansibrightblack",
+            "preview-new": "ansigreen bold",
+        }
+    )
+
+    def get_input_border_style() -> str:
+        try:
+            app = get_app()
+        except Exception:
+            return "class:input-border"
+        return "class:input-border-active" if app.layout.has_focus(username_window) else "class:input-border"
+
+    def get_input_border_line(left: str, joint: str, fill: str, right: str) -> StyleAndTextTuples:
+        style_name = get_input_border_style()
+        return [
+            ("", "  "),
+            (style_name, left),
+            (style_name, fill * 3),
+            (style_name, joint),
+            (style_name, fill * INPUT_WIDTH),
+            (style_name, right),
+        ]
+
+    def get_edit_tree_text() -> StyleAndTextTuples:
+        fragments: StyleAndTextTuples = []
+        rows = state.tree_rows()
+        if not rows:
+            append_line(fragments, [("", "  No remotes found.")])
+            return fragments[:-1]
+
+        tree_has_focus = app.layout.has_focus(tree_window)
+        for index, row in enumerate(rows):
+            if index > 0 and row.kind == "remote":
+                fragments.append(("", "\n"))
+            selected = tree_has_focus and index == state.selected_tree_index
+            prefix = line_prefix(selected)
+            remote = state.remotes[row.remote_index]
+
+            if row.kind == "remote":
+                remote_state = remote.state()
+                append_line(
+                    fragments,
+                    prefix
+                    + [
+                        ("", "  "),
+                        (icon_style(remote_state), f"{theme.remote_icons[remote_state]} "),
+                        ("class:remote-name", remote.name),
+                    ],
+                )
+                continue
+
+            selection = getattr(remote, row.url_kind)
+            if row.kind == "url":
+                branch = theme.branch_mid if row.url_kind == "fetch" else theme.branch_last
+                row_state = selection.state()
+                append_line(
+                    fragments,
+                    prefix
+                    + [
+                        ("", f"  {branch} "),
+                        (icon_style(row_state), f"{theme.item_icons[row_state]} "),
+                        ("", f"{selection.kind:<5}: "),
+                        (url_style(selection), selection.original_url),
+                    ],
+                )
+                continue
+
+            child_prefix = f"  {theme.vertical}   " if row.url_kind == "fetch" else "      "
+            git_state = "checked" if selection.add_git_suffix else "unchecked"
+            append_line(
+                fragments,
+                prefix
+                + [
+                    ("", child_prefix + theme.branch_last + " "),
+                    (icon_style(git_state), f"{theme.item_icons[git_state]} "),
+                    ("", "Add "),
+                    ("class:icon-active", ".git"),
+                    ("", " suffix"),
+                ],
+            )
+
+        return fragments[:-1] if fragments else fragments
+
+    def render_actions(actions: list[ActionItem], current_index: int, focused: bool) -> StyleAndTextTuples:
+        fragments: StyleAndTextTuples = []
+        for index, action in enumerate(actions):
+            if index > 0:
+                fragments.append(("", "\n"))
+            label_style = "" if action.enabled else "class:action-disabled"
+            append_line(
+                fragments,
+                line_prefix(focused and current_index == index)
+                + [
+                    ("", " "),
+                    ("class:action-icon", f"{action.icon} "),
+                    (label_style, action.label),
+                ],
+            )
+        return fragments[:-1] if fragments else fragments
+
+    def get_edit_actions_text() -> StyleAndTextTuples:
+        return render_actions(
+            state.edit_actions(),
+            state.action_index,
+            app.layout.has_focus(edit_actions_window),
+        )
+
+    def get_preview_text() -> StyleAndTextTuples:
+        fragments: StyleAndTextTuples = []
+        plan = state.preview_plan
+        if not plan or not plan.previews:
+            append_line(fragments, [("", "  No changes selected.")])
+            return fragments[:-1]
+        for index, preview in enumerate(plan.previews):
+            if index > 0:
+                fragments.append(("", "\n"))
+            append_line(
+                fragments,
+                [
+                    ("", "  "),
+                    ("class:preview-label", f"{preview.remote_name} / {preview.kind}: "),
+                    ("class:preview-old", preview.old_url),
+                ],
+            )
+            append_line(
+                fragments,
+                [
+                    ("", "    -> "),
+                    ("class:preview-new", preview.new_url),
+                ],
+            )
+        return fragments[:-1] if fragments else fragments
+
+    def get_preview_actions_text() -> StyleAndTextTuples:
+        return render_actions(
+            state.preview_actions(),
+            state.preview_action_index,
+            app.layout.has_focus(preview_actions_window),
+        )
+
+    def get_status_text() -> StyleAndTextTuples:
+        if not state.status_message:
+            return [("", "")]
+        return [("class:error" if state.status_is_error else "class:status", state.status_message)]
+
+    def get_help_text() -> StyleAndTextTuples:
+        return [("class:muted", "Tab focus  Up/Down move  Space toggle  Enter action  a check all  n check none  q cancel")]
+
+    username_control = BufferControl(buffer=state.username_buffer, focusable=True)
+    username_window = Window(
+        content=username_control,
+        width=Dimension(preferred=INPUT_WIDTH, min=INPUT_WIDTH),
+        height=1,
+        wrap_lines=False,
+        dont_extend_width=True,
+    )
+    tree_window = Window(
+        content=FormattedTextControl(get_edit_tree_text, focusable=True),
+        always_hide_cursor=True,
+    )
+    edit_actions_window = Window(
+        content=FormattedTextControl(get_edit_actions_text, focusable=True),
+        always_hide_cursor=True,
+        height=Dimension(min=4, max=4),
+    )
+    preview_window = Window(
+        content=FormattedTextControl(get_preview_text),
+        always_hide_cursor=True,
+    )
+    preview_actions_window = Window(
+        content=FormattedTextControl(get_preview_actions_text, focusable=True),
+        always_hide_cursor=True,
+        height=Dimension(min=3, max=3),
+    )
+    status_window = Window(FormattedTextControl(get_status_text), height=1)
+    help_window = Window(FormattedTextControl(get_help_text), height=1)
+
+    input_container = HSplit(
+        [
+            Window(
+                FormattedTextControl(
+                    lambda: get_input_border_line(
+                        theme.input_top_left,
+                        theme.input_top_joint,
+                        theme.input_top_fill,
+                        theme.input_top_right,
+                    )
+                ),
+                height=1,
+            ),
+            VSplit(
+                [
+                    Window(
+                        FormattedTextControl(
+                            lambda: [
+                                ("", "  "),
+                                (get_input_border_style(), theme.input_mid_left),
+                                (get_input_border_style(), f" {theme.input_mid_prompt} "),
+                                (get_input_border_style(), f"{theme.input_mid_joint} "),
+                            ]
+                        ),
+                        width=8,
+                        height=1,
+                    ),
+                    username_window,
+                    Window(
+                        FormattedTextControl(
+                            lambda: [(get_input_border_style(), f" {theme.input_mid_right}")]
+                        ),
+                        width=2,
+                        height=1,
+                    ),
+                ],
+                height=1,
+            ),
+            Window(
+                FormattedTextControl(
+                    lambda: get_input_border_line(
+                        theme.input_bottom_left,
+                        theme.input_bottom_joint,
+                        theme.input_bottom_fill,
+                        theme.input_bottom_right,
+                    )
+                ),
+                height=1,
+            ),
+        ]
+    )
+
+    edit_container = HSplit(
+        [
+            Window(FormattedTextControl(lambda: [("class:heading", "Enter the git username to use:")]), height=1),
+            input_container,
+            Window(height=1, char=" "),
+            Window(FormattedTextControl(lambda: [("class:heading", "Select the remote urls to change:")]), height=1),
+            tree_window,
+            Window(height=1, char=" "),
+            edit_actions_window,
+            Window(height=1, char=" "),
+            status_window,
+            help_window,
+        ]
+    )
+
+    preview_container = HSplit(
+        [
+            Window(FormattedTextControl(lambda: [("class:heading", "Preview changes:")]), height=1),
+            preview_window,
+            Window(height=1, char=" "),
+            preview_actions_window,
+            Window(height=1, char=" "),
+            status_window,
+            help_window,
+        ]
+    )
+
+    root_container = DynamicContainer(lambda: preview_container if state.preview_plan is not None else edit_container)
+    layout = Layout(root_container, focused_element=username_window)
+    kb = KeyBindings()
+    app: Application
+
+    def focus_next() -> None:
+        if state.preview_plan is not None:
+            app.layout.focus(preview_actions_window)
+            return
+        current = app.layout.current_window
+        if current == username_window:
+            app.layout.focus(tree_window)
+        elif current == tree_window:
+            app.layout.focus(edit_actions_window)
+        else:
+            app.layout.focus(username_window)
+
+    def focus_previous() -> None:
+        if state.preview_plan is not None:
+            app.layout.focus(preview_actions_window)
+            return
+        current = app.layout.current_window
+        if current == username_window:
+            app.layout.focus(edit_actions_window)
+        elif current == tree_window:
+            app.layout.focus(username_window)
+        else:
+            app.layout.focus(tree_window)
+
+    def open_preview() -> None:
+        state.clear_status()
+        try:
+            plan = state.build_preview()
+        except ValueError as exc:
+            state.set_status(str(exc), is_error=True)
+            return
+        if not plan.previews:
+            state.set_status("No changes selected.", is_error=True)
+            return
+        state.preview_plan = plan
+        state.preview_action_index = 0
+        app.layout.focus(preview_actions_window)
+
+    def leave_preview() -> None:
+        state.preview_plan = None
+        state.preview_action_index = 0
+        state.clear_status()
+        app.layout.focus(tree_window)
+
+    def activate_action(action_id: str) -> None:
+        state.clear_status()
+        if action_id == "check_all":
+            state.check_all()
+            return
+        if action_id == "check_none":
+            state.check_none()
+            return
+        if action_id == "preview":
+            open_preview()
+            return
+        if action_id == "apply":
+            if not state.preview_plan or not state.preview_plan.previews:
+                state.set_status("No changes to apply.", is_error=True)
+                return
+            app.exit(result=state.preview_plan)
+            return
+        if action_id == "back":
+            leave_preview()
+            return
+        if action_id == "cancel":
+            app.exit(result=None)
+
+    @kb.add("tab")
+    def _focus_next(event) -> None:
+        focus_next()
+
+    @kb.add("s-tab")
+    def _focus_previous(event) -> None:
+        focus_previous()
+
+    @kb.add("down", filter=has_focus(username_window))
+    def _input_down(event) -> None:
+        app.layout.focus(tree_window if state.preview_plan is None else preview_actions_window)
+
+    @kb.add("up", filter=has_focus(username_window))
+    def _input_up(event) -> None:
+        app.layout.focus(edit_actions_window if state.preview_plan is None else preview_actions_window)
+
+    @kb.add("down", filter=has_focus(tree_window))
+    def _tree_down(event) -> None:
+        state.move_tree(1)
+
+    @kb.add("up", filter=has_focus(tree_window))
+    def _tree_up(event) -> None:
+        state.move_tree(-1)
+
+    @kb.add("space", filter=has_focus(tree_window))
+    def _tree_toggle(event) -> None:
+        state.toggle_current_tree_row()
+
+    @kb.add("down", filter=has_focus(edit_actions_window))
+    def _edit_actions_down(event) -> None:
+        actions = state.edit_actions()
+        state.action_index = clamp(state.action_index + 1, 0, len(actions) - 1)
+        state.clear_status()
+
+    @kb.add("up", filter=has_focus(edit_actions_window))
+    def _edit_actions_up(event) -> None:
+        actions = state.edit_actions()
+        state.action_index = clamp(state.action_index - 1, 0, len(actions) - 1)
+        state.clear_status()
+
+    @kb.add("space", filter=has_focus(edit_actions_window))
+    @kb.add("enter", filter=has_focus(edit_actions_window))
+    def _activate_edit_action(event) -> None:
+        actions = state.edit_actions()
+        action = actions[state.action_index]
+        if not action.enabled:
+            state.set_status(f"{action.label} has no effect right now.", is_error=True)
+            return
+        activate_action(action.action_id)
+
+    @kb.add("down", filter=has_focus(preview_actions_window))
+    def _preview_actions_down(event) -> None:
+        actions = state.preview_actions()
+        state.preview_action_index = clamp(state.preview_action_index + 1, 0, len(actions) - 1)
+        state.clear_status()
+
+    @kb.add("up", filter=has_focus(preview_actions_window))
+    def _preview_actions_up(event) -> None:
+        actions = state.preview_actions()
+        state.preview_action_index = clamp(state.preview_action_index - 1, 0, len(actions) - 1)
+        state.clear_status()
+
+    @kb.add("space", filter=has_focus(preview_actions_window))
+    @kb.add("enter", filter=has_focus(preview_actions_window))
+    def _activate_preview_action(event) -> None:
+        actions = state.preview_actions()
+        action = actions[state.preview_action_index]
+        if not action.enabled:
+            state.set_status(f"{action.label} has no effect right now.", is_error=True)
+            return
+        activate_action(action.action_id)
+
+    @kb.add("a", filter=Condition(lambda: state.preview_plan is None and not app.layout.has_focus(username_window)))
+    def _check_all(event) -> None:
+        state.check_all()
+
+    @kb.add("n", filter=Condition(lambda: state.preview_plan is None and not app.layout.has_focus(username_window)))
+    def _check_none(event) -> None:
+        state.check_none()
+
+    @kb.add("q")
+    @kb.add("escape")
+    def _cancel(event) -> None:
+        app.exit(result=None)
+
+    def on_text_changed(_) -> None:
+        state.clear_status()
+
+    state.username_buffer.on_text_changed += on_text_changed
+    app = Application(layout=layout, key_bindings=kb, style=style, full_screen=True, mouse_support=False)
+    return app.run()
+
+
+def print_applied_summary(plan: ExecutionPlan) -> None:
+    if not plan.previews:
+        print("No changes were applied.")
+        return
+    print(f"Applied {len(plan.previews)} remote URL change(s):")
+    for preview in plan.previews:
+        print(f"- {preview.remote_name} {preview.kind}: {preview.old_url} -> {preview.new_url}")
+
+
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Interactively add or replace GitHub usernames in git remote HTTPS URLs."
+    )
+    parser.add_argument("--username", help="Prefill the username field.")
+    parser.add_argument(
+        "--theme",
+        choices=sorted(THEMES),
+        default=DEFAULT_THEME_NAME,
+        help=f"Visual theme to use. Defaults to {DEFAULT_THEME_NAME}.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = parse_args(argv)
+    try:
+        repo_root = get_repo_root(Path.cwd())
+        remotes = discover_remotes(repo_root)
+    except (GitCommandError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    if not remotes:
+        print("No git remotes found in this repository.", file=sys.stderr)
+        return 1
+
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        print("This script requires an interactive terminal.", file=sys.stderr)
+        return 1
+
+    username = resolve_default_username(
+        args.username,
+        remotes,
+        lambda key: get_git_config_value(repo_root, key),
+    )
+
+    ensure_prompt_toolkit(argv if argv is not None else sys.argv[1:])
+    plan = run_tui(remotes, theme=THEMES[args.theme], username=username)
+    if plan is None:
+        return 0
+
+    try:
+        apply_execution_plan(plan, repo_root)
+    except GitCommandError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    print_applied_summary(plan)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

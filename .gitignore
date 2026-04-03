@@ -26,6 +26,8 @@ xcuserdata/
 [Ll]ib64
 [Ll]ocal
 [Ss]cripts
+!ai/scripts/
+!ai/scripts/**
 pyvenv.cfg
 .venv
 pip-selfcheck.json
@@ -593,5 +595,4 @@ cython_debug/
 
 ### GPG template
 secring.*
-
 
