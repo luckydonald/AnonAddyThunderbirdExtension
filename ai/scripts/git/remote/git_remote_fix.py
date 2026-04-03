@@ -699,10 +699,34 @@ def run_tui(
                 return False
             return True
 
+    @dataclass(frozen=True, slots=True)
+    class RedrawSnapshot:
+        focus_group: str
+        tree_index: int
+        action_index: int
+        preview_action_index: int
+        preview_mode: bool
+
     def append_row(target: StyleAndTextTuples, fragments: StyleAndTextTuples) -> None:
         if target:
             target.append(("", "\n"))
         target.extend(fragments)
+
+    def flatten_fragments(fragments: StyleAndTextTuples) -> str:
+        return "".join(text for _, text in fragments)
+
+    def split_fragment_lines(fragments: StyleAndTextTuples) -> list[StyleAndTextTuples]:
+        lines: list[StyleAndTextTuples] = [[]]
+        for style_name, text in fragments:
+            parts = text.split("\n")
+            for index, part in enumerate(parts):
+                if part:
+                    lines[-1].append((style_name, part))
+                if index != len(parts) - 1:
+                    lines.append([])
+        if lines and not lines[-1]:
+            lines.pop()
+        return lines
 
     def line_prefix(selected: bool) -> StyleAndTextTuples:
         if selected:
@@ -759,10 +783,53 @@ def run_tui(
         if callable(invalidate):
             invalidate()
 
+    def cursor_to_row_start(output, row_index: int) -> bool:
+        cursor_goto = getattr(output, "cursor_goto", None)
+        if not callable(cursor_goto):
+            return False
+        try:
+            cursor_goto(row=row_index, column=0)
+            return True
+        except TypeError:
+            try:
+                cursor_goto(row_index, 0)
+                return True
+            except TypeError:
+                return False
+
+    def rewrite_rows(row_updates: dict[int, str]) -> bool:
+        if not row_updates:
+            return False
+        renderer = getattr(app, "renderer", None)
+        output = getattr(renderer, "output", None)
+        if output is None:
+            return False
+        erase_end_of_line = getattr(output, "erase_end_of_line", None)
+        write = getattr(output, "write", None)
+        flush = getattr(output, "flush", None)
+        if not callable(erase_end_of_line) or not callable(write):
+            return False
+
+        for row_index, text in sorted(row_updates.items()):
+            if not cursor_to_row_start(output, row_index):
+                return False
+            erase_end_of_line()
+            write(text)
+
+        if callable(flush):
+            flush()
+        return True
+
     def redraw_from_scratch() -> None:
         request_redraw(clear=True)
 
     def local_redraw() -> None:
+        snapshot = capture_redraw_snapshot()
+        previous_snapshot = redraw_state["snapshot"]
+        if previous_snapshot is not None and rewrite_rows(collect_row_updates(previous_snapshot, snapshot)):
+            redraw_state["snapshot"] = snapshot
+            return
+        redraw_state["snapshot"] = snapshot
         request_redraw(clear=False)
 
     def refresh_ui() -> None:
@@ -1193,6 +1260,108 @@ def run_tui(
     layout = Layout(root_container, focused_element=username_window)
     kb = KeyBindings()
     app: Application
+    redraw_state: dict[str, RedrawSnapshot | None] = {"snapshot": None}
+
+    def current_focus_group() -> str:
+        current = app.layout.current_window
+        if current == username_window:
+            return "username"
+        if current == tree_window:
+            return "tree"
+        if current == edit_actions_window:
+            return "actions"
+        if current == submit_window:
+            return "submit"
+        if current == preview_actions_window:
+            return "preview-actions"
+        return "other"
+
+    def capture_redraw_snapshot() -> RedrawSnapshot:
+        return RedrawSnapshot(
+            focus_group=current_focus_group(),
+            tree_index=state.selected_tree_index,
+            action_index=state.action_index,
+            preview_action_index=state.preview_action_index,
+            preview_mode=state.preview_plan is not None,
+        )
+
+    def tree_display_line_index_map() -> dict[int, int]:
+        mapping: dict[int, int] = {}
+        display_index = 0
+        rows = state.tree_rows()
+        for index, row in enumerate(rows):
+            if index > 0 and row.kind == "remote":
+                display_index += 1
+            mapping[index] = display_index
+            display_index += 1
+        return mapping
+
+    def tree_screen_row(index: int) -> int | None:
+        mapping = tree_display_line_index_map()
+        line_index = mapping.get(index)
+        if line_index is None:
+            return None
+        return 6 + line_index
+
+    def edit_actions_start_row() -> int:
+        tree_line_count = len(split_fragment_lines(get_edit_tree_text()))
+        return 6 + tree_line_count + 1
+
+    def collect_row_updates(previous: RedrawSnapshot, current: RedrawSnapshot) -> dict[int, str]:
+        if previous.preview_mode or current.preview_mode:
+            return {}
+
+        updates: dict[int, str] = {}
+
+        if "username" in {previous.focus_group, current.focus_group}:
+            updates[1] = flatten_fragments(
+                get_input_border_line(
+                    theme.input_top_left,
+                    theme.input_top_joint,
+                    theme.input_top_fill,
+                    theme.input_top_right,
+                )
+            )
+            updates[2] = flatten_fragments(
+                [("", "  ")]
+                + [(get_input_border_style(), theme.input_mid_left)]
+                + [(get_input_border_style(), f" {theme.input_mid_prompt} ")]
+                + [(get_input_border_style(), f"{theme.input_mid_joint} ")]
+                + get_username_fragments()
+                + [(get_input_border_style(), f" {theme.input_mid_right}")]
+            )
+            updates[3] = flatten_fragments(
+                get_input_border_line(
+                    theme.input_bottom_left,
+                    theme.input_bottom_joint,
+                    theme.input_bottom_fill,
+                    theme.input_bottom_right,
+                )
+            )
+
+        if "tree" in {previous.focus_group, current.focus_group}:
+            rows = state.tree_rows()
+            tree_lines = [flatten_fragments(line) for line in split_fragment_lines(get_edit_tree_text())]
+            for index in {previous.tree_index, current.tree_index}:
+                if not (0 <= index < len(rows)):
+                    continue
+                if rows[index].kind != "remote":
+                    continue
+                screen_row = tree_screen_row(index)
+                line_index = tree_display_line_index_map().get(index)
+                if screen_row is None or line_index is None or line_index >= len(tree_lines):
+                    continue
+                updates[screen_row] = tree_lines[line_index]
+
+        if "actions" in {previous.focus_group, current.focus_group} and 0 in {
+            previous.action_index,
+            current.action_index,
+        }:
+            action_lines = [flatten_fragments(line) for line in split_fragment_lines(get_edit_actions_text())]
+            if action_lines:
+                updates[edit_actions_start_row()] = action_lines[0]
+
+        return updates
 
     def focus_next() -> None:
         if state.preview_plan is not None:
@@ -1481,6 +1650,7 @@ def run_tui(
         mouse_support=True,
         refresh_interval=0.5,
     )
+    redraw_state["snapshot"] = capture_redraw_snapshot()
     return app.run()
 
 
