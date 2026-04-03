@@ -583,9 +583,11 @@ class TuiTddTests(unittest.TestCase):
         ui.press("down")
         ui.press("down", times=5)
         selected_index = ui.selected_tree_line_index()
-        self.assertEqual(ui.app.renderer.clear_count, 0)
+        prior_clear_count = ui.app.renderer.clear_count
+        prior_invalidate_count = ui.app.invalidate_count
         ui.press("r")
-        self.assertEqual(ui.app.renderer.clear_count, 1)
+        self.assertEqual(ui.app.renderer.clear_count, prior_clear_count + 1)
+        self.assertEqual(ui.app.invalidate_count, prior_invalidate_count + 1)
         self.assertIs(ui.app.layout.current_window, ui.tree_window)
         self.assertEqual(ui.selected_tree_line_index(), selected_index)
 
