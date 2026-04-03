@@ -33,5 +33,8 @@
 26. Use `⬆︎` and `⬇︎` instead of `Up` and `Down` for move
 27. If in edit field, add `⬅︎` and `➡︎`
 28. Actually the second arrow (`➡︎`) seems wrong, maybe it does not have the right size. What would be a better replacement?
-29. Use `␛` for escape.
+29. Use `␛` (`SYMBOL FOR ESCAPE`) for escape.
 30. Use `MATHEMATICAL MONOSPACE SMALL` characters for alphanumeric-single-char keys, (i.e. for `q` show `𝚚` (`MATHEMATICAL MONOSPACE SMALL Q`: `𝚚`))
+31. Use `⮐` (`RETURN LEFT`) for Enter
+32. Use `⇥` (`RIGHTWARDS ARROW TO BAR`) for Tab
+33. Use `⟯` (`MATHEMATICAL RIGHT FLATTENED PARENTHESIS`) instead of the normal `)` between character and label.
