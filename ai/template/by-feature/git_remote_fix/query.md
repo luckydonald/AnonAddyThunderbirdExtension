@@ -161,3 +161,9 @@
    - repeat the test with moving down and back up 2 times.
    - repeat the test with moving down all the way to the end (check none) and back up.
    - that way you can immediately test if the rendering is wrong.
+
+› Instead of that homegrown terminal emulator `FakeOutput` and more `Fake*` classes in the tests ( @ai/scripts/tests/test_git_remote_fix_tui_tdd.py ) use `pyte`:
+- with local documentation available at:
+  - @ai/references/https/pyte.readthedocs.io/en/0.8.1-dev/tutorial.html.md
+  - @ai/references/https/pyte.readthedocs.io/en/0.8.1-dev/api.html.md
+- Probably `stream.feed(…)`, `screen.cursor.x/y`, `screen.cursor.attrs` and `screen.display` might be helpful.
