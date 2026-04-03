@@ -175,12 +175,22 @@ class FakeRenderer:
 
 
 class FakeApplication:
-    def __init__(self, *, layout, key_bindings, style, full_screen, mouse_support) -> None:
+    def __init__(
+        self,
+        *,
+        layout,
+        key_bindings,
+        style,
+        full_screen,
+        mouse_support,
+        refresh_interval=None,
+    ) -> None:
         self.layout = layout
         self.key_bindings = key_bindings
         self.style = style
         self.full_screen = full_screen
         self.mouse_support = mouse_support
+        self.refresh_interval = refresh_interval
         self.exit_result = None
         self.invalidate_count = 0
         self.renderer = FakeRenderer()
@@ -676,6 +686,7 @@ class TuiTddTests(unittest.TestCase):
 
     def test_tdd_long_input_scrolls_with_leading_ellipsis_and_keeps_cursor_space(self) -> None:
         self.set_terminal_width(72)
+        self.set_monotonic_time({"value": 0.10})
         ui = self.build_ui(username="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdef")
         line = ui.render_input_line()
         self.assertIn("…", line)
@@ -718,10 +729,12 @@ class TuiTddTests(unittest.TestCase):
         self.assertEqual(ui.app.style.style_rules["input-border-active"], "ansimagenta bold")
 
     def test_tdd_focused_input_uses_template_cursor_glyph(self) -> None:
+        self.set_monotonic_time({"value": 0.10})
         ui = self.build_ui(theme="boxy")
         self.assertIn("▁", ui.render_input_line())
 
     def test_tdd_cursor_glyph_uses_highlight_color(self) -> None:
+        self.set_monotonic_time({"value": 0.10})
         ui = self.build_ui(theme="boxy")
         input_fragments = ui.render_window_fragments(ui.username_window)
         cursor_fragments = [fragment for fragment in input_fragments if "▎" in fragment[1] or "▁" in fragment[1]]

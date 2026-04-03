@@ -782,6 +782,9 @@ def run_tui(
     def current_input_border_width() -> int:
         return current_input_width() + 2
 
+    def cursor_is_visible() -> bool:
+        return (time.monotonic() % 1.0) < 0.5
+
     state = UiState(remotes=remotes, theme=theme, username_buffer=Buffer(multiline=False))
     state.username_buffer.text = username
     state.username_buffer.cursor_position = len(username)
@@ -833,6 +836,7 @@ def run_tui(
         position = clamp(state.username_buffer.cursor_position, 0, len(value))
         focused = app.layout.has_focus(username_window)
         width = current_input_width()
+        blink_on = focused and cursor_is_visible()
 
         if not focused and len(value) <= width:
             return [("", value), ("", " " * max(0, width - len(value)))]
@@ -873,13 +877,12 @@ def run_tui(
         if focused:
             if cursor_at_end:
                 fragments.append(("", value[start:end]))
-                fragments.append(("class:selected-marker", CURSOR_BLOCK))
+                fragments.append(("class:selected-marker", CURSOR_BLOCK if blink_on else " "))
             else:
-                cursor_visible = position - start
                 before_cursor = value[start:position]
                 after_cursor = value[position + 1 : end]
                 fragments.append(("", before_cursor))
-                fragments.append(("class:selected-marker", CURSOR_BAR))
+                fragments.append(("class:selected-marker", CURSOR_BAR if blink_on else value[position]))
                 fragments.append(("", after_cursor))
         else:
             fragments.append(("", value[start:end]))
@@ -1469,7 +1472,14 @@ def run_tui(
         local_redraw()
 
     state.username_buffer.on_text_changed += on_text_changed
-    app = Application(layout=layout, key_bindings=kb, style=style, full_screen=True, mouse_support=True)
+    app = Application(
+        layout=layout,
+        key_bindings=kb,
+        style=style,
+        full_screen=True,
+        mouse_support=True,
+        refresh_interval=0.5,
+    )
     return app.run()
 
 
