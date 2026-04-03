@@ -761,6 +761,9 @@ def run_tui(
     def redraw_from_scratch() -> None:
         request_redraw(clear=True)
 
+    def local_redraw() -> None:
+        request_redraw(clear=False)
+
     def refresh_ui() -> None:
         redraw_from_scratch()
 
@@ -1135,7 +1138,7 @@ def run_tui(
     def focus_next() -> None:
         if state.preview_plan is not None:
             app.layout.focus(preview_actions_window)
-            redraw_from_scratch()
+            local_redraw()
             return
         current = app.layout.current_window
         if current == username_window:
@@ -1146,12 +1149,12 @@ def run_tui(
             app.layout.focus(submit_window)
         else:
             app.layout.focus(username_window)
-        redraw_from_scratch()
+        local_redraw()
 
     def focus_previous() -> None:
         if state.preview_plan is not None:
             app.layout.focus(preview_actions_window)
-            redraw_from_scratch()
+            local_redraw()
             return
         current = app.layout.current_window
         if current == username_window:
@@ -1162,7 +1165,7 @@ def run_tui(
             app.layout.focus(tree_window)
         else:
             app.layout.focus(edit_actions_window)
-        redraw_from_scratch()
+        local_redraw()
 
     def open_preview() -> None:
         state.clear_status()
@@ -1173,36 +1176,36 @@ def run_tui(
             return
         if not plan.previews:
             state.set_status("No changes selected.", is_error=True)
-            redraw_from_scratch()
+            local_redraw()
             return
         state.preview_plan = plan
         state.preview_action_index = 0
         app.layout.focus(preview_actions_window)
-        redraw_from_scratch()
+        local_redraw()
 
     def leave_preview() -> None:
         state.preview_plan = None
         state.preview_action_index = 0
         state.clear_status()
         app.layout.focus(tree_window)
-        redraw_from_scratch()
+        local_redraw()
 
     def activate_action(action_id: str) -> None:
         state.clear_status()
         if action_id == "check_all":
             flash_feedback("action:check_all")
             state.check_all()
-            redraw_from_scratch()
+            local_redraw()
             return
         if action_id == "check_none":
             flash_feedback("action:check_none")
             state.check_none()
-            redraw_from_scratch()
+            local_redraw()
             return
         if action_id == "apply":
             if not state.preview_plan or not state.preview_plan.previews:
                 state.set_status("No changes to apply.", is_error=True)
-                redraw_from_scratch()
+                local_redraw()
                 return
             flash_feedback("action:apply")
             app.exit(result=state.preview_plan)
@@ -1220,11 +1223,11 @@ def run_tui(
             plan = state.build_preview()
         except ValueError as exc:
             state.set_status(str(exc), is_error=True)
-            redraw_from_scratch()
+            local_redraw()
             return
         if not plan.previews:
             state.set_status("No changes selected.", is_error=True)
-            redraw_from_scratch()
+            local_redraw()
             return
         flash_feedback("submit")
         open_preview()
@@ -1240,49 +1243,49 @@ def run_tui(
     @kb.add("down", filter=has_focus(username_window))
     def _input_down(event) -> None:
         app.layout.focus(tree_window)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("enter", filter=has_focus(username_window))
     def _input_enter(event) -> None:
         app.layout.focus(tree_window)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("left", filter=has_focus(username_window))
     def _input_left(event) -> None:
         state.move_cursor(-1)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("right", filter=has_focus(username_window))
     def _input_right(event) -> None:
         state.move_cursor(1)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("home", filter=has_focus(username_window))
     def _input_home(event) -> None:
         state.username_buffer.cursor_position = 0
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("end", filter=has_focus(username_window))
     def _input_end(event) -> None:
         state.username_buffer.cursor_position = len(state.username_buffer.text)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("backspace", filter=has_focus(username_window))
     def _input_backspace(event) -> None:
         state.delete_before_cursor()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("delete", filter=has_focus(username_window))
     def _input_delete(event) -> None:
         state.delete_at_cursor()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add(Keys.Any if Keys is not None else "<any>", filter=has_focus(username_window))
     def _input_text(event) -> None:
         text = getattr(event, "data", "")
         if text and text.isprintable() and text not in "\r\n\t":
             state.insert_text(text)
-            redraw_from_scratch()
+            local_redraw()
 
     @kb.add("down", filter=has_focus(tree_window))
     def _tree_down(event) -> None:
@@ -1290,31 +1293,31 @@ def run_tui(
             state.action_index = 0
             app.layout.focus(edit_actions_window)
             state.clear_status()
-            redraw_from_scratch()
+            local_redraw()
             return
         state.move_tree(1)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("up", filter=has_focus(tree_window))
     def _tree_up(event) -> None:
         if state.selected_tree_index <= 0:
             app.layout.focus(username_window)
             state.clear_status()
-            redraw_from_scratch()
+            local_redraw()
             return
         state.move_tree(-1)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("space", filter=has_focus(tree_window))
     def _tree_toggle(event) -> None:
         state.toggle_current_tree_row()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("enter", filter=has_focus(tree_window))
     def _tree_enter(event) -> None:
         app.layout.focus(edit_actions_window)
         state.action_index = 0
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("down", filter=has_focus(edit_actions_window))
     def _edit_actions_down(event) -> None:
@@ -1322,11 +1325,11 @@ def run_tui(
         if state.action_index >= len(actions) - 1:
             app.layout.focus(submit_window)
             state.clear_status()
-            redraw_from_scratch()
+            local_redraw()
             return
         state.action_index = clamp(state.action_index + 1, 0, len(actions) - 1)
         state.clear_status()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("up", filter=has_focus(edit_actions_window))
     def _edit_actions_up(event) -> None:
@@ -1334,12 +1337,12 @@ def run_tui(
             state.selected_tree_index = state.last_tree_index()
             app.layout.focus(tree_window)
             state.clear_status()
-            redraw_from_scratch()
+            local_redraw()
             return
         actions = state.edit_actions()
         state.action_index = clamp(state.action_index - 1, 0, len(actions) - 1)
         state.clear_status()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("space", filter=has_focus(edit_actions_window))
     @kb.add("enter", filter=has_focus(edit_actions_window))
@@ -1355,7 +1358,7 @@ def run_tui(
     def _submit_up(event) -> None:
         state.action_index = len(state.edit_actions()) - 1
         app.layout.focus(edit_actions_window)
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("space", filter=has_focus(submit_window))
     @kb.add("enter", filter=has_focus(submit_window))
@@ -1367,14 +1370,14 @@ def run_tui(
         actions = state.preview_actions()
         state.preview_action_index = clamp(state.preview_action_index + 1, 0, len(actions) - 1)
         state.clear_status()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("up", filter=has_focus(preview_actions_window))
     def _preview_actions_up(event) -> None:
         actions = state.preview_actions()
         state.preview_action_index = clamp(state.preview_action_index - 1, 0, len(actions) - 1)
         state.clear_status()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("space", filter=has_focus(preview_actions_window))
     @kb.add("enter", filter=has_focus(preview_actions_window))
@@ -1389,12 +1392,12 @@ def run_tui(
     @kb.add("a", filter=Condition(lambda: state.preview_plan is None and not app.layout.has_focus(username_window)))
     def _check_all(event) -> None:
         state.check_all()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("n", filter=Condition(lambda: state.preview_plan is None and not app.layout.has_focus(username_window)))
     def _check_none(event) -> None:
         state.check_none()
-        redraw_from_scratch()
+        local_redraw()
 
     @kb.add("r")
     def _refresh(event) -> None:
@@ -1407,7 +1410,7 @@ def run_tui(
 
     def on_text_changed(_) -> None:
         state.clear_status()
-        redraw_from_scratch()
+        local_redraw()
 
     state.username_buffer.on_text_changed += on_text_changed
     app = Application(layout=layout, key_bindings=kb, style=style, full_screen=True, mouse_support=True)
