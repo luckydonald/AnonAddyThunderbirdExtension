@@ -111,3 +111,22 @@
 8. If more text is entered into the text box, 'scroll' the text, via `…` symbol in the front/back as needed.
    - The empty space to add (blinking `▁`) should always still have space at the end
 9. Fix the text field cursor not blinking once per second but being static.
+
+> Let's do round 3 of fixes (cont'd 3):
+- remember to start with _Writing and committing TTD tests_.
+- commit after each step where it makes sense
+- at least commit after each todo number below, you can commit more often.
+10. `^C` should do the same as `q`, too.
+11. It's not really redrawing those components correctly. I really want to refresh exactly those elements as requested.
+    1. Pointer to the start row index
+    2. Command to move pointer to the beginning of the row
+    3. Clear the current row
+    4. re-write the current row
+    5. Repeat from **1.** for every row.
+12. The blinking finally works, but the then updated text is printed 1 character too much to the right.
+    - so pos `- 1` or something.
+13. Moving up/down via scroll wheel no longer works, this was working before.
+14. The level-2 checkboxes (suffix) are colorized even if they are not selected, fix that
+15. Scrolling text field + checkboxes when the focus gets out of visible bounding box does not work
+    - preferably keeping the current input field centered-ish
+    - of course the ends should end up at the end, no overscroll
