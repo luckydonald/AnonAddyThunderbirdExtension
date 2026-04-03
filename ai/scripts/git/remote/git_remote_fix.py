@@ -803,11 +803,11 @@ def run_tui(
         if not callable(cursor_goto):
             return False
         try:
-            cursor_goto(row=row_index, column=0)
+            cursor_goto(row=row_index, column=1)
             return True
         except TypeError:
             try:
-                cursor_goto(row_index, 0)
+                cursor_goto(row_index, 1)
                 return True
             except TypeError:
                 return False

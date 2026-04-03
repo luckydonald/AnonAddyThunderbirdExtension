@@ -1095,6 +1095,15 @@ class TuiTddTests(unittest.TestCase):
         expected = self.padded_screen_lines(ui)
         self.assertEqual(merged[0:5], expected[0:5])
 
+    def test_tdd_round4_local_redraw_targets_terminal_column_one(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        ui.app.renderer.output.operations.clear()
+        ui.press("down")
+        cursor_gotos = [operation for operation in ui.app.renderer.output.operations if operation[0] == "cursor_goto"]
+        self.assertTrue(cursor_gotos)
+        self.assertTrue(all(operation[2] == 1 for operation in cursor_gotos), cursor_gotos)
+
 
 if __name__ == "__main__":
     unittest.main()
