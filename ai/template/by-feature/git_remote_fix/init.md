@@ -1,4 +1,4 @@
-# {TODO: feature name}
+# git_remote_fix script
 
 ## Table of contents
 <!-- TOC -->
