@@ -168,3 +168,4 @@
   - @ai/references/https/pyte.readthedocs.io/en/0.8.1-dev/api.html.md
 - Probably `stream.feed(…)`, `screen.cursor.x/y`, `screen.cursor.attrs` and `screen.display` might be helpful.
 › While extracting those terminal tests, move them to their own file for clarity.
+› well, I expect the tests to fail, that's why we switch parsers, so we can actually fix the output. Commit before attempting to dive into those issues first.
