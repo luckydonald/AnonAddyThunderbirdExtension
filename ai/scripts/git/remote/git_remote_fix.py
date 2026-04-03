@@ -527,6 +527,8 @@ def run_tui(
         from prompt_toolkit.keys import Keys
     except Exception:
         Keys = None
+    scroll_down_key = getattr(Keys, "ScrollDown", "scrolldown") if Keys is not None else "scrolldown"
+    scroll_up_key = getattr(Keys, "ScrollUp", "scrollup") if Keys is not None else "scrollup"
 
     @dataclass(slots=True)
     class UiState:
@@ -1468,6 +1470,7 @@ def run_tui(
     def _focus_previous(event) -> None:
         focus_previous()
 
+    @kb.add(scroll_down_key, filter=has_focus(username_window))
     @kb.add("down", filter=has_focus(username_window))
     def _input_down(event) -> None:
         app.layout.focus(tree_window)
@@ -1515,6 +1518,7 @@ def run_tui(
             state.insert_text(text)
             local_redraw()
 
+    @kb.add(scroll_down_key, filter=has_focus(tree_window))
     @kb.add("down", filter=has_focus(tree_window))
     def _tree_down(event) -> None:
         if state.selected_tree_index >= state.last_tree_index():
@@ -1526,6 +1530,7 @@ def run_tui(
         state.move_tree(1)
         local_redraw()
 
+    @kb.add(scroll_up_key, filter=has_focus(tree_window))
     @kb.add("up", filter=has_focus(tree_window))
     def _tree_up(event) -> None:
         if state.selected_tree_index <= 0:
@@ -1547,6 +1552,7 @@ def run_tui(
         state.action_index = 0
         local_redraw()
 
+    @kb.add(scroll_down_key, filter=has_focus(edit_actions_window))
     @kb.add("down", filter=has_focus(edit_actions_window))
     def _edit_actions_down(event) -> None:
         actions = state.edit_actions()
@@ -1559,6 +1565,7 @@ def run_tui(
         state.clear_status()
         local_redraw()
 
+    @kb.add(scroll_up_key, filter=has_focus(edit_actions_window))
     @kb.add("up", filter=has_focus(edit_actions_window))
     def _edit_actions_up(event) -> None:
         if state.action_index <= 0:
@@ -1582,6 +1589,7 @@ def run_tui(
             return
         activate_action(action.action_id)
 
+    @kb.add(scroll_up_key, filter=has_focus(submit_window))
     @kb.add("up", filter=has_focus(submit_window))
     def _submit_up(event) -> None:
         state.action_index = len(state.edit_actions()) - 1
@@ -1593,6 +1601,7 @@ def run_tui(
     def _submit_activate(event) -> None:
         activate_submit()
 
+    @kb.add(scroll_down_key, filter=has_focus(preview_actions_window))
     @kb.add("down", filter=has_focus(preview_actions_window))
     def _preview_actions_down(event) -> None:
         actions = state.preview_actions()
@@ -1600,6 +1609,7 @@ def run_tui(
         state.clear_status()
         local_redraw()
 
+    @kb.add(scroll_up_key, filter=has_focus(preview_actions_window))
     @kb.add("up", filter=has_focus(preview_actions_window))
     def _preview_actions_up(event) -> None:
         actions = state.preview_actions()
