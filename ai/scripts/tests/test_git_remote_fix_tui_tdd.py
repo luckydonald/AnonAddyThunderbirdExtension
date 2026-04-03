@@ -182,6 +182,18 @@ class FakeOutput:
     def cursor_goto(self, row: int = 0, column: int = 0) -> None:
         self.operations.append(("cursor_goto", row, column))
 
+    def cursor_up(self, amount: int) -> None:
+        self.operations.append(("cursor_up", amount))
+
+    def cursor_down(self, amount: int) -> None:
+        self.operations.append(("cursor_down", amount))
+
+    def cursor_forward(self, amount: int) -> None:
+        self.operations.append(("cursor_forward", amount))
+
+    def cursor_backward(self, amount: int) -> None:
+        self.operations.append(("cursor_backward", amount))
+
     def erase_end_of_line(self) -> None:
         self.operations.append(("erase_end_of_line",))
 
@@ -345,6 +357,89 @@ def window_width(window) -> int:
     return 0
 
 
+def join_line_fragments(line: list[tuple[str, str]]) -> str:
+    return "".join(text for _, text in line)
+
+
+def render_node_lines(node, render_window_fragments) -> list[str]:
+    if isinstance(node, FakeDynamicContainer):
+        return render_node_lines(node.get_container(), render_window_fragments)
+    if isinstance(node, FakeWindow):
+        return [join_line_fragments(line) for line in split_fragment_lines(render_window_fragments(node))] or [""]
+    if isinstance(node, FakeHSplit):
+        lines: list[str] = []
+        for child in node.children:
+            lines.extend(render_node_lines(child, render_window_fragments))
+        return lines
+    if isinstance(node, FakeVSplit):
+        child_lines = [render_node_lines(child, render_window_fragments) for child in node.children]
+        height = max((len(lines) for lines in child_lines), default=0)
+        rendered: list[str] = []
+        for index in range(height):
+            parts: list[str] = []
+            for child, lines in zip(node.children, child_lines):
+                line = lines[index] if index < len(lines) else ""
+                width = window_width(child) if isinstance(child, FakeWindow) else len(line)
+                parts.append(line.ljust(width))
+            rendered.append("".join(parts))
+        return rendered
+    raise TypeError(f"Unsupported fake node: {type(node)!r}")
+
+
+class FakeTerminalBuffer:
+    def __init__(self, lines: list[str], *, width: int, height: int) -> None:
+        padded = [line.ljust(width)[:width] for line in lines[:height]]
+        if len(padded) < height:
+            padded.extend([" " * width for _ in range(height - len(padded))])
+        self.lines = [list(line) for line in padded]
+        self.width = width
+        self.height = height
+        self.row = 0
+        self.column = 0
+
+    def apply(self, operations: list[tuple]) -> None:
+        for operation in operations:
+            name = operation[0]
+            if name == "cursor_goto":
+                self.row = max(0, min(self.height - 1, max(1, operation[1]) - 1))
+                self.column = max(0, min(self.width - 1, max(1, operation[2]) - 1))
+                continue
+            if name == "cursor_up":
+                self.row = max(0, self.row - operation[1])
+                continue
+            if name == "cursor_down":
+                self.row = min(self.height - 1, self.row + operation[1])
+                continue
+            if name == "cursor_forward":
+                self.column = min(self.width - 1, self.column + operation[1])
+                continue
+            if name == "cursor_backward":
+                self.column = max(0, self.column - operation[1])
+                continue
+            if name == "erase_end_of_line":
+                for index in range(self.column, self.width):
+                    self.lines[self.row][index] = " "
+                continue
+            if name in {"write", "write_raw"}:
+                self._write_text(operation[1])
+                continue
+
+    def _write_text(self, text: str) -> None:
+        for character in text:
+            if character == "\r":
+                self.column = 0
+                continue
+            if character == "\n":
+                self.row = min(self.height - 1, self.row + 1)
+                continue
+            if 0 <= self.row < self.height and 0 <= self.column < self.width:
+                self.lines[self.row][self.column] = character
+            self.column = min(self.width - 1, self.column + 1)
+
+    def rendered_lines(self, count: int) -> list[str]:
+        return ["".join(line) for line in self.lines[:count]]
+
+
 class FakeTuiHarness:
     def __init__(self, app) -> None:
         self.app = app
@@ -413,6 +508,12 @@ class FakeTuiHarness:
     def help_text(self) -> str:
         return flatten_fragments(self.render_window_fragments(self.help_window))
 
+    def screen_lines(self) -> list[str]:
+        return render_node_lines(self.app.layout.container, self.render_window_fragments)
+
+    def screen_width(self) -> int:
+        return max((len(line) for line in self.screen_lines()), default=0)
+
     def selected_tree_line_index(self) -> int:
         marker = MODULE.THEMES["rounded"].cursor_marker
         for index, line in enumerate(self.tree_lines()):
@@ -457,6 +558,41 @@ def make_sample_remotes() -> list[MODULE.RemoteSelection]:
     ]
 
 
+def make_init_example_remotes() -> list[MODULE.RemoteSelection]:
+    return [
+        MODULE.RemoteSelection(
+            name="origin",
+            fetch=MODULE.make_url_selection("fetch", "https://github.com/luckydonald/base"),
+            push=MODULE.make_url_selection("push", "https://github.com/luckydonald/base.git"),
+            push_is_explicit=False,
+        ),
+        MODULE.RemoteSelection(
+            name="empty",
+            fetch=MODULE.make_url_selection("fetch", "https://someone@github.com/EmptyAAS/empty"),
+            push=MODULE.make_url_selection("push", "https://luckydonald@github.com/EmptyAAS/empty"),
+            push_is_explicit=False,
+        ),
+        MODULE.RemoteSelection(
+            name="template",
+            fetch=MODULE.make_url_selection("fetch", "../hoass_template"),
+            push=MODULE.make_url_selection("push", "https://github.com/luckydonald/hoass_plugin-template.git"),
+            push_is_explicit=False,
+        ),
+        MODULE.RemoteSelection(
+            name="clock",
+            fetch=MODULE.make_url_selection(
+                "fetch",
+                "https://luckydonald@github.com/luckydonald/hoass_calendar-alarm-clock.git",
+            ),
+            push=MODULE.make_url_selection(
+                "push",
+                "https://luckydonald@github.com/luckydonald/hoass_calendar-alarm-clock.git",
+            ),
+            push_is_explicit=False,
+        ),
+    ]
+
+
 class TuiTddTests(unittest.TestCase):
     def setUp(self) -> None:
         self.fake_modules = FakePromptToolkitModules()
@@ -486,6 +622,23 @@ class TuiTddTests(unittest.TestCase):
         original = MODULE.time.monotonic
         MODULE.time.monotonic = lambda: value_ref["value"]
         self.addCleanup(setattr, MODULE.time, "monotonic", original)
+
+    def build_terminal_buffer(self, ui: FakeTuiHarness) -> FakeTerminalBuffer:
+        lines = ui.screen_lines()
+        return FakeTerminalBuffer(
+            lines,
+            width=max(ui.screen_width(), 1),
+            height=MODULE.shutil.get_terminal_size(fallback=(80, 24)).lines,
+        )
+
+    def merged_screen_after_keys(self, ui: FakeTuiHarness, keys: list[str]) -> list[str]:
+        buffer = self.build_terminal_buffer(ui)
+        for key in keys:
+            ui.app.renderer.output.operations.clear()
+            ui.press(key)
+            buffer.apply(ui.app.renderer.output.operations)
+        expected = ui.screen_lines()
+        return buffer.rendered_lines(len(expected))
 
     def test_tdd_starts_with_name_field_focused_and_cursor_at_end(self) -> None:
         ui = self.build_ui()
@@ -870,6 +1023,59 @@ class TuiTddTests(unittest.TestCase):
         self.assertEqual(len(ui.tree_lines()), 7)
         self.assertIn(ui.selected_tree_line_index(), range(2, 5))
         self.assertTrue(any("empty" in line for line in ui.tree_lines()))
+
+    def test_tdd_round4_single_down_and_up_preserve_merged_screen(self) -> None:
+        scenarios = [
+            ("sample", make_sample_remotes()),
+            ("init", make_init_example_remotes()),
+        ]
+        for height in (20, 28, 40):
+            for label, remotes in scenarios:
+                with self.subTest(height=height, scenario=label):
+                    self.set_terminal_size(120, height)
+                    ui = self.build_ui(remotes=remotes)
+                    expected = ui.screen_lines()
+                    merged = self.merged_screen_after_keys(ui, ["down", "up"])
+                    self.assertEqual(merged, expected)
+
+    def test_tdd_round4_two_down_and_up_cycles_preserve_merged_screen(self) -> None:
+        scenarios = [
+            ("sample", make_sample_remotes()),
+            ("init", make_init_example_remotes()),
+        ]
+        for height in (20, 28, 40):
+            for label, remotes in scenarios:
+                with self.subTest(height=height, scenario=label):
+                    self.set_terminal_size(120, height)
+                    ui = self.build_ui(remotes=remotes)
+                    expected = ui.screen_lines()
+                    merged = self.merged_screen_after_keys(ui, ["down", "up", "down", "up"])
+                    self.assertEqual(merged, expected)
+
+    def test_tdd_round4_full_down_and_up_path_preserve_merged_screen(self) -> None:
+        scenarios = [
+            ("sample", make_sample_remotes()),
+            ("init", make_init_example_remotes()),
+        ]
+        for height in (20, 28, 40):
+            for label, remotes in scenarios:
+                with self.subTest(height=height, scenario=label):
+                    self.set_terminal_size(120, height)
+                    ui = self.build_ui(remotes=remotes)
+                    selectable_tree_rows = sum(1 for line in ui.tree_lines() if line)
+                    down_keys = ["down"]
+                    down_keys.extend(["down"] * max(0, selectable_tree_rows - 1))
+                    down_keys.extend(["down", "down"])
+                    up_keys = ["up"] * len(down_keys)
+                    expected = ui.screen_lines()
+                    merged = self.merged_screen_after_keys(ui, down_keys + up_keys)
+                    self.assertEqual(merged, expected)
+
+    def test_tdd_round4_single_down_matches_direct_rendered_screen(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        merged = self.merged_screen_after_keys(ui, ["down"])
+        self.assertEqual(merged, ui.screen_lines())
 
 
 if __name__ == "__main__":
