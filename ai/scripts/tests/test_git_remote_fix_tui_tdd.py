@@ -165,6 +165,14 @@ class FakePromptToolkitRuntime:
         self.current_app = None
 
 
+class FakeRenderer:
+    def __init__(self) -> None:
+        self.clear_count = 0
+
+    def clear(self) -> None:
+        self.clear_count += 1
+
+
 class FakeApplication:
     def __init__(self, *, layout, key_bindings, style, full_screen, mouse_support) -> None:
         self.layout = layout
@@ -174,6 +182,7 @@ class FakeApplication:
         self.mouse_support = mouse_support
         self.exit_result = None
         self.invalidate_count = 0
+        self.renderer = FakeRenderer()
         FAKE_RUNTIME.current_app = self
 
     def exit(self, result=None) -> None:
@@ -422,8 +431,14 @@ class TuiTddTests(unittest.TestCase):
         self.fake_modules.install()
         self.addCleanup(self.fake_modules.uninstall)
 
-    def build_ui(self, *, username: str = "luckydonald", theme: str = "rounded") -> FakeTuiHarness:
-        app = MODULE.run_tui(make_sample_remotes(), theme=MODULE.THEMES[theme], username=username)
+    def build_ui(
+        self,
+        *,
+        username: str = "luckydonald",
+        theme: str = "rounded",
+        remotes: list[MODULE.RemoteSelection] | None = None,
+    ) -> FakeTuiHarness:
+        app = MODULE.run_tui(remotes or make_sample_remotes(), theme=MODULE.THEMES[theme], username=username)
         return FakeTuiHarness(app)
 
     def test_tdd_starts_with_name_field_focused_and_cursor_at_end(self) -> None:
@@ -562,6 +577,67 @@ class TuiTddTests(unittest.TestCase):
         self.assertEqual(ui.app.invalidate_count, 0)
         ui.press("r")
         self.assertEqual(ui.app.invalidate_count, 1)
+
+    def test_tdd_refresh_hotkey_clears_the_screen_and_keeps_current_state(self) -> None:
+        ui = self.build_ui()
+        ui.press("down")
+        ui.press("down", times=5)
+        selected_index = ui.selected_tree_line_index()
+        self.assertEqual(ui.app.renderer.clear_count, 0)
+        ui.press("r")
+        self.assertEqual(ui.app.renderer.clear_count, 1)
+        self.assertIs(ui.app.layout.current_window, ui.tree_window)
+        self.assertEqual(ui.selected_tree_line_index(), selected_index)
+
+    def test_tdd_navigation_requests_fresh_redraws_to_prevent_ghost_lines(self) -> None:
+        ui = self.build_ui()
+        self.assertEqual(ui.app.renderer.clear_count, 0)
+        ui.press("down")
+        ui.press("down")
+        ui.press("down")
+        while ui.app.layout.current_window is ui.tree_window:
+            ui.press("down")
+        ui.press("down")
+        self.assertGreaterEqual(ui.app.renderer.clear_count, 5)
+
+    def test_tdd_second_level_active_icon_keeps_active_shape_when_suffix_turns_off(self) -> None:
+        remotes = [
+            MODULE.RemoteSelection(
+                name="origin",
+                fetch=MODULE.make_url_selection("fetch", "https://github.com/example/origin"),
+                push=MODULE.make_url_selection("push", "https://github.com/example/origin"),
+                push_is_explicit=False,
+            )
+        ]
+        remotes[0].fetch.change_username = False
+        remotes[0].fetch.add_git_suffix = False
+        remotes[0].push.change_username = False
+        remotes[0].push.add_git_suffix = False
+
+        ui = self.build_ui(remotes=remotes)
+        ui.press("down")
+        ui.press("down", times=3)
+
+        self.assertIn("○ push", ui.tree_lines()[3])
+        self.assertIn("○ Add .git suffix", ui.tree_lines()[4])
+
+        ui.press("down")
+        ui.press("space")
+        self.assertIn("◒ push", ui.tree_lines()[3])
+        self.assertIn("● Add .git suffix", ui.tree_lines()[4])
+
+        ui.press("up")
+        ui.press("space")
+        self.assertIn("● push", ui.tree_lines()[3])
+        self.assertIn("● Add .git suffix", ui.tree_lines()[4])
+
+        ui.press("down")
+        ui.press("space")
+        self.assertTrue(
+            any(icon in ui.tree_lines()[3] for icon in ("◓ push", "● push")),
+            ui.tree_lines()[3],
+        )
+        self.assertIn("○ Add .git suffix", ui.tree_lines()[4])
 
     def test_tdd_enter_in_name_field_moves_focus_to_multi_select(self) -> None:
         ui = self.build_ui()
