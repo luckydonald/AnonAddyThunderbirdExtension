@@ -1464,6 +1464,7 @@ def run_tui(
 
     @kb.add("q")
     @kb.add("escape")
+    @kb.add("c-c")
     def _cancel(event) -> None:
         app.exit(result=None)
 
