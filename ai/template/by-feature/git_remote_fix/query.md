@@ -98,3 +98,16 @@
       - Correct would be:  `●` push and `○` suffix (`init.md` spec)
       - Implement instead: `◓` push and `○` suffix (actually better)
    - Write this as test first (accepting both `◓` and `●` for step 8.), then fix it.
+
+> Let's do round 3 of fixes (cont'd 2):
+- remember to start with _Writing and committing TTD tests_.
+- commit after each step where it makes sense
+- at least commit after each todo number below, you can commit more often.
+5. now it seems to refresh everything on every input, leading to a lot of flickering.
+   - At least limit it to the current focused/unfocused elements, so a local refresh only
+   - and only if it's the problematic ones (text bar, each first level remote name, Check all)
+6. still 2 spaces/chars too much inside the text box, extend top/bottom border by 2 characters
+7. Make the text box grow up to the end of the terminal (padding -2 cols) if more text is entered
+8. If more text is entered into the text box, 'scroll' the text, via `…` symbol in the front/back as needed.
+   - The empty space to add (blinking `▁`) should always still have space at the end
+9. Fix the text field cursor not blinking once per second but being static.
