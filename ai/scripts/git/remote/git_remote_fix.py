@@ -747,6 +747,11 @@ def run_tui(
             return "class:icon-active"
         return ""
 
+    def git_icon_style(state_name: SelectionState, *, selected: bool) -> str:
+        if selected:
+            return "class:selected-marker"
+        return ""
+
     def url_style(selection: RemoteUrlSelection) -> str:
         return "class:url" if selection.eligible else "class:url-disabled"
 
@@ -1014,7 +1019,7 @@ def run_tui(
                 prefix
                 + [
                     ("", child_prefix + theme.branch_last + " "),
-                    (item_icon_style(git_state, selected=selected), f"{theme.item_icons[git_state]} "),
+                    (git_icon_style(git_state, selected=selected), f"{theme.item_icons[git_state]} "),
                     ("", "Add "),
                     ("class:code", ".git"),
                     ("", " suffix"),
