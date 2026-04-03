@@ -18,6 +18,7 @@ PROMPT_TOOLKIT_PACKAGE = "prompt_toolkit"
 BOOTSTRAP_ENV = "GIT_REMOTE_FIX_BOOTSTRAPPED"
 DEFAULT_THEME_NAME = "rounded"
 INPUT_WIDTH = 40
+INPUT_BORDER_WIDTH = INPUT_WIDTH + 2
 FLASH_FEEDBACK_SECONDS = 0.25
 CURSOR_BAR = "▎"
 CURSOR_BLOCK = "▁"
@@ -809,7 +810,7 @@ def run_tui(
             (style_name, left),
             (style_name, fill * 3),
             (style_name, joint),
-            (style_name, fill * INPUT_WIDTH),
+            (style_name, fill * INPUT_BORDER_WIDTH),
             (style_name, right),
         ]
 
