@@ -536,6 +536,7 @@ def run_tui(
         theme: ThemeGlyphs
         username_buffer: Buffer
         selected_tree_index: int = 0
+        tree_scroll_offset: int = 0
         action_index: int = 0
         preview_action_index: int = 0
         preview_plan: ExecutionPlan | None = None
@@ -583,6 +584,7 @@ def run_tui(
             if not rows:
                 return
             self.selected_tree_index = clamp(self.selected_tree_index + delta, 0, len(rows) - 1)
+            ensure_tree_selection_visible()
             self.clear_status()
 
         def last_tree_index(self) -> int:
@@ -730,6 +732,12 @@ def run_tui(
             lines.pop()
         return lines
 
+    def join_fragment_lines(lines: Sequence[StyleAndTextTuples]) -> StyleAndTextTuples:
+        fragments: StyleAndTextTuples = []
+        for line in lines:
+            append_row(fragments, list(line))
+        return fragments
+
     def line_prefix(selected: bool) -> StyleAndTextTuples:
         if selected:
             return [("class:selected-marker", f"{theme.cursor_marker}  ")]
@@ -845,6 +853,9 @@ def run_tui(
     def terminal_columns() -> int:
         return shutil.get_terminal_size(fallback=(80, 24)).columns
 
+    def terminal_lines() -> int:
+        return shutil.get_terminal_size(fallback=(80, 24)).lines
+
     def max_input_width() -> int:
         return max(INPUT_WIDTH, terminal_columns() - 12)
 
@@ -858,6 +869,9 @@ def run_tui(
 
     def cursor_is_visible() -> bool:
         return (time.monotonic() % 1.0) < 0.5
+
+    def tree_visible_height() -> int:
+        return max(1, terminal_lines() - 13)
 
     state = UiState(remotes=remotes, theme=theme, username_buffer=Buffer(multiline=False))
     state.username_buffer.text = username
@@ -968,7 +982,7 @@ def run_tui(
         fragments.append(("", " " * max(0, width - visible_length)))
         return fragments
 
-    def get_edit_tree_text() -> StyleAndTextTuples:
+    def build_full_tree_text() -> StyleAndTextTuples:
         fragments: StyleAndTextTuples = []
         rows = state.tree_rows()
         if not rows:
@@ -1027,6 +1041,13 @@ def run_tui(
             )
 
         return fragments
+
+    def get_edit_tree_text() -> StyleAndTextTuples:
+        tree_lines = split_fragment_lines(build_full_tree_text())
+        start = clamp(state.tree_scroll_offset, 0, max(0, len(tree_lines) - tree_visible_height()))
+        state.tree_scroll_offset = start
+        end = start + tree_visible_height()
+        return join_fragment_lines(tree_lines[start:end])
 
     def render_actions(actions: list[ActionItem], current_index: int, focused: bool) -> StyleAndTextTuples:
         fragments: StyleAndTextTuples = []
@@ -1303,12 +1324,25 @@ def run_tui(
             display_index += 1
         return mapping
 
+    def total_tree_line_count() -> int:
+        return len(split_fragment_lines(build_full_tree_text()))
+
+    def ensure_tree_selection_visible() -> None:
+        mapping = tree_display_line_index_map()
+        line_index = mapping.get(state.selected_tree_index, 0)
+        height = tree_visible_height()
+        max_scroll = max(0, total_tree_line_count() - height)
+        if line_index < state.tree_scroll_offset or line_index >= state.tree_scroll_offset + height:
+            state.tree_scroll_offset = clamp(line_index - (height // 2), 0, max_scroll)
+
     def tree_screen_row(index: int) -> int | None:
         mapping = tree_display_line_index_map()
         line_index = mapping.get(index)
         if line_index is None:
             return None
-        return 6 + line_index
+        if not (state.tree_scroll_offset <= line_index < state.tree_scroll_offset + tree_visible_height()):
+            return None
+        return 6 + (line_index - state.tree_scroll_offset)
 
     def edit_actions_start_row() -> int:
         tree_line_count = len(split_fragment_lines(get_edit_tree_text()))
@@ -1356,9 +1390,14 @@ def run_tui(
                     continue
                 screen_row = tree_screen_row(index)
                 line_index = tree_display_line_index_map().get(index)
-                if screen_row is None or line_index is None or line_index >= len(tree_lines):
+                visible_line_index = None if line_index is None else line_index - state.tree_scroll_offset
+                if (
+                    screen_row is None
+                    or visible_line_index is None
+                    or not (0 <= visible_line_index < len(tree_lines))
+                ):
                     continue
-                updates[screen_row] = tree_lines[line_index]
+                updates[screen_row] = tree_lines[visible_line_index]
 
         if "actions" in {previous.focus_group, current.focus_group} and 0 in {
             previous.action_index,
@@ -1378,6 +1417,7 @@ def run_tui(
         current = app.layout.current_window
         if current == username_window:
             app.layout.focus(tree_window)
+            ensure_tree_selection_visible()
         elif current == tree_window:
             app.layout.focus(edit_actions_window)
         elif current == edit_actions_window:
@@ -1423,6 +1463,7 @@ def run_tui(
         state.preview_action_index = 0
         state.clear_status()
         app.layout.focus(tree_window)
+        ensure_tree_selection_visible()
         local_redraw()
 
     def activate_action(action_id: str) -> None:
@@ -1479,11 +1520,13 @@ def run_tui(
     @kb.add("down", filter=has_focus(username_window))
     def _input_down(event) -> None:
         app.layout.focus(tree_window)
+        ensure_tree_selection_visible()
         local_redraw()
 
     @kb.add("enter", filter=has_focus(username_window))
     def _input_enter(event) -> None:
         app.layout.focus(tree_window)
+        ensure_tree_selection_visible()
         local_redraw()
 
     @kb.add("left", filter=has_focus(username_window))
@@ -1575,6 +1618,7 @@ def run_tui(
     def _edit_actions_up(event) -> None:
         if state.action_index <= 0:
             state.selected_tree_index = state.last_tree_index()
+            ensure_tree_selection_visible()
             app.layout.focus(tree_window)
             state.clear_status()
             local_redraw()
