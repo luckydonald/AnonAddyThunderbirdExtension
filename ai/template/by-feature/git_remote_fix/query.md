@@ -28,3 +28,10 @@
 21. write the key codes as `tab)  focus`, `A)  check all`, `Q|ESC)  cancel`, `Enter) next element/submit` etc.
 22. Enter in the text field shall go to the multi-select, too.
 23. Shortly (`0.25s`) invert hotkeys upon clicking them, like the macOS menu bar does.
+24. Add a [ Submit → ] button, as 4th group. Again embedded into the up/down and the tab logic.
+25. The submit button is all-colorized (pink) on focus, and inverts for `0.25s` after clicking before we go to the next "page".
+26. Use `⬆︎` and `⬇︎` instead of `Up` and `Down` for move
+27. If in edit field, add `⬅︎` and `➡︎`
+28. Actually the second arrow (`➡︎`) seems wrong, maybe it does not have the right size. What would be a better replacement?
+29. Use `␛` for escape.
+30. Use `MATHEMATICAL MONOSPACE SMALL` characters for alphanumeric-single-char keys, (i.e. for `q` show `𝚚` (`MATHEMATICAL MONOSPACE SMALL Q`: `𝚚`))
