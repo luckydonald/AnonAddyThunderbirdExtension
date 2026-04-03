@@ -2,28 +2,55 @@
 
 Small reusable git base for other repositories.
 
-Right now this repo provides:
-
-- `.editorconfig`
-- `.gitignore`
-- `ai/`
-  - `ai/scripts/hardlink_memories.sh`
-  - `ai/scripts/unlink_memories.sh`
-
-The branch to consume is `mane`.
-
 This history is intentionally rooted at `empty/init` from `https://github.com/EmptyAAS/empty.git`. That gives multiple repos the same empty ancestor commit, which makes it possible to rebase or merge this base into another repo in a predictable way.
 
-## Add This To Your Repo
+## Table of contents
 
-There are two sane ways to adopt this:
+<!-- TOC -->
+* [base](#base)
+  * [Table of contents](#table-of-contents)
+* [Add This To Your Repo](#add-this-to-your-repo)
+  * [What to do](#what-to-do)
+    * [Which Workflow To Choose](#which-workflow-to-choose)
+* [Installation](#installation)
+  * [Setup](#setup)
+  * [Setup: a) Checkout](#setup-a-checkout)
+  * [Setup: b) Rebase Onto `base/mane`](#setup-b-rebase-onto-basemane)
+  * [Setup: c) Merge `base/mane`](#setup-c-merge-basemane)
+  * [After Adopting The Base](#after-adopting-the-base)
+<!-- TOC -->
 
-- rebase your repo on top of `base/mane` if you want this base to become part of your linear history
+# Add This To Your Repo
+
+## Overview
+There are three ways to adopt this:
+
+- start with it from the get-go, creating your branch from `base/mane`.
+  - obviously only works if you haven't commited anything yet.
+  - otherwise see rebase below, that's basically _"plz pretend I started from that and did all my own commits afterward!"_
+- rebase your repo on top of `base/mane` if you want this base to become part of your linear history 
+  - recommended if your git is not yet used by others
 - merge `base/mane` into your repo if you do not want to rewrite history
 
 If you only want a one-time copy of the files, just copy them manually. The steps below are for keeping your repo connected to this base over time.
 
-## One-Time Setup
+### Which Workflow To Choose
+
+Choose rebase if:
+
+- you want this base to sit underneath your repo's commits
+- you prefer a linear history
+- force-pushing rewritten history is acceptable
+
+Choose merge if:
+
+- your branch is already published or shared
+- you want the least disruptive adoption path
+- you are fine with explicit merge commits for base updates
+
+
+# Installation
+## Setup
 
 Add the remotes you need:
 
@@ -42,9 +69,12 @@ git rebase --root --onto empty/init
 
 That keeps your file history intact, but rewrites every commit in the branch so the new root is the shared empty commit.
 
-## a) Rebase Onto `base/mane`
+## Setup: a) Checkout
+todo
 
-Use this if you want a clean linear history and you are comfortable rewriting your branch.
+## Setup: b) Rebase Onto `base/mane`
+
+Use this if you want a clean linear history, and you are comfortable rewriting your branch.
 
 Initial adoption:
 
@@ -65,7 +95,7 @@ Notes:
 - if you already pushed the branch, you will usually need `git push --force-with-lease`
 - this is best for personal branches or repos where force-pushes are acceptable
 
-## b) Merge `base/mane`
+## Setup: c) Merge `base/mane`
 
 Use this if you want to preserve existing history and avoid rebasing published branches.
 
@@ -87,20 +117,6 @@ Notes:
 - this keeps a merge commit for each base update
 - this is the safer choice for shared branches
 - if your repo already shares `empty/init` as an ancestor, the initial `--allow-unrelated-histories` is not needed
-
-## Which Workflow To Choose
-
-Choose rebase if:
-
-- you want this base to sit underneath your repo's commits
-- you prefer a linear history
-- force-pushing rewritten history is acceptable
-
-Choose merge if:
-
-- your branch is already published or shared
-- you want the least disruptive adoption path
-- you are fine with explicit merge commits for base updates
 
 ## After Adopting The Base
 
