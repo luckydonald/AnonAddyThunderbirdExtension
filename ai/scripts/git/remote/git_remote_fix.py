@@ -29,6 +29,7 @@ UP_DOWN_KEYS = "↑|↓"
 LEFT_RIGHT_KEYS = "←|→"
 CHECK_ALL_KEY = "𝚊"
 CHECK_NONE_KEY = "𝚗"
+REFRESH_KEY = "𝚛"
 CANCEL_KEYS = f"𝚚|{ESCAPE_KEY}"
 
 
@@ -744,6 +745,11 @@ def run_tui(
     def key_hint(label: str) -> str:
         return f"{label}{KEY_SEPARATOR}  "
 
+    def refresh_ui() -> None:
+        invalidate = getattr(app, "invalidate", None)
+        if callable(invalidate):
+            invalidate()
+
     state = UiState(remotes=remotes, theme=theme, username_buffer=Buffer(multiline=False))
     state.username_buffer.text = username
     state.username_buffer.cursor_position = len(username)
@@ -949,6 +955,7 @@ def run_tui(
                     f"{key_hint(TAB_KEY)}focus",
                     f"{key_hint(UP_DOWN_KEYS)}move",
                     f"{key_hint(ENTER_KEY)}next element/submit",
+                    f"{key_hint(REFRESH_KEY)}refresh",
                     f"{key_hint(CANCEL_KEYS)}cancel",
                 ]
             )
@@ -961,6 +968,7 @@ def run_tui(
                     f"{key_hint(UP_DOWN_KEYS)}move",
                     f"{key_hint(LEFT_RIGHT_KEYS)}move cursor",
                     f"{key_hint(ENTER_KEY)}next element/submit",
+                    f"{key_hint(REFRESH_KEY)}refresh",
                 ]
             )
             return [("class:muted", text)]
@@ -976,6 +984,7 @@ def run_tui(
                 f"{key_hint(ENTER_KEY)}next element/submit",
                 f"{key_hint(CHECK_ALL_KEY)}check all",
                 f"{key_hint(CHECK_NONE_KEY)}check none",
+                f"{key_hint(REFRESH_KEY)}refresh",
                 f"{key_hint(CANCEL_KEYS)}cancel",
             ]
         )
@@ -1336,6 +1345,10 @@ def run_tui(
     @kb.add("n", filter=Condition(lambda: state.preview_plan is None and not app.layout.has_focus(username_window)))
     def _check_none(event) -> None:
         state.check_none()
+
+    @kb.add("r")
+    def _refresh(event) -> None:
+        refresh_ui()
 
     @kb.add("q")
     @kb.add("escape")

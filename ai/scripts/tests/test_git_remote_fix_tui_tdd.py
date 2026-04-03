@@ -173,10 +173,14 @@ class FakeApplication:
         self.full_screen = full_screen
         self.mouse_support = mouse_support
         self.exit_result = None
+        self.invalidate_count = 0
         FAKE_RUNTIME.current_app = self
 
     def exit(self, result=None) -> None:
         self.exit_result = result
+
+    def invalidate(self) -> None:
+        self.invalidate_count += 1
 
     def press(self, key: str) -> None:
         for binding in self.key_bindings.bindings:
@@ -536,6 +540,7 @@ class TuiTddTests(unittest.TestCase):
         self.assertIn("↑|↓⟯  move", help_text)
         self.assertIn("←|→⟯  move cursor", help_text)
         self.assertIn("⏎⟯  next element/submit", help_text)
+        self.assertIn("𝚛⟯  refresh", help_text)
         self.assertNotIn("𝚊⟯", help_text)
         self.assertNotIn("𝚗⟯", help_text)
         self.assertNotIn("𝚚|␛⟯", help_text)
@@ -549,7 +554,14 @@ class TuiTddTests(unittest.TestCase):
         self.assertIn("⏎⟯  next element/submit", help_text)
         self.assertIn("𝚊⟯  check all", help_text)
         self.assertIn("𝚗⟯  check none", help_text)
+        self.assertIn("𝚛⟯  refresh", help_text)
         self.assertIn("𝚚|␛⟯  cancel", help_text)
+
+    def test_tdd_refresh_hotkey_invalidates_the_app(self) -> None:
+        ui = self.build_ui()
+        self.assertEqual(ui.app.invalidate_count, 0)
+        ui.press("r")
+        self.assertEqual(ui.app.invalidate_count, 1)
 
     def test_tdd_enter_in_name_field_moves_focus_to_multi_select(self) -> None:
         ui = self.build_ui()
