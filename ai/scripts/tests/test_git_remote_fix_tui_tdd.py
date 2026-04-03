@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import types
 import unittest
@@ -441,6 +442,16 @@ class TuiTddTests(unittest.TestCase):
         app = MODULE.run_tui(remotes or make_sample_remotes(), theme=MODULE.THEMES[theme], username=username)
         return FakeTuiHarness(app)
 
+    def set_terminal_width(self, columns: int) -> None:
+        original = MODULE.shutil.get_terminal_size
+        MODULE.shutil.get_terminal_size = lambda fallback=(80, 24): os.terminal_size((columns, 24))
+        self.addCleanup(setattr, MODULE.shutil, "get_terminal_size", original)
+
+    def set_monotonic_time(self, value_ref: dict[str, float]) -> None:
+        original = MODULE.time.monotonic
+        MODULE.time.monotonic = lambda: value_ref["value"]
+        self.addCleanup(setattr, MODULE.time, "monotonic", original)
+
     def test_tdd_starts_with_name_field_focused_and_cursor_at_end(self) -> None:
         ui = self.build_ui()
         self.assertIs(ui.app.layout.current_window, ui.username_window)
@@ -591,7 +602,7 @@ class TuiTddTests(unittest.TestCase):
         self.assertIs(ui.app.layout.current_window, ui.tree_window)
         self.assertEqual(ui.selected_tree_line_index(), selected_index)
 
-    def test_tdd_navigation_requests_fresh_redraws_to_prevent_ghost_lines(self) -> None:
+    def test_tdd_navigation_does_not_full_clear_on_every_input(self) -> None:
         ui = self.build_ui()
         self.assertEqual(ui.app.renderer.clear_count, 0)
         ui.press("down")
@@ -600,7 +611,8 @@ class TuiTddTests(unittest.TestCase):
         while ui.app.layout.current_window is ui.tree_window:
             ui.press("down")
         ui.press("down")
-        self.assertGreaterEqual(ui.app.renderer.clear_count, 5)
+        self.assertEqual(ui.app.renderer.clear_count, 0)
+        self.assertGreater(ui.app.invalidate_count, 0)
 
     def test_tdd_second_level_active_icon_keeps_active_shape_when_suffix_turns_off(self) -> None:
         remotes = [
@@ -640,6 +652,61 @@ class TuiTddTests(unittest.TestCase):
             ui.tree_lines()[3],
         )
         self.assertIn("○ Add .git suffix", ui.tree_lines()[4])
+
+    def test_tdd_input_border_extends_by_two_characters(self) -> None:
+        ui = self.build_ui(theme="rounded")
+        self.assertEqual(
+            flatten_fragments(ui.render_window_fragments(ui.input_container.children[0])),
+            "  ╭───┬──────────────────────────────────────────╮",
+        )
+        self.assertEqual(
+            flatten_fragments(ui.render_window_fragments(ui.input_container.children[2])),
+            "  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯",
+        )
+
+    def test_tdd_input_box_grows_to_terminal_width_minus_two(self) -> None:
+        self.set_terminal_width(72)
+        ui = self.build_ui(username="luckydonald-with-a-very-long-name-that-should-grow")
+        top_line = flatten_fragments(ui.render_window_fragments(ui.input_container.children[0]))
+        mid_line = ui.render_input_line()
+        bottom_line = flatten_fragments(ui.render_window_fragments(ui.input_container.children[2]))
+        self.assertEqual(len(top_line), 70)
+        self.assertEqual(len(mid_line), 70)
+        self.assertEqual(len(bottom_line), 70)
+
+    def test_tdd_long_input_scrolls_with_leading_ellipsis_and_keeps_cursor_space(self) -> None:
+        self.set_terminal_width(72)
+        ui = self.build_ui(username="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdef")
+        line = ui.render_input_line()
+        self.assertIn("…", line)
+        self.assertIn("▁ ", line)
+
+    def test_tdd_long_input_scrolls_with_both_ellipses_when_cursor_is_in_the_middle(self) -> None:
+        self.set_terminal_width(72)
+        ui = self.build_ui(username="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdef")
+        ui.press("left", times=20)
+        line = ui.render_input_line()
+        self.assertGreaterEqual(line.count("…"), 2)
+
+    def test_tdd_cursor_blinks_once_per_second_instead_of_staying_static(self) -> None:
+        clock = {"value": 0.10}
+        self.set_monotonic_time(clock)
+        ui = self.build_ui(theme="boxy")
+
+        blink_on_line = ui.render_input_line()
+        blink_on_fragments = ui.render_window_fragments(ui.username_window)
+
+        clock["value"] = 0.75
+        blink_off_line = ui.render_input_line()
+        blink_off_fragments = ui.render_window_fragments(ui.username_window)
+
+        self.assertNotEqual(blink_on_line, blink_off_line)
+        self.assertIn("▁", blink_on_line)
+        self.assertNotIn("▁", blink_off_line)
+        self.assertTrue(
+            any(style == "class:selected-marker" for style, text in blink_off_fragments if text),
+            blink_off_fragments,
+        )
 
     def test_tdd_enter_in_name_field_moves_focus_to_multi_select(self) -> None:
         ui = self.build_ui()
