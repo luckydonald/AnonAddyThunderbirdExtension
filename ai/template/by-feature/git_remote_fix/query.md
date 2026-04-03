@@ -130,3 +130,15 @@
 15. Scrolling text field + checkboxes when the focus gets out of visible bounding box does not work
     - preferably keeping the current input field centered-ish
     - of course the ends should end up at the end, no overscroll
+
+› Let's do round 4 of fixes:
+- remember to start with _Writing and committing TTD tests_.
+- commit after each step where it makes sense
+
+- commit message here in the `base` repo shall be as follows:
+  - always start with `[base] ai: run: `
+  - a short summary
+  - followed by the fix round and the step
+  - linebreak
+  - followed by a detailed in the second+ lines of the summary, with as many lines as needed.
+- at least commit after each TODO number below, you can commit more often.
