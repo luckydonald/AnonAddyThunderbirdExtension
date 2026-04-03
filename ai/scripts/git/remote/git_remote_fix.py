@@ -768,6 +768,20 @@ def run_tui(
     def refresh_ui() -> None:
         redraw_from_scratch()
 
+    def terminal_columns() -> int:
+        return shutil.get_terminal_size(fallback=(80, 24)).columns
+
+    def max_input_width() -> int:
+        return max(INPUT_WIDTH, terminal_columns() - 12)
+
+    def current_input_width() -> int:
+        if len(state.username_buffer.text) + 1 > INPUT_WIDTH:
+            return max_input_width()
+        return INPUT_WIDTH
+
+    def current_input_border_width() -> int:
+        return current_input_width() + 2
+
     state = UiState(remotes=remotes, theme=theme, username_buffer=Buffer(multiline=False))
     state.username_buffer.text = username
     state.username_buffer.cursor_position = len(username)
@@ -810,7 +824,7 @@ def run_tui(
             (style_name, left),
             (style_name, fill * 3),
             (style_name, joint),
-            (style_name, fill * INPUT_BORDER_WIDTH),
+            (style_name, fill * current_input_border_width()),
             (style_name, right),
         ]
 
@@ -833,7 +847,7 @@ def run_tui(
         else:
             fragments.append(("", value))
 
-        fragments.append(("", " " * max(0, INPUT_WIDTH - visible_length)))
+        fragments.append(("", " " * max(0, current_input_width() - visible_length)))
         return fragments
 
     def get_edit_tree_text() -> StyleAndTextTuples:
@@ -1015,7 +1029,7 @@ def run_tui(
         pass
     username_window = Window(
         content=username_control,
-        width=Dimension(preferred=INPUT_WIDTH, min=INPUT_WIDTH),
+        width=Dimension(min=INPUT_WIDTH),
         height=1,
         wrap_lines=False,
         dont_extend_width=True,
