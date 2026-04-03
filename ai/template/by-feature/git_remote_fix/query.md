@@ -75,3 +75,23 @@
           - focused actual (2/3): `  │ ✎ │ luckydoonal▁▁                            │`
           - focused actual (3/3): `  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯`
 3. I would expect `r` to completely clear the screen and draw it all from scratch, based on the current state.
+4. 2nd level _active_ state has wrong icon. Here's a full test sequence:
+   1. Given a push or fetch, which has a `.git` suffix, both currently turned off
+   2. Observe:
+      1. State: push: off, suffix off
+      2. both have the `○` icon. (correct)
+   3. Toggle the _suffix_ option _on_
+   4. Observe:
+      1. State: push: off, suffix on
+      2. `◒` push and `●` suffix (correct)
+   5. Toggle the _fetch/push_ option _on_
+   6. Observe:
+      1. State: push: on, suffix on
+      2. `●` push and `●` suffix (correct)
+   7. Toggle the _suffix_ option _off_ again.
+   8. Observe:
+      1. State: push: on, suffix off
+      2. `◒` push and `○` suffix (incorrect!)
+      - Correct would be:  `●` push and `○` suffix (`init.md` spec)
+      - Implement instead: `◓` push and `○` suffix (actually better)
+   - Write this as test first (accepting both `◓` and `●` for step 8.), then fix it.
