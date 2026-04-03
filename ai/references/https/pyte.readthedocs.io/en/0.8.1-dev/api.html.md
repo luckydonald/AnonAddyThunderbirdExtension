@@ -4,18 +4,19 @@
 
 This module provides three stream implementations with different features; for starters, here’s a quick example of how streams are typically used:
 
-\>>> import pyte
-\>>> screen \= pyte.Screen(80, 24)
-\>>> stream \= pyte.Stream(screen)
-\>>> stream.feed("\[5B")  \# Move the cursor down 5 rows.
-\>>> screen.cursor.y
-5
+```python
+import pyte
+screen = pyte.Screen(80, 24)
+stream = pyte.Stream(screen)
+stream.feed("\[5B")  # Move the cursor down 5 rows.
+assert(screen.cursor.y == 5)
+```
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>copyright:</th><td><ol start="3"><li>2011-2012 by Selectel.</li></ol></td></tr><tr><th>copyright:</th><td><p>(c) 2012-2017 by pyte authors and contributors, see AUTHORS for details.</p></td></tr><tr><th>license:</th><td><p>LGPL, see LICENSE for more details.</p></td></tr></tbody></table>
 
 ### pyte.Stream[¶](#pyte-stream "Permalink to this headline")
 
-_class_ `pyte.``Stream`(_screen=None_, _strict=True_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/streams.py#L35-L387)[¶](#pyte.Stream "Permalink to this definition")
+_class_ `pyte`.`Stream`(_screen=None_, _strict=True_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/streams.py#L35-L387)[¶](#pyte.Stream "Permalink to this definition")
 
 A stream is a state machine that parses a stream of bytes and dispatches events based on what it sees.
 
@@ -33,7 +34,7 @@ For details on console codes listed bellow in `basic`, [`escape`](#module-pyte.e
 
 ### pyte.ByteStream[¶](#pyte-bytestream "Permalink to this headline")
 
-_class_ `pyte.``ByteStream`(_\*args_, _\*\*kwargs_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/streams.py#L391-L420)[¶](#pyte.ByteStream "Permalink to this definition")
+_class_ `pyte`.`ByteStream`(_\*args_, _\*\*kwargs_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/streams.py#L391-L420)[¶](#pyte.ByteStream "Permalink to this definition")
 
 A stream which takes bytes as input.
 
@@ -59,19 +60,19 @@ It would be nice to split those features into mixin classes, rather than subclas
 
 ### pyte.screens.Screen[¶](#pyte-screens-screen "Permalink to this headline")
 
-_class_ `pyte.screens.``Cursor`(_x_, _y_, _attrs=Char(data=' '_, _fg='default'_, _bg='default'_, _bold=False_, _italics=False_, _underscore=False_, _strikethrough=False_, _reverse=False_, _blink=False)_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L110-L125)[¶](#pyte.screens.Cursor "Permalink to this definition")
+_class_ `pyte.screens`.`Cursor`(_x_, _y_, _attrs=Char(data=' '_, _fg='default'_, _bg='default'_, _bold=False_, _italics=False_, _underscore=False_, _strikethrough=False_, _reverse=False_, _blink=False)_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L110-L125)[¶](#pyte.screens.Cursor "Permalink to this definition")
 
 Screen cursor.
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>Parameters:</th><td><ul><li><strong>x</strong> (<a href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – 0-based horizontal cursor position.</li><li><strong>y</strong> (<a href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – 0-based vertical cursor position.</li><li><strong>attrs</strong> (<a href="#pyte.screens.Char" title="pyte.screens.Char"><em>pyte.screens.Char</em></a>) – cursor attributes (see <a href="#pyte.screens.Screen.select_graphic_rendition" title="pyte.screens.Screen.select_graphic_rendition"><code><span>select_graphic_rendition()</span></code></a> for details).</li></ul></td></tr></tbody></table>
 
-_class_ `pyte.screens.``Char`[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L71-L107)[¶](#pyte.screens.Char "Permalink to this definition")
+_class_ `pyte.screens`.`Char`[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L71-L107)[¶](#pyte.screens.Char "Permalink to this definition")
 
 A single styled on-screen character.
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>Parameters:</th><td><ul><li><strong>data</strong> (<a href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – unicode character. Invariant: <code><span>len(data)</span> <span>==</span> <span>1</span></code>.</li><li><strong>fg</strong> (<a href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – foreground colour. Defaults to <code><span>"default"</span></code>.</li><li><strong>bg</strong> (<a href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – background colour. Defaults to <code><span>"default"</span></code>.</li><li><strong>bold</strong> (<a href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – flag for rendering the character using bold font. Defaults to <code><span>False</span></code>.</li><li><strong>italics</strong> (<a href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – flag for rendering the character using italic font. Defaults to <code><span>False</span></code>.</li><li><strong>underscore</strong> (<a href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – flag for rendering the character underlined. Defaults to <code><span>False</span></code>.</li><li><strong>strikethrough</strong> (<a href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – flag for rendering the character with a strike-through line. Defaults to <code><span>False</span></code>.</li><li><strong>reverse</strong> (<a href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – flag for swapping foreground and background colours during rendering. Defaults to <code><span>False</span></code>.</li><li><strong>blink</strong> (<a href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – flag for rendering the character blinked. Defaults to <code><span>False</span></code>.</li></ul></td></tr></tbody></table>
 
-_class_ `pyte.screens.``Screen`(_columns_, _lines_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L147-L1068)[¶](#pyte.screens.Screen "Permalink to this definition")
+_class_ `pyte.screens`.`Screen`(_columns_, _lines_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L147-L1068)[¶](#pyte.screens.Screen "Permalink to this definition")
 
 A screen is an in-memory matrix of characters that represents the screen display of the terminal. It can be instantiated on its own and given explicit commands, or it can be attached to a stream and will respond to events.
 
@@ -421,7 +422,7 @@ By default is a noop.
 
 ### pyte.screens.DiffScreen[¶](#pyte-screens-diffscreen "Permalink to this headline")
 
-_class_ `pyte.screens.``DiffScreen`(_\*args_, _\*\*kwargs_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L1071-L1089)[¶](#pyte.screens.DiffScreen "Permalink to this definition")
+_class_ `pyte.screens`.`DiffScreen`(_\*args_, _\*\*kwargs_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L1071-L1089)[¶](#pyte.screens.DiffScreen "Permalink to this definition")
 
 A screen subclass, which maintains a set of dirty lines in its `dirty` attribute. The end user is responsible for emptying a set, when a diff is applied.
 
@@ -429,9 +430,9 @@ Deprecated since version 0.7.0: The functionality contained in this class has be
 
 ### pyte.screens.HistoryScreen[¶](#pyte-screens-historyscreen "Permalink to this headline")
 
-_class_ `pyte.screens.``History`(_top_, _bottom_, _ratio_, _size_, _position_)[¶](#pyte.screens.History "Permalink to this definition")
+_class_ `pyte.screens`.`History`(_top_, _bottom_, _ratio_, _size_, _position_)[¶](#pyte.screens.History "Permalink to this definition")
 
-_class_ `pyte.screens.``HistoryScreen`(_columns_, _lines_, _history=100_, _ratio=0.5_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L1095-L1267)[¶](#pyte.screens.HistoryScreen "Permalink to this definition")
+_class_ `pyte.screens`.`HistoryScreen`(_columns_, _lines_, _history=100_, _ratio=0.5_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L1095-L1267)[¶](#pyte.screens.HistoryScreen "Permalink to this definition")
 
 A :class:~\`pyte.screens.Screen\` subclass, which keeps track of screen history and allows pagination. This is not linux-specific, but still useful; see page 462 of VT520 User’s Manual.
 
@@ -503,7 +504,7 @@ Move the screen page down through the history buffer.
 
 ### pyte.screens.DebugScreen[¶](#pyte-screens-debugscreen "Permalink to this headline")
 
-_class_ `pyte.screens.``DebugScreen`(_to=<\_io.TextIOWrapper name='<stderr>' mode='w' encoding='UTF-8'>_, _only=()_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L1290-L1331)[¶](#pyte.screens.DebugScreen "Permalink to this definition")
+_class_ `pyte.screens`.`DebugScreen`(_to=<\_io.TextIOWrapper name='<stderr>' mode='w' encoding='UTF-8'>_, _only=()_)[\[source\]](https://github.com/selectel/pyte/tree/master/pyte/screens.py#L1290-L1331)[¶](#pyte.screens.DebugScreen "Permalink to this definition")
 
 A screen which dumps a subset of the received events to a file.
 
@@ -536,31 +537,31 @@ The latter are shifted 5 times to the right, to be easily distinguishable from t
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>copyright:</th><td><ol start="3"><li>2011-2012 by Selectel.</li></ol></td></tr><tr><th>copyright:</th><td><p>(c) 2012-2017 by pyte authors and contributors, see AUTHORS for details.</p></td></tr><tr><th>license:</th><td><p>LGPL, see LICENSE for more details.</p></td></tr></tbody></table>
 
-`pyte.modes.``LNM` _= 20_[¶](#pyte.modes.LNM "Permalink to this definition")
+`pyte.modes`.`LNM` _= 20_[¶](#pyte.modes.LNM "Permalink to this definition")
 
 _Line Feed/New Line Mode_: When enabled, causes a received [`LF`](#pyte.control.LF "pyte.control.LF"), [`pyte.control.FF`](#pyte.control.FF "pyte.control.FF"), or [`VT`](#pyte.control.VT "pyte.control.VT") to move the cursor to the first column of the next line.
 
-`pyte.modes.``IRM` _= 4_[¶](#pyte.modes.IRM "Permalink to this definition")
+`pyte.modes`.`IRM` _= 4_[¶](#pyte.modes.IRM "Permalink to this definition")
 
 _Insert/Replace Mode_: When enabled, new display characters move old display characters to the right. Characters moved past the right margin are lost. Otherwise, new display characters replace old display characters at the cursor position.
 
-`pyte.modes.``DECTCEM` _= 800_[¶](#pyte.modes.DECTCEM "Permalink to this definition")
+`pyte.modes`.`DECTCEM` _= 800_[¶](#pyte.modes.DECTCEM "Permalink to this definition")
 
 _Text Cursor Enable Mode_: determines if the text cursor is visible.
 
-`pyte.modes.``DECSCNM` _= 160_[¶](#pyte.modes.DECSCNM "Permalink to this definition")
+`pyte.modes`.`DECSCNM` _= 160_[¶](#pyte.modes.DECSCNM "Permalink to this definition")
 
 _Screen Mode_: toggles screen-wide reverse-video mode.
 
-`pyte.modes.``DECOM` _= 192_[¶](#pyte.modes.DECOM "Permalink to this definition")
+`pyte.modes`.`DECOM` _= 192_[¶](#pyte.modes.DECOM "Permalink to this definition")
 
 _Origin Mode_: allows cursor addressing relative to a user-defined origin. This mode resets when the terminal is powered up or reset. It does not affect the erase in display (ED) function.
 
-`pyte.modes.``DECAWM` _= 224_[¶](#pyte.modes.DECAWM "Permalink to this definition")
+`pyte.modes`.`DECAWM` _= 224_[¶](#pyte.modes.DECAWM "Permalink to this definition")
 
 _Auto Wrap Mode_: selects where received graphic characters appear when the cursor is at the right margin.
 
-`pyte.modes.``DECCOLM` _= 96_[¶](#pyte.modes.DECCOLM "Permalink to this definition")
+`pyte.modes`.`DECCOLM` _= 96_[¶](#pyte.modes.DECCOLM "Permalink to this definition")
 
 _Column Mode_: selects the number of columns per line (80 or 132) on the screen.
 
@@ -570,75 +571,75 @@ This module defines simple control sequences, recognized by `Stream`, the set of
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>copyright:</th><td><ol start="3"><li>2011-2012 by Selectel.</li></ol></td></tr><tr><th>copyright:</th><td><p>(c) 2012-2017 by pyte authors and contributors, see AUTHORS for details.</p></td></tr><tr><th>license:</th><td><p>LGPL, see LICENSE for more details.</p></td></tr></tbody></table>
 
-`pyte.control.``SP` _= ' '_[¶](#pyte.control.SP "Permalink to this definition")
+`pyte.control`.`SP` = `' '` [¶](#pyte.control.SP "Permalink to this definition")
 
 _Space_: Not suprisingly – `" "`.
 
-`pyte.control.``NUL` _= '\\x00'_[¶](#pyte.control.NUL "Permalink to this definition")
+`pyte.control`.`NUL` = `'\\x00'` [¶](#pyte.control.NUL "Permalink to this definition")
 
 _Null_: Does nothing.
 
-`pyte.control.``BEL` _= '\\x07'_[¶](#pyte.control.BEL "Permalink to this definition")
+`pyte.control`.`BEL` = `'\\x07'` [¶](#pyte.control.BEL "Permalink to this definition")
 
 _Bell_: Beeps.
 
-`pyte.control.``BS` _= '\\x08'_[¶](#pyte.control.BS "Permalink to this definition")
+`pyte.control`.`BS` = `'\\x08'` [¶](#pyte.control.BS "Permalink to this definition")
 
 _Backspace_: Backspace one column, but not past the begining of the line.
 
-`pyte.control.``HT` _= '\\t'_[¶](#pyte.control.HT "Permalink to this definition")
+`pyte.control`.`HT` = `'\\t'` [¶](#pyte.control.HT "Permalink to this definition")
 
 _Horizontal tab_: Move cursor to the next tab stop, or to the end of the line if there is no earlier tab stop.
 
-`pyte.control.``LF` _= '\\n'_[¶](#pyte.control.LF "Permalink to this definition")
+`pyte.control`.`LF` = `'\\n'` [¶](#pyte.control.LF "Permalink to this definition")
 
 _Linefeed_: Give a line feed, and, if [`pyte.modes.LNM`](#pyte.modes.LNM "pyte.modes.LNM") (new line mode) is set also a carriage return.
 
-`pyte.control.``VT` _= '\\x0b'_[¶](#pyte.control.VT "Permalink to this definition")
+`pyte.control`.`VT` = `'\\x0b'` [¶](#pyte.control.VT "Permalink to this definition")
 
 _Vertical tab_: Same as [`LF`](#pyte.control.LF "pyte.control.LF").
 
-`pyte.control.``FF` _= '\\x0c'_[¶](#pyte.control.FF "Permalink to this definition")
+`pyte.control`.`FF` = `'\\x0c'` [¶](#pyte.control.FF "Permalink to this definition")
 
 _Form feed_: Same as [`LF`](#pyte.control.LF "pyte.control.LF").
 
-`pyte.control.``CR` _= '\\r'_[¶](#pyte.control.CR "Permalink to this definition")
+`pyte.control`.`CR` = `'\\r'` [¶](#pyte.control.CR "Permalink to this definition")
 
 _Carriage return_: Move cursor to left margin on current line.
 
-`pyte.control.``SO` _= '\\x0e'_[¶](#pyte.control.SO "Permalink to this definition")
+`pyte.control`.`SO` = `'\\x0e'` [¶](#pyte.control.SO "Permalink to this definition")
 
 _Shift out_: Activate G1 character set.
 
-`pyte.control.``SI` _= '\\x0f'_[¶](#pyte.control.SI "Permalink to this definition")
+`pyte.control`.`SI` = `'\\x0f'` [¶](#pyte.control.SI "Permalink to this definition")
 
 _Shift in_: Activate G0 character set.
 
-`pyte.control.``CAN` _= '\\x18'_[¶](#pyte.control.CAN "Permalink to this definition")
+`pyte.control`.`CAN` = `'\\x18'` [¶](#pyte.control.CAN "Permalink to this definition")
 
 _Cancel_: Interrupt escape sequence. If received during an escape or control sequence, cancels the sequence and displays substitution character.
 
-`pyte.control.``SUB` _= '\\x1a'_[¶](#pyte.control.SUB "Permalink to this definition")
+`pyte.control`.`SUB` = `'\\x1a'` [¶](#pyte.control.SUB "Permalink to this definition")
 
 _Substitute_: Same as [`CAN`](#pyte.control.CAN "pyte.control.CAN").
 
-`pyte.control.``ESC` _= '\\x1b'_[¶](#pyte.control.ESC "Permalink to this definition")
+`pyte.control`.`ESC` = `'\\x1b'` [¶](#pyte.control.ESC "Permalink to this definition")
 
 _Escape_: Starts an escape sequence.
 
-`pyte.control.``DEL` _= '\\x7f'_[¶](#pyte.control.DEL "Permalink to this definition")
+`pyte.control`.`DEL` = `'\\x7f'` [¶](#pyte.control.DEL "Permalink to this definition")
 
 _Delete_: Is ignored.
 
-`pyte.control.``CSI_C0` _= '\\x1b\['_[¶](#pyte.control.CSI_C0 "Permalink to this definition")
+`pyte.control`.`CSI_C0` = `'\\x1b\['` [¶](#pyte.control.CSI_C0 "Permalink to this definition")
 
 _Control sequence introducer_.
 
-`pyte.control.``ST_C0` _= '\\x1b\\\\'_[¶](#pyte.control.ST_C0 "Permalink to this definition")
+`pyte.control`.`ST_C0` = `'\\x1b\\\\'` [¶](#pyte.control.ST_C0 "Permalink to this definition")
 
 _String terminator_.
 
-`pyte.control.``OSC_C0` _= '\\x1b\]'_[¶](#pyte.control.OSC_C0 "Permalink to this definition")
+`pyte.control`.`OSC_C0` = `'\\x1b\]'` [¶](#pyte.control.OSC_C0 "Permalink to this definition")
 
 _Operating system command_.
 
@@ -648,143 +649,143 @@ This module defines both CSI and non-CSI escape sequences, recognized by `Stream
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>copyright:</th><td><ol start="3"><li>2011-2012 by Selectel.</li></ol></td></tr><tr><th>copyright:</th><td><p>(c) 2012-2017 by pyte authors and contributors, see AUTHORS for details.</p></td></tr><tr><th>license:</th><td><p>LGPL, see LICENSE for more details.</p></td></tr></tbody></table>
 
-`pyte.escape.``RIS` _= 'c'_[¶](#pyte.escape.RIS "Permalink to this definition")
+`pyte.escape`.`RIS` = `'c'` [¶](#pyte.escape.RIS "Permalink to this definition")
 
 _Reset_.
 
-`pyte.escape.``IND` _= 'D'_[¶](#pyte.escape.IND "Permalink to this definition")
+`pyte.escape`.`IND` = `'D'` [¶](#pyte.escape.IND "Permalink to this definition")
 
 _Index_: Move cursor down one line in same column. If the cursor is at the bottom margin, the screen performs a scroll-up.
 
-`pyte.escape.``NEL` _= 'E'_[¶](#pyte.escape.NEL "Permalink to this definition")
+`pyte.escape`.`NEL` = `'E'` [¶](#pyte.escape.NEL "Permalink to this definition")
 
 _Next line_: Same as [`pyte.control.LF`](#pyte.control.LF "pyte.control.LF").
 
-`pyte.escape.``HTS` _= 'H'_[¶](#pyte.escape.HTS "Permalink to this definition")
+`pyte.escape`.`HTS` = `'H'` [¶](#pyte.escape.HTS "Permalink to this definition")
 
 Tabulation set: Set a horizontal tab stop at cursor position.
 
-`pyte.escape.``RI` _= 'M'_[¶](#pyte.escape.RI "Permalink to this definition")
+`pyte.escape`.`RI` = `'M'` [¶](#pyte.escape.RI "Permalink to this definition")
 
 _Reverse index_: Move cursor up one line in same column. If the cursor is at the top margin, the screen performs a scroll-down.
 
-`pyte.escape.``DECSC` _= '7'_[¶](#pyte.escape.DECSC "Permalink to this definition")
+`pyte.escape`.`DECSC` = `'7'` [¶](#pyte.escape.DECSC "Permalink to this definition")
 
 Save cursor: Save cursor position, character attribute (graphic rendition), character set, and origin mode selection (see [`DECRC`](#pyte.escape.DECRC "pyte.escape.DECRC")).
 
-`pyte.escape.``DECRC` _= '8'_[¶](#pyte.escape.DECRC "Permalink to this definition")
+`pyte.escape`.`DECRC` = `'8'` [¶](#pyte.escape.DECRC "Permalink to this definition")
 
 _Restore cursor_: Restore previously saved cursor position, character attribute (graphic rendition), character set, and origin mode selection. If none were saved, move cursor to home position.
 
-`pyte.escape.``DECALN` _= '8'_[¶](#pyte.escape.DECALN "Permalink to this definition")
+`pyte.escape`.`DECALN` = `'8'` [¶](#pyte.escape.DECALN "Permalink to this definition")
 
 _Alignment display_: Fill screen with uppercase E’s for testing screen focus and alignment.
 
-`pyte.escape.``ICH` _= '@'_[¶](#pyte.escape.ICH "Permalink to this definition")
+`pyte.escape`.`ICH` = `'@'` [¶](#pyte.escape.ICH "Permalink to this definition")
 
 _Insert character_: Insert the indicated # of blank characters.
 
-`pyte.escape.``CUU` _= 'A'_[¶](#pyte.escape.CUU "Permalink to this definition")
+`pyte.escape`.`CUU` = `'A'` [¶](#pyte.escape.CUU "Permalink to this definition")
 
 _Cursor up_: Move cursor up the indicated # of lines in same column. Cursor stops at top margin.
 
-`pyte.escape.``CUD` _= 'B'_[¶](#pyte.escape.CUD "Permalink to this definition")
+`pyte.escape`.`CUD` = `'B'` [¶](#pyte.escape.CUD "Permalink to this definition")
 
 _Cursor down_: Move cursor down the indicated # of lines in same column. Cursor stops at bottom margin.
 
-`pyte.escape.``CUF` _= 'C'_[¶](#pyte.escape.CUF "Permalink to this definition")
+`pyte.escape`.`CUF` = `'C'` [¶](#pyte.escape.CUF "Permalink to this definition")
 
 _Cursor forward_: Move cursor right the indicated # of columns. Cursor stops at right margin.
 
-`pyte.escape.``CUB` _= 'D'_[¶](#pyte.escape.CUB "Permalink to this definition")
+`pyte.escape`.`CUB` = `'D'` [¶](#pyte.escape.CUB "Permalink to this definition")
 
 _Cursor back_: Move cursor left the indicated # of columns. Cursor stops at left margin.
 
-`pyte.escape.``CNL` _= 'E'_[¶](#pyte.escape.CNL "Permalink to this definition")
+`pyte.escape`.`CNL` = `'E'` [¶](#pyte.escape.CNL "Permalink to this definition")
 
 _Cursor next line_: Move cursor down the indicated # of lines to column 1.
 
-`pyte.escape.``CPL` _= 'F'_[¶](#pyte.escape.CPL "Permalink to this definition")
+`pyte.escape`.`CPL` = `'F'` [¶](#pyte.escape.CPL "Permalink to this definition")
 
 _Cursor previous line_: Move cursor up the indicated # of lines to column 1.
 
-`pyte.escape.``CHA` _= 'G'_[¶](#pyte.escape.CHA "Permalink to this definition")
+`pyte.escape`.`CHA` = `'G'` [¶](#pyte.escape.CHA "Permalink to this definition")
 
 _Cursor horizontal align_: Move cursor to the indicated column in current line.
 
-`pyte.escape.``CUP` _= 'H'_[¶](#pyte.escape.CUP "Permalink to this definition")
+`pyte.escape`.`CUP` = `'H'` [¶](#pyte.escape.CUP "Permalink to this definition")
 
 _Cursor position_: Move cursor to the indicated line, column (origin at `1, 1`).
 
-`pyte.escape.``ED` _= 'J'_[¶](#pyte.escape.ED "Permalink to this definition")
+`pyte.escape`.`ED` = `'J'` [¶](#pyte.escape.ED "Permalink to this definition")
 
 _Erase data_ (default: from cursor to end of line).
 
-`pyte.escape.``EL` _= 'K'_[¶](#pyte.escape.EL "Permalink to this definition")
+`pyte.escape`.`EL` = `'K'` [¶](#pyte.escape.EL "Permalink to this definition")
 
 _Erase in line_ (default: from cursor to end of line).
 
-`pyte.escape.``IL` _= 'L'_[¶](#pyte.escape.IL "Permalink to this definition")
+`pyte.escape`.`IL` = `'L'` [¶](#pyte.escape.IL "Permalink to this definition")
 
 _Insert line_: Insert the indicated # of blank lines, starting from the current line. Lines displayed below cursor move down. Lines moved past the bottom margin are lost.
 
-`pyte.escape.``DL` _= 'M'_[¶](#pyte.escape.DL "Permalink to this definition")
+`pyte.escape`.`DL` = `'M'` [¶](#pyte.escape.DL "Permalink to this definition")
 
 _Delete line_: Delete the indicated # of lines, starting from the current line. As lines are deleted, lines displayed below cursor move up. Lines added to bottom of screen have spaces with same character attributes as last line move up.
 
-`pyte.escape.``DCH` _= 'P'_[¶](#pyte.escape.DCH "Permalink to this definition")
+`pyte.escape`.`DCH` = `'P'` [¶](#pyte.escape.DCH "Permalink to this definition")
 
 _Delete character_: Delete the indicated # of characters on the current line. When character is deleted, all characters to the right of cursor move left.
 
-`pyte.escape.``ECH` _= 'X'_[¶](#pyte.escape.ECH "Permalink to this definition")
+`pyte.escape`.`ECH` = `'X'` [¶](#pyte.escape.ECH "Permalink to this definition")
 
 _Erase character_: Erase the indicated # of characters on the current line.
 
-`pyte.escape.``HPR` _= 'a'_[¶](#pyte.escape.HPR "Permalink to this definition")
+`pyte.escape`.`HPR` = `'a'` [¶](#pyte.escape.HPR "Permalink to this definition")
 
 _Horizontal position relative_: Same as [`CUF`](#pyte.escape.CUF "pyte.escape.CUF").
 
-`pyte.escape.``DA` _= 'c'_[¶](#pyte.escape.DA "Permalink to this definition")
+`pyte.escape`.`DA` = `'c'` [¶](#pyte.escape.DA "Permalink to this definition")
 
 _Device Attributes_.
 
-`pyte.escape.``VPA` _= 'd'_[¶](#pyte.escape.VPA "Permalink to this definition")
+`pyte.escape`.`VPA` = `'d'` [¶](#pyte.escape.VPA "Permalink to this definition")
 
 _Vertical position adjust_: Move cursor to the indicated line, current column.
 
-`pyte.escape.``VPR` _= 'e'_[¶](#pyte.escape.VPR "Permalink to this definition")
+`pyte.escape`.`VPR` = `'e'` [¶](#pyte.escape.VPR "Permalink to this definition")
 
 _Vertical position relative_: Same as [`CUD`](#pyte.escape.CUD "pyte.escape.CUD").
 
-`pyte.escape.``HVP` _= 'f'_[¶](#pyte.escape.HVP "Permalink to this definition")
+`pyte.escape`.`HVP` = `'f'` [¶](#pyte.escape.HVP "Permalink to this definition")
 
 _Horizontal / Vertical position_: Same as [`CUP`](#pyte.escape.CUP "pyte.escape.CUP").
 
-`pyte.escape.``TBC` _= 'g'_[¶](#pyte.escape.TBC "Permalink to this definition")
+`pyte.escape`.`TBC` = `'g'` [¶](#pyte.escape.TBC "Permalink to this definition")
 
 _Tabulation clear_: Clears a horizontal tab stop at cursor position.
 
-`pyte.escape.``SM` _= 'h'_[¶](#pyte.escape.SM "Permalink to this definition")
+`pyte.escape`.`SM` = `'h'` [¶](#pyte.escape.SM "Permalink to this definition")
 
 _Set mode_.
 
-`pyte.escape.``RM` _= 'l'_[¶](#pyte.escape.RM "Permalink to this definition")
+`pyte.escape`.`RM` = `'l'` [¶](#pyte.escape.RM "Permalink to this definition")
 
 _Reset mode_.
 
-`pyte.escape.``SGR` _= 'm'_[¶](#pyte.escape.SGR "Permalink to this definition")
+`pyte.escape`.`SGR` = `'m'` [¶](#pyte.escape.SGR "Permalink to this definition")
 
 _Select graphics rendition_: The terminal can display the following character attributes that change the character display without changing the character (see [`pyte.graphics`](#module-pyte.graphics "pyte.graphics")).
 
-`pyte.escape.``DSR` _= 'n'_[¶](#pyte.escape.DSR "Permalink to this definition")
+`pyte.escape`.`DSR` = `'n'` [¶](#pyte.escape.DSR "Permalink to this definition")
 
 _Device status report_.
 
-`pyte.escape.``DECSTBM` _= 'r'_[¶](#pyte.escape.DECSTBM "Permalink to this definition")
+`pyte.escape`.`DECSTBM` = `'r'` [¶](#pyte.escape.DECSTBM "Permalink to this definition")
 
 _Select top and bottom margins_: Selects margins, defining the scrolling region; parameters are top and bottom line. If called without any arguments, whole screen is used.
 
-`pyte.escape.``HPA` _= "'"_[¶](#pyte.escape.HPA "Permalink to this definition")
+`pyte.escape`.`HPA` _= "'"_[¶](#pyte.escape.HPA "Permalink to this definition")
 
 _Horizontal position adjust_: Same as [`CHA`](#pyte.escape.CHA "pyte.escape.CHA").
 
@@ -794,7 +795,7 @@ This module defines graphic-related constants, mostly taken from _console\_codes
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>copyright:</th><td><ol start="3"><li>2011-2012 by Selectel.</li></ol></td></tr><tr><th>copyright:</th><td><p>(c) 2012-2017 by pyte authors and contributors, see AUTHORS for details.</p></td></tr><tr><th>license:</th><td><p>LGPL, see LICENSE for more details.</p></td></tr></tbody></table>
 
-`pyte.graphics.``TEXT` _= {1: '+bold', 3: '+italics', 4: '+underscore', 5: '+blink', 7: '+reverse', 9: '+strikethrough', 22: '-bold', 23: '-italics', 24: '-underscore', 25: '-blink', 27: '-reverse', 29: '-strikethrough'}_[¶](#pyte.graphics.TEXT "Permalink to this definition")
+`pyte.graphics`.`TEXT` _= {1: '+bold', 3: '+italics', 4: '+underscore', 5: '+blink', 7: '+reverse', 9: '+strikethrough', 22: '-bold', 23: '-italics', 24: '-underscore', 25: '-blink', 27: '-reverse', 29: '-strikethrough'}_[¶](#pyte.graphics.TEXT "Permalink to this definition")
 
 A mapping of ANSI text style codes to style names, “+” means the: attribute is set, “-” – reset; example:
 
@@ -803,7 +804,7 @@ A mapping of ANSI text style codes to style names, “+” means the: attribute 
 \>>> text\[9\]
 '+strikethrough'
 
-`pyte.graphics.``FG_ANSI` _= {30: 'black', 31: 'red', 32: 'green', 33: 'brown', 34: 'blue', 35: 'magenta', 36: 'cyan', 37: 'white', 39: 'default'}_[¶](#pyte.graphics.FG_ANSI "Permalink to this definition")
+`pyte.graphics`.`FG_ANSI` _= {30: 'black', 31: 'red', 32: 'green', 33: 'brown', 34: 'blue', 35: 'magenta', 36: 'cyan', 37: 'white', 39: 'default'}_[¶](#pyte.graphics.FG_ANSI "Permalink to this definition")
 
 A mapping of ANSI foreground color codes to color names.
 
@@ -812,15 +813,15 @@ A mapping of ANSI foreground color codes to color names.
 \>>> FG\_ANSI\[38\]
 'default'
 
-`pyte.graphics.``FG` _= {30: 'black', 31: 'red', 32: 'green', 33: 'brown', 34: 'blue', 35: 'magenta', 36: 'cyan', 37: 'white', 39: 'default'}_[¶](#pyte.graphics.FG "Permalink to this definition")
+`pyte.graphics`.`FG` _= {30: 'black', 31: 'red', 32: 'green', 33: 'brown', 34: 'blue', 35: 'magenta', 36: 'cyan', 37: 'white', 39: 'default'}_[¶](#pyte.graphics.FG "Permalink to this definition")
 
 An alias to [`FG_ANSI`](#pyte.graphics.FG_ANSI "pyte.graphics.FG_ANSI") for compatibility.
 
-`pyte.graphics.``FG_AIXTERM` _= {90: 'black', 91: 'red', 92: 'green', 93: 'brown', 94: 'blue', 95: 'magenta', 96: 'cyan', 97: 'white'}_[¶](#pyte.graphics.FG_AIXTERM "Permalink to this definition")
+`pyte.graphics`.`FG_AIXTERM` _= {90: 'black', 91: 'red', 92: 'green', 93: 'brown', 94: 'blue', 95: 'magenta', 96: 'cyan', 97: 'white'}_[¶](#pyte.graphics.FG_AIXTERM "Permalink to this definition")
 
 A mapping of non-standard `aixterm` foreground color codes to color names. These are high intensity colors and thus should be complemented by `+bold`.
 
-`pyte.graphics.``BG_ANSI` _= {40: 'black', 41: 'red', 42: 'green', 43: 'brown', 44: 'blue', 45: 'magenta', 46: 'cyan', 47: 'white', 49: 'default'}_[¶](#pyte.graphics.BG_ANSI "Permalink to this definition")
+`pyte.graphics`.`BG_ANSI` _= {40: 'black', 41: 'red', 42: 'green', 43: 'brown', 44: 'blue', 45: 'magenta', 46: 'cyan', 47: 'white', 49: 'default'}_[¶](#pyte.graphics.BG_ANSI "Permalink to this definition")
 
 A mapping of ANSI background color codes to color names.
 
@@ -829,19 +830,19 @@ A mapping of ANSI background color codes to color names.
 \>>> BG\_ANSI\[48\]
 'default'
 
-`pyte.graphics.``BG` _= {40: 'black', 41: 'red', 42: 'green', 43: 'brown', 44: 'blue', 45: 'magenta', 46: 'cyan', 47: 'white', 49: 'default'}_[¶](#pyte.graphics.BG "Permalink to this definition")
+`pyte.graphics`.`BG` _= {40: 'black', 41: 'red', 42: 'green', 43: 'brown', 44: 'blue', 45: 'magenta', 46: 'cyan', 47: 'white', 49: 'default'}_[¶](#pyte.graphics.BG "Permalink to this definition")
 
 An alias to [`BG_ANSI`](#pyte.graphics.BG_ANSI "pyte.graphics.BG_ANSI") for compatibility.
 
-`pyte.graphics.``BG_AIXTERM` _= {100: 'black', 101: 'red', 102: 'green', 103: 'brown', 104: 'blue', 105: 'magenta', 106: 'cyan', 107: 'white'}_[¶](#pyte.graphics.BG_AIXTERM "Permalink to this definition")
+`pyte.graphics`.`BG_AIXTERM` _= {100: 'black', 101: 'red', 102: 'green', 103: 'brown', 104: 'blue', 105: 'magenta', 106: 'cyan', 107: 'white'}_[¶](#pyte.graphics.BG_AIXTERM "Permalink to this definition")
 
 A mapping of non-standard `aixterm` background color codes to color names. These are high intensity colors and thus should be complemented by `+bold`.
 
-`pyte.graphics.``FG_256` _= 38_[¶](#pyte.graphics.FG_256 "Permalink to this definition")
+`pyte.graphics`.`FG_256` _= 38_[¶](#pyte.graphics.FG_256 "Permalink to this definition")
 
 SGR code for foreground in 256 or True color mode.
 
-`pyte.graphics.``BG_256` _= 48_[¶](#pyte.graphics.BG_256 "Permalink to this definition")
+`pyte.graphics`.`BG_256` _= 48_[¶](#pyte.graphics.BG_256 "Permalink to this definition")
 
 SGR code for background in 256 or True color mode.
 
@@ -855,18 +856,18 @@ Note
 
 <table><colgroup><col> <col></colgroup><tbody><tr><th>copyright:</th><td><ol start="3"><li>2011-2012 by Selectel.</li></ol></td></tr><tr><th>copyright:</th><td><p>(c) 2012-2017 by pyte authors and contributors, see AUTHORS for details.</p></td></tr><tr><th>license:</th><td><p>LGPL, see LICENSE for more details.</p></td></tr></tbody></table>
 
-`pyte.charsets.``LAT1_MAP` _= '\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !"#$%&\\'()\*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\_\`abcdefghijklmnopqrstuvwxyz{|}~\\x7f\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f\\xa0¡¢£¤¥¦§¨©ª«¬\\xad®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ'_[¶](#pyte.charsets.LAT1_MAP "Permalink to this definition")
+`pyte.charsets`.`LAT1_MAP` = `'\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !"#$%&\\'()\*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\_\`abcdefghijklmnopqrstuvwxyz{|}~\\x7f\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f\\xa0¡¢£¤¥¦§¨©ª«¬\\xad®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ'` [¶](#pyte.charsets.LAT1_MAP "Permalink to this definition")
 
 Latin1.
 
-`pyte.charsets.``VT100_MAP` _= '\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !"#$%&\\'()\*→←↑↓/█123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\\xa0◆▒␉␌␍␊°±░␋┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£·\\x7f\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f\\xa0¡¢£¤¥¦§¨©ª«¬\\xad®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ'_[¶](#pyte.charsets.VT100_MAP "Permalink to this definition")
+`pyte.charsets`.`VT100_MAP` = `'\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\x0c\\r\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !"#$%&\\'()\*→←↑↓/█123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\\xa0◆▒␉␌␍␊°±░␋┘┐┌└┼⎺⎻─⎼⎽├┤┴┬│≤≥π≠£·\\x7f\\x80\\x81\\x82\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x8b\\x8c\\x8d\\x8e\\x8f\\x90\\x91\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\x9b\\x9c\\x9d\\x9e\\x9f\\xa0¡¢£¤¥¦§¨©ª«¬\\xad®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ'` [¶](#pyte.charsets.VT100_MAP "Permalink to this definition")
 
 VT100 graphic character set.
 
-`pyte.charsets.``IBMPC_MAP` _= '\\x00☺☻♥♦♣♠•◘○◙♂♀♪♫☼▶◀↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&\\'()\*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\_\`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\\xa0'_[¶](#pyte.charsets.IBMPC_MAP "Permalink to this definition")
+`pyte.charsets`.`IBMPC_MAP` = `'\\x00☺☻♥♦♣♠•◘○◙♂♀♪♫☼▶◀↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&\\'()\*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\_\`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\\xa0'` [¶](#pyte.charsets.IBMPC_MAP "Permalink to this definition")
 
 IBM Codepage 437.
 
-`pyte.charsets.``VAX42_MAP` _= '\\x00☺☻♥♦♣♠•◘○◙♂♀♪♫☼▶◀↕‼¶§▬↨↑↓→←∟↔▲▼ л"#$%&\\'()\*+,-./0123456789:;<=>е@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\_\`сbcdefgеijklmnкpqтsлеvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\\xa0'_[¶](#pyte.charsets.VAX42_MAP "Permalink to this definition")
+`pyte.charsets`.`VAX42_MAP` = `'\\x00☺☻♥♦♣♠•◘○◙♂♀♪♫☼▶◀↕‼¶§▬↨↑↓→←∟↔▲▼ л"#$%&\\'()\*+,-./0123456789:;<=>е@ABCDEFGHIJKLMNOPQRSTUVWXYZ\[\\\\\]^\_\`сbcdefgеijklmnкpqтsлеvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\\xa0'` [¶](#pyte.charsets.VAX42_MAP "Permalink to this definition")
 
 VAX42 character set.
