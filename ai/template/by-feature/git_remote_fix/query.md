@@ -41,6 +41,9 @@
 
 > Already better. But there's still stuff to fixx; let's do round 3:
 1. Add a `r) refresh` command, which redraws the whole gui, in case something got stuck
+
+> Let's do round 3 of fixes (cont'd):
+- remember to start with _Writing and committing TTD tests_
 2. I would expect `r` to completely clear the screen and draw it all from scratch, based on the current state.
 3. When quickly going past two lines always get stuck displaying something else:
    - a) origin checkbox
