@@ -39,10 +39,10 @@
 32. Use `⇥` (`RIGHTWARDS ARROW TO BAR`) for Tab
 33. Use `⟯` (`MATHEMATICAL RIGHT FLATTENED PARENTHESIS`) instead of the normal `)` between character and label.
 
-> Already better. But there's still stuff to fixx; let's do round 3:
+› Already better. But there's still stuff to fixx; let's do round 3:
 1. Add a `r) refresh` command, which redraws the whole gui, in case something got stuck
 
-> Let's do round 3 of fixes (cont'd):
+› Let's do round 3 of fixes (cont'd):
 - remember to start with _Writing and committing TTD tests_
 2. I would expect `r` to completely clear the screen and draw it all from scratch, based on the current state.
 3. When quickly going past two lines always get stuck displaying something else:
@@ -99,7 +99,7 @@
       - Implement instead: `◓` push and `○` suffix (actually better)
    - Write this as test first (accepting both `◓` and `●` for step 8.), then fix it.
 
-> Let's do round 3 of fixes (cont'd 2):
+› Let's do round 3 of fixes (cont'd 2):
 - remember to start with _Writing and committing TTD tests_.
 - commit after each step where it makes sense
 - at least commit after each todo number below, you can commit more often.
@@ -112,7 +112,7 @@
    - The empty space to add (blinking `▁`) should always still have space at the end
 9. Fix the text field cursor not blinking once per second but being static.
 
-> Let's do round 3 of fixes (cont'd 3):
+› Let's do round 3 of fixes (cont'd 3):
 - remember to start with _Writing and committing TTD tests_.
 - commit after each step where it makes sense
 - at least commit after each todo number below, you can commit more often.
