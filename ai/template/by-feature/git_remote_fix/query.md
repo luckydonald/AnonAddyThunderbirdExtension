@@ -30,11 +30,11 @@
 23. Shortly (`0.25s`) invert hotkeys upon clicking them, like the macOS menu bar does.
 24. Add a [ Submit → ] button, as 4th group. Again embedded into the up/down and the tab logic.
 25. The submit button is all-colorized (pink) on focus, and inverts for `0.25s` after clicking before we go to the next "page".
-26. Use `⬆︎` and `⬇︎` instead of `Up` and `Down` for move
-27. If in edit field, add `⬅︎` and `➡︎`
-28. Actually the second arrow (`➡︎`) seems wrong, maybe it does not have the right size. What would be a better replacement?
+26. Use `↑` (`UPWARDS ARROW`) and `↓` (`DOWNWARDS ARROW`) instead of `Up` and `Down` for moveing the focus
+27. If in edit field, add `←` (`LEFTWARDS ARROW`) and `→` (`RIGHTWARDS ARROW`) for moving the cursor
+28. (Removed)
 29. Use `␛` (`SYMBOL FOR ESCAPE`) for escape.
 30. Use `MATHEMATICAL MONOSPACE SMALL` characters for alphanumeric-single-char keys, (i.e. for `q` show `𝚚` (`MATHEMATICAL MONOSPACE SMALL Q`: `𝚚`))
-31. Use `⮐` (`RETURN LEFT`) for Enter
+31. Use `⏎` (`RETURN SYMBOL`) for Enter
 32. Use `⇥` (`RIGHTWARDS ARROW TO BAR`) for Tab
 33. Use `⟯` (`MATHEMATICAL RIGHT FLATTENED PARENTHESIS`) instead of the normal `)` between character and label.
