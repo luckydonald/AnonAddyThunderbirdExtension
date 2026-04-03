@@ -70,7 +70,36 @@ git rebase --root --onto empty/init
 That keeps your file history intact, but rewrites every commit in the branch so the new root is the shared empty commit.
 
 ## Setup: a) Checkout
-todo
+
+Use this if you are starting fresh and want your repository branch to begin at `base/mane`.
+
+This is the simplest option, but it only makes sense before you have your own commits on the branch.
+
+Initial adoption:
+
+```bash
+git switch --create main base/mane
+```
+
+If your git version is older and does not support `switch`, use:
+
+```bash
+git checkout -b main base/mane
+```
+
+Then point your own repository remote at the branch and publish it as usual:
+
+```bash
+git push -u origin main
+```
+
+Future updates work the same as in the other setups: fetch `base`, then either rebase onto `base/mane` or merge `base/mane`, depending on the workflow you chose for ongoing maintenance.
+
+Notes:
+
+- replace `main` with whatever branch name your repo should use
+- this avoids the one-time re-rooting and adoption steps from the rebase and merge workflows
+- once you start adding your own commits, updates from this base are handled with either section `b)` or `c)`
 
 ## Setup: b) Rebase Onto `base/mane`
 
