@@ -4,6 +4,21 @@
 PROMPT_LOG="ai/query.md"
 PROMPT_COMMIT_TEMPLATE="ai/commit-templates/prompt.md"
 
+AI_TOOL=${1:-unknown}
+
+case "$AI_TOOL" in
+  claude)
+    PREFIX="❯"
+    ;;
+  codex)
+    PREFIX="›"
+    ;;
+  *)
+    PREFIX="⩼"
+    ;;
+esac
+
+echo "PREFIX=$PREFIX"
 
 PROMPT=$(jq -r '.prompt // ""')
 if [ -z "$PROMPT" ]; then
@@ -11,8 +26,8 @@ if [ -z "$PROMPT" ]; then
 fi
 
 # Work from the git root
-ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
-cd "$ROOT"
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 1
+cd "$ROOT" || exit 2
 
 mkdir -p ai
 env
@@ -28,7 +43,7 @@ if [ -n "$STAGED_HASH" ] && [ "$STAGED_HASH" != "$HEAD_HASH" ]; then
   git cat-file blob "$STAGED_HASH" > "$TMP_STAGED" 2>/dev/null || true
 fi
 
-printf '❯ %s\n\n' "${PROMPT}" >> "${PROMPT_LOG}"
+printf '%s %s\n\n' "${PREFIX}" "${PROMPT}" >> "${PROMPT_LOG}"
 
 # Determine commit message
 COMMIT_MSG=""
