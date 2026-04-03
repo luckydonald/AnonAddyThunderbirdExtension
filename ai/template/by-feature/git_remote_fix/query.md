@@ -134,7 +134,6 @@
 › Let's do round 4 of fixes:
 - remember to start with _Writing and committing TTD tests_.
 - commit after each step where it makes sense
-
 - commit message here in the `base` repo shall be as follows:
   - always start with `[base] ai: run: `
   - a short summary
@@ -142,3 +141,23 @@
   - linebreak
   - followed by a detailed in the second+ lines of the summary, with as many lines as needed.
 - at least commit after each TODO number below, you can commit more often.
+1. The custom element re-render of the level-1 (remote) checkboxes seems to write on the line above where it would need to and this shift everything below by one line to high.
+   - at least the differential updates seems to actually run for their own lines (even if those are not yet matching the old ones)
+   - maybe the shift is also a factor, as a further down remote checkbox is way further off.
+   - see also 2.
+2. leaving the text box eats 3 rows.
+   - but it then writes it to the correct horizontal position
+   - after already deleting (hence shifting the content up by) 3 lines
+   - probably the row-clear is actually removing the linebreak (or similar) as well, instead of clearing the line but letting it exist as empty row.
+3. The text box rendering does not start in the first column. Is the "move-to-line-start" command wrong?
+4. write a test which tests those
+   - for a few constructed git payloads (see the `init.md` examples)
+   - for a few terminal heights
+   1. record that output buffer
+   2. then move down once
+   3. move back up
+   4. compare that it's still the same
+   - possibly you need to use a library which can merge/simulate the terminal (especially the escape-sequence cursor jumping stuff) to give a "fully rendered"/"fully merged" result to compare in `3.4.`
+   - repeat the test with moving down and back up 2 times.
+   - repeat the test with moving down all the way to the end (check none) and back up.
+   - that way you can immediately test if the rendering is wrong.
