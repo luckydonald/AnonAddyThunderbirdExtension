@@ -41,7 +41,8 @@
 
 > Already better. But there's still stuff to fixx; let's do round 3:
 1. Add a `r) refresh` command, which redraws the whole gui, in case something got stuck
-2. When quickly going past two lines always get stuck displaying something else:
+2. I would expect `r` to completely clear the screen and draw it all from scratch, based on the current state.
+3. When quickly going past two lines always get stuck displaying something else:
    - a) origin checkbox
      - Directly under `Select the remote urls to change:`
      1) unfocused
@@ -74,7 +75,6 @@
           - focused actual (1/3): `  ╭╭───╭───┬────────────────────────────────────────╮`
           - focused actual (2/3): `  │ ✎ │ luckydoonal▁▁                            │`
           - focused actual (3/3): `  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯`
-3. I would expect `r` to completely clear the screen and draw it all from scratch, based on the current state.
 4. 2nd level _active_ state has wrong icon. Here's a full test sequence:
    1. Given a push or fetch, which has a `.git` suffix, both currently turned off
    2. Observe:
