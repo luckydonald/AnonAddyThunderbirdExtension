@@ -169,9 +169,30 @@ class FakePromptToolkitRuntime:
 class FakeRenderer:
     def __init__(self) -> None:
         self.clear_count = 0
+        self.output = FakeOutput()
 
     def clear(self) -> None:
         self.clear_count += 1
+
+
+class FakeOutput:
+    def __init__(self) -> None:
+        self.operations: list[tuple] = []
+
+    def cursor_goto(self, row: int = 0, column: int = 0) -> None:
+        self.operations.append(("cursor_goto", row, column))
+
+    def erase_end_of_line(self) -> None:
+        self.operations.append(("erase_end_of_line",))
+
+    def write(self, text: str) -> None:
+        self.operations.append(("write", text))
+
+    def write_raw(self, text: str) -> None:
+        self.operations.append(("write_raw", text))
+
+    def flush(self) -> None:
+        self.operations.append(("flush",))
 
 
 class FakeApplication:
@@ -441,6 +462,7 @@ class TuiTddTests(unittest.TestCase):
         self.fake_modules = FakePromptToolkitModules()
         self.fake_modules.install()
         self.addCleanup(self.fake_modules.uninstall)
+        self.set_terminal_size(120, 40)
 
     def build_ui(
         self,
@@ -452,10 +474,13 @@ class TuiTddTests(unittest.TestCase):
         app = MODULE.run_tui(remotes or make_sample_remotes(), theme=MODULE.THEMES[theme], username=username)
         return FakeTuiHarness(app)
 
-    def set_terminal_width(self, columns: int) -> None:
+    def set_terminal_size(self, columns: int, lines: int) -> None:
         original = MODULE.shutil.get_terminal_size
-        MODULE.shutil.get_terminal_size = lambda fallback=(80, 24): os.terminal_size((columns, 24))
+        MODULE.shutil.get_terminal_size = lambda fallback=(80, 24): os.terminal_size((columns, lines))
         self.addCleanup(setattr, MODULE.shutil, "get_terminal_size", original)
+
+    def set_terminal_width(self, columns: int) -> None:
+        self.set_terminal_size(columns, 40)
 
     def set_monotonic_time(self, value_ref: dict[str, float]) -> None:
         original = MODULE.time.monotonic
@@ -780,6 +805,71 @@ class TuiTddTests(unittest.TestCase):
         ui = self.build_ui()
         self.assertTrue(ui.app.mouse_support)
         self.assertEqual(getattr(MODULE, "FLASH_FEEDBACK_SECONDS"), 0.25)
+
+    def test_tdd_ctrl_c_cancels_like_q(self) -> None:
+        ui = self.build_ui()
+        ui.press("c-c")
+        self.assertIsNone(ui.app.exit_result)
+
+    def test_tdd_local_redraw_rewrites_changed_rows_in_place(self) -> None:
+        ui = self.build_ui()
+        ui.app.renderer.output.operations.clear()
+        ui.press("down")
+        self.assertEqual(
+            ui.app.renderer.output.operations,
+            [
+                ("cursor_goto", 1, 0),
+                ("erase_end_of_line",),
+                ("write", "  ╭───┬──────────────────────────────────────────╮"),
+                ("cursor_goto", 2, 0),
+                ("erase_end_of_line",),
+                ("write", "  │ ✎ │ luckydonald                              │"),
+                ("cursor_goto", 3, 0),
+                ("erase_end_of_line",),
+                ("write", "  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"),
+                ("cursor_goto", 6, 0),
+                ("erase_end_of_line",),
+                ("write", "⋑    ◉ origin"),
+                ("flush",),
+            ],
+        )
+
+    def test_tdd_blink_redraw_writes_text_row_without_extra_column_shift(self) -> None:
+        clock = {"value": 0.75}
+        self.set_monotonic_time(clock)
+        ui = self.build_ui(theme="boxy")
+        ui.app.renderer.output.operations.clear()
+        ui.press("left", times=4)
+        self.assertIn(
+            ("write", "  │ ✎ │ luckydonald                              │"),
+            ui.app.renderer.output.operations,
+        )
+
+    def test_tdd_scroll_wheel_moves_like_up_and_down(self) -> None:
+        ui = self.build_ui()
+        ui.press("scrolldown")
+        self.assertIs(ui.app.layout.current_window, ui.tree_window)
+        ui.press("scrolldown")
+        self.assertEqual(ui.selected_tree_line_index(), 1)
+        ui.press("scrollup")
+        self.assertEqual(ui.selected_tree_line_index(), 0)
+        ui.press("scrollup")
+        self.assertIs(ui.app.layout.current_window, ui.username_window)
+
+    def test_tdd_checked_suffix_icon_is_not_colored_when_unfocused(self) -> None:
+        ui = self.build_ui()
+        ui.press("down")
+        suffix_line = next(line for line in ui.tree_fragment_lines() if "Add .git suffix" in flatten_fragments(line))
+        suffix_icon = next(fragment for fragment in suffix_line if "●" in fragment[1])
+        self.assertEqual(suffix_icon[0], "")
+
+    def test_tdd_tree_scrolls_to_keep_selected_row_centered_when_terminal_is_short(self) -> None:
+        self.set_terminal_size(80, 20)
+        ui = self.build_ui()
+        ui.press("down", times=7)
+        self.assertEqual(len(ui.tree_lines()), 7)
+        self.assertIn(ui.selected_tree_line_index(), range(2, 5))
+        self.assertTrue(any("empty" in line for line in ui.tree_lines()))
 
 
 if __name__ == "__main__":
