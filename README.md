@@ -184,4 +184,4 @@ Notes:
 
 ## After Adopting The Base
 
-Once the base is present in your repo, the files provided by this repo live in your repo like normal files. In particular, the `ai/scripts/*.sh` helpers are intended to be run from inside the consuming repository.
+Once the base is present in your repo, the files provided by this repo live in your repo like normal files. In particular, the `ai/scripts/*` helpers are intended to be run from inside the consuming repository.
