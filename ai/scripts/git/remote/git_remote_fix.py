@@ -1355,7 +1355,7 @@ def run_tui(
         updates: dict[int, str] = {}
 
         if "username" in {previous.focus_group, current.focus_group}:
-            updates[1] = flatten_fragments(
+            updates[2] = flatten_fragments(
                 get_input_border_line(
                     theme.input_top_left,
                     theme.input_top_joint,
@@ -1363,7 +1363,7 @@ def run_tui(
                     theme.input_top_right,
                 )
             )
-            updates[2] = flatten_fragments(
+            updates[3] = flatten_fragments(
                 [("", "  ")]
                 + [(get_input_border_style(), theme.input_mid_left)]
                 + [(get_input_border_style(), f" {theme.input_mid_prompt} ")]
@@ -1371,7 +1371,7 @@ def run_tui(
                 + get_username_fragments()
                 + [(get_input_border_style(), f" {theme.input_mid_right}")]
             )
-            updates[3] = flatten_fragments(
+            updates[4] = flatten_fragments(
                 get_input_border_line(
                     theme.input_bottom_left,
                     theme.input_bottom_joint,

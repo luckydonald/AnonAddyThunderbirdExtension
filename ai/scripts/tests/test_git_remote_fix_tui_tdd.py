@@ -1088,6 +1088,13 @@ class TuiTddTests(unittest.TestCase):
         expected = self.padded_screen_lines(ui)
         self.assertEqual(merged[5:11], expected[5:11])
 
+    def test_tdd_round4_single_down_keeps_heading_and_input_rows_in_place(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        merged = self.merged_screen_after_keys(ui, ["down"])
+        expected = self.padded_screen_lines(ui)
+        self.assertEqual(merged[0:5], expected[0:5])
+
 
 if __name__ == "__main__":
     unittest.main()
