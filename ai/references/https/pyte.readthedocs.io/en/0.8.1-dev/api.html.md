@@ -1,5 +1,7 @@
-[pyte](https://htmltomd.com/index.html)
+[pyte](https://pyte.readthedocs.io/en/latest/index.html)
+========================================================
 
+# API reference
 ## pyte.streams[¶](#pyte-streams "Permalink to this headline")
 
 This module provides three stream implementations with different features; for starters, here’s a quick example of how streams are typically used:
