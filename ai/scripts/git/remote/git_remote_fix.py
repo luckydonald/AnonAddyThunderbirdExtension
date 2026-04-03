@@ -707,6 +707,7 @@ def run_tui(
     class RedrawSnapshot:
         focus_group: str
         tree_index: int
+        tree_line_count: int
         action_index: int
         preview_action_index: int
         preview_mode: bool
@@ -1308,6 +1309,7 @@ def run_tui(
         return RedrawSnapshot(
             focus_group=current_focus_group(),
             tree_index=state.selected_tree_index,
+            tree_line_count=len(split_fragment_lines(get_edit_tree_text())),
             action_index=state.action_index,
             preview_action_index=state.preview_action_index,
             preview_mode=state.preview_plan is not None,
@@ -1346,7 +1348,15 @@ def run_tui(
 
     def edit_actions_start_row() -> int:
         tree_line_count = len(split_fragment_lines(get_edit_tree_text()))
-        return 6 + tree_line_count + 1
+        return 8 + tree_line_count
+
+    def submit_row() -> int:
+        tree_line_count = len(split_fragment_lines(get_edit_tree_text()))
+        return 12 + tree_line_count
+
+    def help_row() -> int:
+        tree_line_count = len(split_fragment_lines(get_edit_tree_text()))
+        return 13 + tree_line_count
 
     def collect_row_updates(previous: RedrawSnapshot, current: RedrawSnapshot) -> dict[int, str]:
         if previous.preview_mode or current.preview_mode:
@@ -1381,31 +1391,20 @@ def run_tui(
             )
 
         if "tree" in {previous.focus_group, current.focus_group}:
-            rows = state.tree_rows()
             tree_lines = [flatten_fragments(line) for line in split_fragment_lines(get_edit_tree_text())]
-            for index in {previous.tree_index, current.tree_index}:
-                if not (0 <= index < len(rows)):
-                    continue
-                if rows[index].kind != "remote":
-                    continue
-                screen_row = tree_screen_row(index)
-                line_index = tree_display_line_index_map().get(index)
-                visible_line_index = None if line_index is None else line_index - state.tree_scroll_offset
-                if (
-                    screen_row is None
-                    or visible_line_index is None
-                    or not (0 <= visible_line_index < len(tree_lines))
-                ):
-                    continue
-                updates[screen_row] = tree_lines[visible_line_index]
+            for visible_index in range(max(previous.tree_line_count, current.tree_line_count)):
+                updates[7 + visible_index] = tree_lines[visible_index] if visible_index < len(tree_lines) else ""
 
-        if "actions" in {previous.focus_group, current.focus_group} and 0 in {
-            previous.action_index,
-            current.action_index,
-        }:
+        if "actions" in {previous.focus_group, current.focus_group}:
             action_lines = [flatten_fragments(line) for line in split_fragment_lines(get_edit_actions_text())]
-            if action_lines:
-                updates[edit_actions_start_row()] = action_lines[0]
+            for line_index, line in enumerate(action_lines):
+                updates[edit_actions_start_row() + line_index] = line
+
+        if "submit" in {previous.focus_group, current.focus_group}:
+            updates[submit_row()] = flatten_fragments(get_submit_text())
+
+        if previous.focus_group != current.focus_group or previous.preview_mode != current.preview_mode:
+            updates[help_row()] = flatten_fragments(get_help_text())
 
         return updates
 

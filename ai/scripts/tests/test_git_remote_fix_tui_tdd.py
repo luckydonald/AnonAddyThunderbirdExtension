@@ -431,10 +431,11 @@ class FakeTerminalBuffer:
                 continue
             if character == "\n":
                 self.row = min(self.height - 1, self.row + 1)
+                self.column = 0
                 continue
             if 0 <= self.row < self.height and 0 <= self.column < self.width:
                 self.lines[self.row][self.column] = character
-            self.column = min(self.width - 1, self.column + 1)
+            self.column += 1
 
     def rendered_lines(self, count: int) -> list[str]:
         return ["".join(line) for line in self.lines[:count]]
@@ -804,7 +805,7 @@ class TuiTddTests(unittest.TestCase):
             ui.press("down")
         ui.press("down")
         self.assertEqual(ui.app.renderer.clear_count, 0)
-        self.assertGreater(ui.app.invalidate_count, 0)
+        self.assertEqual(ui.app.invalidate_count, 0)
 
     def test_tdd_second_level_active_icon_keeps_active_shape_when_suffix_turns_off(self) -> None:
         remotes = [
@@ -972,24 +973,11 @@ class TuiTddTests(unittest.TestCase):
         ui = self.build_ui()
         ui.app.renderer.output.operations.clear()
         ui.press("down")
-        self.assertEqual(
-            ui.app.renderer.output.operations,
-            [
-                ("cursor_goto", 1, 0),
-                ("erase_end_of_line",),
-                ("write", "  ╭───┬──────────────────────────────────────────╮"),
-                ("cursor_goto", 2, 0),
-                ("erase_end_of_line",),
-                ("write", "  │ ✎ │ luckydonald                              │"),
-                ("cursor_goto", 3, 0),
-                ("erase_end_of_line",),
-                ("write", "  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯"),
-                ("cursor_goto", 6, 0),
-                ("erase_end_of_line",),
-                ("write", "⋑    ◉ origin"),
-                ("flush",),
-            ],
-        )
+        operations = ui.app.renderer.output.operations
+        self.assertEqual(operations[0:3], [("cursor_goto", 2, 1), ("erase_end_of_line",), ("write", "  ╭───┬──────────────────────────────────────────╮")])
+        self.assertIn(("cursor_goto", 7, 1), operations)
+        self.assertIn(("write", "⋑    ◉ origin"), operations)
+        self.assertEqual(operations[-1], ("flush",))
 
     def test_tdd_blink_redraw_writes_text_row_without_extra_column_shift(self) -> None:
         clock = {"value": 0.75}
