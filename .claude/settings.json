@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(poetry install:*)",
+      "Bash(yarn install:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(poetry run pytests:*)",
+      "Bash(yarn test:unit:*)",
+      "Bash(./scripts/append_and_clear_summary.sh)",
+      "Bash(.claude/hooks/save-prompt.sh)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(make commit:*)"
+    ]
+  }
+}
