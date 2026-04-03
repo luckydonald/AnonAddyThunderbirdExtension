@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1] / "git" / "remote"
 MODULE_PATH = ROOT / "git_remote_fix.py"
 SPEC = importlib.util.spec_from_file_location("git_remote_fix", MODULE_PATH)
 MODULE = importlib.util.module_from_spec(SPEC)
@@ -304,13 +304,16 @@ class FakeTuiHarness:
     def __init__(self, app) -> None:
         self.app = app
         self.edit_container = self.app.layout.container.get_container()
-        self.input_container = self.edit_container.children[1]
+        self.edit_body = self.edit_container.children[0]
+        self.footer_container = self.edit_container.children[1]
+        self.input_container = self.edit_body.children[1]
         self.input_row = self.input_container.children[1]
         self.username_window = self.input_row.children[1]
-        self.tree_window = self.edit_container.children[4]
-        self.actions_window = self.edit_container.children[6]
-        self.status_window = self.edit_container.children[8]
-        self.help_window = self.edit_container.children[9]
+        self.tree_window = self.edit_body.children[4]
+        self.actions_window = self.edit_body.children[6]
+        self.status_window = self.edit_body.children[8]
+        self.submit_window = self.edit_body.children[9]
+        self.help_window = self.footer_container.children[0]
 
     def press(self, key: str, *, times: int = 1) -> None:
         for _ in range(times):
@@ -446,12 +449,16 @@ class TuiTddTests(unittest.TestCase):
     def test_tdd_multi_select_down_from_last_item_moves_to_check_all(self) -> None:
         ui = self.build_ui()
         ui.press("down")
-        ui.press("down", times=40)
+        while ui.app.layout.current_window is ui.tree_window:
+            ui.press("down")
         self.assertIs(ui.app.layout.current_window, ui.actions_window)
         self.assertEqual(ui.selected_action_line_index(), 0)
 
     def test_tdd_check_all_up_moves_back_to_last_multi_select_item(self) -> None:
         ui = self.build_ui()
+        ui.press("down")
+        while ui.app.layout.current_window is ui.tree_window:
+            ui.press("down")
         ui.press("up")
         self.assertIs(ui.app.layout.current_window, ui.tree_window)
 
@@ -465,6 +472,7 @@ class TuiTddTests(unittest.TestCase):
 
     def test_tdd_input_line_matches_template_width_without_extra_trailing_space(self) -> None:
         ui = self.build_ui(theme="boxy")
+        ui.press("down")
         self.assertEqual(
             ui.render_input_line(),
             "  │ ✎ │ luckydonald                              │",
@@ -518,8 +526,6 @@ class TuiTddTests(unittest.TestCase):
             [
                 "    ◉ Check all",
                 "    ◎ Check none",
-                "    ▶ Preview changes",
-                "    ✕ Cancel",
             ],
         )
 
@@ -556,7 +562,7 @@ class TuiTddTests(unittest.TestCase):
 
     def test_tdd_focused_input_uses_template_cursor_glyph(self) -> None:
         ui = self.build_ui(theme="boxy")
-        self.assertIn("▎", ui.render_input_line())
+        self.assertIn("▁", ui.render_input_line())
 
     def test_tdd_cursor_glyph_uses_highlight_color(self) -> None:
         ui = self.build_ui(theme="boxy")
@@ -577,26 +583,26 @@ class TuiTddTests(unittest.TestCase):
 
     def test_tdd_submit_button_exists_as_fourth_focus_group(self) -> None:
         ui = self.build_ui()
-        submit_window = ui.find_window_containing("Submit")
         ui.press("tab")
         ui.press("tab")
         ui.press("tab")
-        self.assertIs(ui.app.layout.current_window, submit_window)
+        self.assertIs(ui.app.layout.current_window, ui.submit_window)
 
     def test_tdd_submit_button_is_reachable_via_down_logic(self) -> None:
         ui = self.build_ui()
         ui.press("down")
-        ui.press("down", times=40)
-        submit_window = ui.find_window_containing("Submit")
-        self.assertIs(ui.app.layout.current_window, submit_window)
+        while ui.app.layout.current_window is ui.tree_window:
+            ui.press("down")
+        ui.press("down")
+        ui.press("down")
+        self.assertIs(ui.app.layout.current_window, ui.submit_window)
 
     def test_tdd_submit_button_focus_is_fully_highlighted(self) -> None:
         ui = self.build_ui()
-        submit_window = ui.find_window_containing("Submit")
         ui.press("tab")
         ui.press("tab")
         ui.press("tab")
-        submit_fragments = ui.render_window_fragments(submit_window)
+        submit_fragments = ui.render_window_fragments(ui.submit_window)
         non_space_styles = {style for style, text in submit_fragments if text.strip()}
         self.assertEqual(non_space_styles, {"class:selected-marker"})
 
