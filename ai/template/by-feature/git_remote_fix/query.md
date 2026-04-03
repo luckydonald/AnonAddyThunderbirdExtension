@@ -27,3 +27,4 @@
 20. The text edit border color on focus is green/aqua, not pink (highlight).
 21. write the key codes as `tab)  focus`, `A)  check all`, `Q|ESC)  cancel`, `Enter) next element/submit` etc.
 22. Enter in the text field shall go to the multi-select, too.
+23. Shortly (`0.25s`) invert hotkeys upon clicking them, like the macOS menu bar does.
