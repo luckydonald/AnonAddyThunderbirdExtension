@@ -627,7 +627,7 @@ class TuiTddTests(unittest.TestCase):
         lines = ui.screen_lines()
         return FakeTerminalBuffer(
             lines,
-            width=max(ui.screen_width(), 1),
+            width=max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1),
             height=MODULE.shutil.get_terminal_size(fallback=(80, 24)).lines,
         )
 
@@ -639,6 +639,10 @@ class TuiTddTests(unittest.TestCase):
             buffer.apply(ui.app.renderer.output.operations)
         expected = ui.screen_lines()
         return buffer.rendered_lines(len(expected))
+
+    def padded_screen_lines(self, ui: FakeTuiHarness) -> list[str]:
+        width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
+        return [line.ljust(width)[:width] for line in ui.screen_lines()]
 
     def test_tdd_starts_with_name_field_focused_and_cursor_at_end(self) -> None:
         ui = self.build_ui()
@@ -1034,7 +1038,7 @@ class TuiTddTests(unittest.TestCase):
                 with self.subTest(height=height, scenario=label):
                     self.set_terminal_size(120, height)
                     ui = self.build_ui(remotes=remotes)
-                    expected = ui.screen_lines()
+                    expected = self.padded_screen_lines(ui)
                     merged = self.merged_screen_after_keys(ui, ["down", "up"])
                     self.assertEqual(merged, expected)
 
@@ -1048,7 +1052,7 @@ class TuiTddTests(unittest.TestCase):
                 with self.subTest(height=height, scenario=label):
                     self.set_terminal_size(120, height)
                     ui = self.build_ui(remotes=remotes)
-                    expected = ui.screen_lines()
+                    expected = self.padded_screen_lines(ui)
                     merged = self.merged_screen_after_keys(ui, ["down", "up", "down", "up"])
                     self.assertEqual(merged, expected)
 
@@ -1067,7 +1071,7 @@ class TuiTddTests(unittest.TestCase):
                     down_keys.extend(["down"] * max(0, selectable_tree_rows - 1))
                     down_keys.extend(["down", "down"])
                     up_keys = ["up"] * len(down_keys)
-                    expected = ui.screen_lines()
+                    expected = self.padded_screen_lines(ui)
                     merged = self.merged_screen_after_keys(ui, down_keys + up_keys)
                     self.assertEqual(merged, expected)
 
@@ -1075,7 +1079,14 @@ class TuiTddTests(unittest.TestCase):
         self.set_terminal_size(120, 28)
         ui = self.build_ui(remotes=make_init_example_remotes())
         merged = self.merged_screen_after_keys(ui, ["down"])
-        self.assertEqual(merged, ui.screen_lines())
+        self.assertEqual(merged, self.padded_screen_lines(ui))
+
+    def test_tdd_round4_single_down_keeps_first_remote_on_its_own_row(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        merged = self.merged_screen_after_keys(ui, ["down"])
+        expected = self.padded_screen_lines(ui)
+        self.assertEqual(merged[5:11], expected[5:11])
 
 
 if __name__ == "__main__":

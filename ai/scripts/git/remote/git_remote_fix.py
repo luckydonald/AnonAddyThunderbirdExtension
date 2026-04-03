@@ -1342,7 +1342,7 @@ def run_tui(
             return None
         if not (state.tree_scroll_offset <= line_index < state.tree_scroll_offset + tree_visible_height()):
             return None
-        return 6 + (line_index - state.tree_scroll_offset)
+        return 7 + (line_index - state.tree_scroll_offset)
 
     def edit_actions_start_row() -> int:
         tree_line_count = len(split_fragment_lines(get_edit_tree_text()))
