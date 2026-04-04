@@ -151,6 +151,20 @@ class TuiTerminalTests(TuiTestCase):
             EXPECTED_SAMPLE_SCREEN_80X20,
         )
 
+    def test_tdd_round4_text_field_three_left_then_four_right_matches_hardcoded_80x20_screen(self) -> None:
+        self.set_terminal_size(80, 20)
+        self.freeze_cursor_blink()
+        ui = self.build_ui(remotes=make_sample_remotes())
+
+        self.assertEqual(
+            self.merge_screen_after_keys(
+                ui,
+                ["left", "left", "left", "right", "right", "right", "right"],
+                initial_lines=EXPECTED_SAMPLE_SCREEN_80X20,
+            ),
+            EXPECTED_SAMPLE_SCREEN_80X20,
+        )
+
     def test_tdd_local_redraw_rewrites_changed_rows_in_place(self) -> None:
         ui = self.build_ui()
         terminal = self.build_terminal(ui)
