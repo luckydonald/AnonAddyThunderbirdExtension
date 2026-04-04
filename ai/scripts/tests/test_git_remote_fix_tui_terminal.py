@@ -155,13 +155,25 @@ class TuiTerminalTests(TuiTestCase):
         self.set_terminal_size(80, 20)
         self.freeze_cursor_blink()
         ui = self.build_ui(remotes=make_sample_remotes())
+        terminal = self.build_terminal_from_lines(EXPECTED_SAMPLE_SCREEN_80X20)
+
+        for key in ["left", "left", "left"]:
+            ui.app.renderer.output.clear()
+            ui.press(key)
+            terminal.apply_calls(ui.app.renderer.output.calls)
+
+        self.assertNotEqual(
+            terminal.display_lines(len(EXPECTED_SAMPLE_SCREEN_80X20)),
+            EXPECTED_SAMPLE_SCREEN_80X20,
+        )
+
+        for key in ["right", "right", "right", "right"]:
+            ui.app.renderer.output.clear()
+            ui.press(key)
+            terminal.apply_calls(ui.app.renderer.output.calls)
 
         self.assertEqual(
-            self.merge_screen_after_keys(
-                ui,
-                ["left", "left", "left", "right", "right", "right", "right"],
-                initial_lines=EXPECTED_SAMPLE_SCREEN_80X20,
-            ),
+            terminal.display_lines(len(EXPECTED_SAMPLE_SCREEN_80X20)),
             EXPECTED_SAMPLE_SCREEN_80X20,
         )
 
