@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import os
 import sys
@@ -18,161 +19,13 @@ sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
 
-class FakeEvent:
-    def __init__(self, app) -> None:
+PROMPT_TOOLKIT_AVAILABLE = importlib.util.find_spec("prompt_toolkit") is not None
+
+
+class TestKeyEvent:
+    def __init__(self, app, *, data: str = "") -> None:
         self.app = app
-
-
-class FakeBufferEvent:
-    def __init__(self) -> None:
-        self._callbacks = []
-
-    def __iadd__(self, callback):
-        self._callbacks.append(callback)
-        return self
-
-    def fire(self, buffer) -> None:
-        for callback in list(self._callbacks):
-            callback(buffer)
-
-
-class FakeBuffer:
-    def __init__(self, *, multiline: bool = False) -> None:
-        self.multiline = multiline
-        self._text = ""
-        self.cursor_position = 0
-        self.on_text_changed = FakeBufferEvent()
-
-    @property
-    def text(self) -> str:
-        return self._text
-
-    @text.setter
-    def text(self, value: str) -> None:
-        self._text = value
-        self.cursor_position = min(self.cursor_position, len(value))
-        self.on_text_changed.fire(self)
-
-
-class FakeCondition:
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self) -> bool:
-        return bool(self.func())
-
-
-@dataclass
-class FakeBinding:
-    key: str
-    filter: FakeCondition | None
-    handler: object
-
-
-class FakeKeyBindings:
-    def __init__(self) -> None:
-        self.bindings: list[FakeBinding] = []
-
-    def add(self, key: str, filter=None):
-        def decorator(func):
-            self.bindings.append(FakeBinding(key=key, filter=filter, handler=func))
-            return func
-
-        return decorator
-
-
-class FakeFormattedTextControl:
-    def __init__(self, text, focusable: bool = False) -> None:
-        self.text = text
-        self.focusable = focusable
-
-    def fragments(self):
-        return self.text() if callable(self.text) else self.text
-
-
-class FakeBufferControl:
-    def __init__(self, buffer: FakeBuffer, focusable: bool = True) -> None:
-        self.buffer = buffer
-        self.focusable = focusable
-
-
-class FakeDimension:
-    def __init__(self, preferred=None, min=None, max=None) -> None:
-        self.preferred = preferred
-        self.min = min
-        self.max = max
-
-
-class FakeWindow:
-    def __init__(
-        self,
-        content=None,
-        width=None,
-        height=None,
-        wrap_lines=None,
-        dont_extend_width=None,
-        always_hide_cursor=None,
-        char=None,
-    ) -> None:
-        self.content = content
-        self.width = width
-        self.height = height
-        self.wrap_lines = wrap_lines
-        self.dont_extend_width = dont_extend_width
-        self.always_hide_cursor = always_hide_cursor
-        self.char = char
-
-
-class FakeHSplit:
-    def __init__(self, children, height=None) -> None:
-        self.children = children
-        self.height = height
-
-
-class FakeVSplit:
-    def __init__(self, children, height=None) -> None:
-        self.children = children
-        self.height = height
-
-
-class FakeDynamicContainer:
-    def __init__(self, get_container) -> None:
-        self.get_container = get_container
-
-
-class FakeLayout:
-    def __init__(self, container, focused_element) -> None:
-        self.container = container
-        self.current_window = focused_element
-
-    def focus(self, window) -> None:
-        self.current_window = window
-
-    def has_focus(self, window) -> bool:
-        return self.current_window is window
-
-
-class FakeStyle:
-    def __init__(self, style_rules: dict[str, str]) -> None:
-        self.style_rules = style_rules
-
-    @classmethod
-    def from_dict(cls, mapping: dict[str, str]):
-        return cls(mapping)
-
-
-class FakePromptToolkitRuntime:
-    def __init__(self) -> None:
-        self.current_app = None
-
-
-class FakeRenderer:
-    def __init__(self) -> None:
-        self.clear_count = 0
-        self.output = OutputRecorder()
-
-    def clear(self) -> None:
-        self.clear_count += 1
+        self.data = data
 
 
 class OutputRecorder:
@@ -210,7 +63,63 @@ class OutputRecorder:
         self.calls.append(("flush",))
 
 
-class FakeApplication:
+class RendererRecorder:
+    def __init__(self) -> None:
+        self.clear_count = 0
+        self.output = OutputRecorder()
+
+    def clear(self) -> None:
+        self.clear_count += 1
+
+
+class TestPromptToolkitRuntime:
+    def __init__(self) -> None:
+        self.current_app = None
+
+
+TEST_RUNTIME = TestPromptToolkitRuntime()
+
+
+class StyleProxy:
+    def __init__(self, style) -> None:
+        self._style = style
+        style_rules = getattr(style, "style_rules", {})
+        self.style_rules = dict(style_rules) if isinstance(style_rules, list) else style_rules
+
+    def __getattr__(self, name: str):
+        return getattr(self._style, name)
+
+
+def get_current_app():
+    return TEST_RUNTIME.current_app
+
+
+def has_focus_filter(window):
+    return CONDITION_CLASS(lambda: TEST_RUNTIME.current_app.layout.has_focus(window))
+
+
+def normalize_key_name(key: object) -> str:
+    value = getattr(key, "value", key)
+    mapping = {
+        " ": "space",
+        "c-m": "enter",
+        "c-i": "tab",
+        "<scroll-down>": "scrolldown",
+        "<scroll-up>": "scrollup",
+        "<any>": "<any>",
+    }
+    return mapping.get(value, str(value))
+
+
+def event_data_for_key(key: str) -> str:
+    if key == "space":
+        return " "
+    if len(key) == 1:
+        return key
+    return ""
+
+
+class TestApplication:
     def __init__(
         self,
         *,
@@ -229,8 +138,9 @@ class FakeApplication:
         self.refresh_interval = refresh_interval
         self.exit_result = None
         self.invalidate_count = 0
-        self.renderer = FakeRenderer()
-        FAKE_RUNTIME.current_app = self
+        self.style = StyleProxy(style)
+        self.renderer = RendererRecorder()
+        TEST_RUNTIME.current_app = self
 
     def exit(self, result=None) -> None:
         self.exit_result = result
@@ -239,31 +149,207 @@ class FakeApplication:
         self.invalidate_count += 1
 
     def press(self, key: str) -> None:
-        for binding in self.key_bindings.bindings:
-            if binding.key != key:
+        event = TestKeyEvent(self, data=event_data_for_key(key))
+        bindings = list(self.key_bindings.bindings)
+        for binding in bindings:
+            if not self.binding_matches(binding, key, allow_any=False):
                 continue
-            if binding.filter is not None and not binding.filter():
+            active_filter = getattr(binding, "filter", None)
+            if active_filter is not None and not active_filter():
                 continue
-            binding.handler(FakeEvent(self))
+            binding.handler(event)
+            return
+        for binding in bindings:
+            if not self.binding_matches(binding, key, allow_any=True):
+                continue
+            active_filter = getattr(binding, "filter", None)
+            if active_filter is not None and not active_filter():
+                continue
+            binding.handler(event)
             return
         raise AssertionError(f"No active key binding for {key!r}")
+
+    def binding_matches(self, binding, key: str, *, allow_any: bool) -> bool:
+        keys = getattr(binding, "keys", None)
+        if keys is not None:
+            if len(keys) != 1:
+                return False
+            binding_key = normalize_key_name(keys[0])
+            if binding_key == "<any>":
+                return allow_any and bool(event_data_for_key(key))
+            if allow_any:
+                return False
+            return binding_key == key
+
+        binding_key = getattr(binding, "key", None)
+        if binding_key is None:
+            return False
+        return not allow_any and binding_key == key
 
     def run(self):
         return self
 
 
-FAKE_RUNTIME = FakePromptToolkitRuntime()
+if PROMPT_TOOLKIT_AVAILABLE:
+    REAL_PROMPT_TOOLKIT = importlib.import_module("prompt_toolkit")
+    REAL_BUFFER_MODULE = importlib.import_module("prompt_toolkit.buffer")
+    REAL_FORMATTED_TEXT_MODULE = importlib.import_module("prompt_toolkit.formatted_text")
+    REAL_KEY_BINDING_MODULE = importlib.import_module("prompt_toolkit.key_binding")
+    REAL_LAYOUT_MODULE = importlib.import_module("prompt_toolkit.layout")
+    REAL_LAYOUT_CONTROLS_MODULE = importlib.import_module("prompt_toolkit.layout.controls")
+    REAL_LAYOUT_DIMENSION_MODULE = importlib.import_module("prompt_toolkit.layout.dimension")
+    REAL_STYLES_MODULE = importlib.import_module("prompt_toolkit.styles")
+    REAL_KEYS_MODULE = importlib.import_module("prompt_toolkit.keys")
+
+    BUFFER_CLASS = REAL_BUFFER_MODULE.Buffer
+    CONDITION_CLASS = importlib.import_module("prompt_toolkit.filters").Condition
+    KEY_BINDINGS_CLASS = REAL_KEY_BINDING_MODULE.KeyBindings
+    FORMATTED_TEXT_CONTROL_CLASS = REAL_LAYOUT_CONTROLS_MODULE.FormattedTextControl
+    BUFFER_CONTROL_CLASS = REAL_LAYOUT_CONTROLS_MODULE.BufferControl
+    DIMENSION_CLASS = REAL_LAYOUT_DIMENSION_MODULE.Dimension
+    WINDOW_CLASS = REAL_LAYOUT_MODULE.Window
+    HSPLIT_CLASS = REAL_LAYOUT_MODULE.HSplit
+    VSPLIT_CLASS = REAL_LAYOUT_MODULE.VSplit
+    DYNAMIC_CONTAINER_CLASS = REAL_LAYOUT_MODULE.DynamicContainer
+    LAYOUT_CLASS = REAL_LAYOUT_MODULE.Layout
+    STYLE_CLASS = REAL_STYLES_MODULE.Style
+else:
+    class FallbackBufferEvent:
+        def __init__(self) -> None:
+            self._callbacks = []
+
+        def __iadd__(self, callback):
+            self._callbacks.append(callback)
+            return self
+
+        def fire(self, buffer) -> None:
+            for callback in list(self._callbacks):
+                callback(buffer)
+
+    class FallbackBuffer:
+        def __init__(self, *, multiline: bool = False) -> None:
+            self.multiline = multiline
+            self._text = ""
+            self.cursor_position = 0
+            self.on_text_changed = FallbackBufferEvent()
+
+        @property
+        def text(self) -> str:
+            return self._text
+
+        @text.setter
+        def text(self, value: str) -> None:
+            self._text = value
+            self.cursor_position = min(self.cursor_position, len(value))
+            self.on_text_changed.fire(self)
+
+    class FallbackCondition:
+        def __init__(self, func):
+            self.func = func
+
+        def __call__(self) -> bool:
+            return bool(self.func())
+
+    @dataclass
+    class FallbackBinding:
+        key: str
+        filter: object | None
+        handler: object
+
+    class FallbackKeyBindings:
+        def __init__(self) -> None:
+            self.bindings: list[FallbackBinding] = []
+
+        def add(self, key: str, filter=None):
+            def decorator(func):
+                self.bindings.append(FallbackBinding(key=key, filter=filter, handler=func))
+                return func
+
+            return decorator
+
+    class FallbackFormattedTextControl:
+        def __init__(self, text, focusable: bool = False) -> None:
+            self.text = text
+            self.focusable = focusable
+
+    class FallbackBufferControl:
+        def __init__(self, buffer: FallbackBuffer, focusable: bool = True) -> None:
+            self.buffer = buffer
+            self.focusable = focusable
+
+    class FallbackDimension:
+        def __init__(self, preferred=None, min=None, max=None) -> None:
+            self.preferred = preferred
+            self.min = min
+            self.max = max
+
+    class FallbackWindow:
+        def __init__(
+            self,
+            content=None,
+            width=None,
+            height=None,
+            wrap_lines=None,
+            dont_extend_width=None,
+            always_hide_cursor=None,
+            char=None,
+        ) -> None:
+            self.content = content
+            self.width = width
+            self.height = height
+            self.wrap_lines = wrap_lines
+            self.dont_extend_width = dont_extend_width
+            self.always_hide_cursor = always_hide_cursor
+            self.char = char
+
+    class FallbackHSplit:
+        def __init__(self, children, height=None) -> None:
+            self.children = children
+            self.height = height
+
+    class FallbackVSplit:
+        def __init__(self, children, height=None) -> None:
+            self.children = children
+            self.height = height
+
+    class FallbackDynamicContainer:
+        def __init__(self, get_container) -> None:
+            self.get_container = get_container
+
+    class FallbackLayout:
+        def __init__(self, container, focused_element) -> None:
+            self.container = container
+            self.current_window = focused_element
+
+        def focus(self, window) -> None:
+            self.current_window = window
+
+        def has_focus(self, window) -> bool:
+            return self.current_window is window
+
+    class FallbackStyle:
+        def __init__(self, style_rules: dict[str, str]) -> None:
+            self.style_rules = style_rules
+
+        @classmethod
+        def from_dict(cls, mapping: dict[str, str]):
+            return cls(mapping)
+
+    BUFFER_CLASS = FallbackBuffer
+    CONDITION_CLASS = FallbackCondition
+    KEY_BINDINGS_CLASS = FallbackKeyBindings
+    FORMATTED_TEXT_CONTROL_CLASS = FallbackFormattedTextControl
+    BUFFER_CONTROL_CLASS = FallbackBufferControl
+    DIMENSION_CLASS = FallbackDimension
+    WINDOW_CLASS = FallbackWindow
+    HSPLIT_CLASS = FallbackHSplit
+    VSPLIT_CLASS = FallbackVSplit
+    DYNAMIC_CONTAINER_CLASS = FallbackDynamicContainer
+    LAYOUT_CLASS = FallbackLayout
+    STYLE_CLASS = FallbackStyle
 
 
-def fake_get_app():
-    return FAKE_RUNTIME.current_app
-
-
-def fake_has_focus(window):
-    return FakeCondition(lambda: FAKE_RUNTIME.current_app.layout.has_focus(window))
-
-
-class FakePromptToolkitModules:
+class PromptToolkitTestModules:
     MODULE_NAMES = (
         "prompt_toolkit",
         "prompt_toolkit.application",
@@ -275,6 +361,7 @@ class FakePromptToolkitModules:
         "prompt_toolkit.layout.controls",
         "prompt_toolkit.layout.dimension",
         "prompt_toolkit.styles",
+        "prompt_toolkit.keys",
     )
 
     def __init__(self) -> None:
@@ -284,6 +371,34 @@ class FakePromptToolkitModules:
         for name in self.MODULE_NAMES:
             self.previous[name] = sys.modules.get(name)
 
+        if PROMPT_TOOLKIT_AVAILABLE:
+            self.install_real()
+            return
+        self.install_fallback()
+
+    def install_real(self) -> None:
+        application = types.ModuleType("prompt_toolkit.application")
+        filters = types.ModuleType("prompt_toolkit.filters")
+
+        application.Application = TestApplication
+        application.get_app = get_current_app
+
+        filters.Condition = CONDITION_CLASS
+        filters.has_focus = has_focus_filter
+
+        sys.modules["prompt_toolkit"] = REAL_PROMPT_TOOLKIT
+        sys.modules["prompt_toolkit.application"] = application
+        sys.modules["prompt_toolkit.buffer"] = REAL_BUFFER_MODULE
+        sys.modules["prompt_toolkit.filters"] = filters
+        sys.modules["prompt_toolkit.formatted_text"] = REAL_FORMATTED_TEXT_MODULE
+        sys.modules["prompt_toolkit.key_binding"] = REAL_KEY_BINDING_MODULE
+        sys.modules["prompt_toolkit.layout"] = REAL_LAYOUT_MODULE
+        sys.modules["prompt_toolkit.layout.controls"] = REAL_LAYOUT_CONTROLS_MODULE
+        sys.modules["prompt_toolkit.layout.dimension"] = REAL_LAYOUT_DIMENSION_MODULE
+        sys.modules["prompt_toolkit.styles"] = REAL_STYLES_MODULE
+        sys.modules["prompt_toolkit.keys"] = REAL_KEYS_MODULE
+
+    def install_fallback(self) -> None:
         prompt_toolkit = types.ModuleType("prompt_toolkit")
         application = types.ModuleType("prompt_toolkit.application")
         buffer = types.ModuleType("prompt_toolkit.buffer")
@@ -295,22 +410,22 @@ class FakePromptToolkitModules:
         layout_dimension = types.ModuleType("prompt_toolkit.layout.dimension")
         styles = types.ModuleType("prompt_toolkit.styles")
 
-        application.Application = FakeApplication
-        application.get_app = fake_get_app
-        buffer.Buffer = FakeBuffer
-        filters.Condition = FakeCondition
-        filters.has_focus = fake_has_focus
+        application.Application = TestApplication
+        application.get_app = get_current_app
+        buffer.Buffer = BUFFER_CLASS
+        filters.Condition = CONDITION_CLASS
+        filters.has_focus = has_focus_filter
         formatted_text.StyleAndTextTuples = list
-        key_binding.KeyBindings = FakeKeyBindings
-        layout.DynamicContainer = FakeDynamicContainer
-        layout.HSplit = FakeHSplit
-        layout.Layout = FakeLayout
-        layout.VSplit = FakeVSplit
-        layout.Window = FakeWindow
-        layout_controls.BufferControl = FakeBufferControl
-        layout_controls.FormattedTextControl = FakeFormattedTextControl
-        layout_dimension.Dimension = FakeDimension
-        styles.Style = FakeStyle
+        key_binding.KeyBindings = KEY_BINDINGS_CLASS
+        layout.DynamicContainer = DYNAMIC_CONTAINER_CLASS
+        layout.HSplit = HSPLIT_CLASS
+        layout.Layout = LAYOUT_CLASS
+        layout.VSplit = VSPLIT_CLASS
+        layout.Window = WINDOW_CLASS
+        layout_controls.BufferControl = BUFFER_CONTROL_CLASS
+        layout_controls.FormattedTextControl = FORMATTED_TEXT_CONTROL_CLASS
+        layout_dimension.Dimension = DIMENSION_CLASS
+        styles.Style = STYLE_CLASS
 
         sys.modules["prompt_toolkit"] = prompt_toolkit
         sys.modules["prompt_toolkit.application"] = application
@@ -324,6 +439,7 @@ class FakePromptToolkitModules:
         sys.modules["prompt_toolkit.styles"] = styles
 
     def uninstall(self) -> None:
+        TEST_RUNTIME.current_app = None
         for name, previous in self.previous.items():
             if previous is None:
                 sys.modules.pop(name, None)
@@ -333,6 +449,14 @@ class FakePromptToolkitModules:
 
 def flatten_fragments(fragments) -> str:
     return "".join(text for _, text in fragments)
+
+
+def normalize_fragments(value) -> list[tuple[str, str]]:
+    if value is None:
+        return [("", "")]
+    if isinstance(value, str):
+        return [("", value)]
+    return list(value)
 
 
 def split_fragment_lines(fragments) -> list[list[tuple[str, str]]]:
@@ -350,7 +474,7 @@ def split_fragment_lines(fragments) -> list[list[tuple[str, str]]]:
 
 
 def window_width(window) -> int:
-    width = window.width
+    width = getattr(window, "width", 0)
     if isinstance(width, int):
         return width
     if hasattr(width, "preferred") and width.preferred is not None:
@@ -364,32 +488,44 @@ def join_line_fragments(line: list[tuple[str, str]]) -> str:
     return "".join(text for _, text in line)
 
 
+def is_dynamic_container(node) -> bool:
+    return callable(getattr(node, "get_container", None))
+
+
+def is_window(node) -> bool:
+    return hasattr(node, "content") and hasattr(node, "width")
+
+
+def is_split(node) -> bool:
+    return hasattr(node, "children")
+
+
 def render_node_lines(node, render_window_fragments) -> list[str]:
-    if isinstance(node, FakeDynamicContainer):
+    if is_dynamic_container(node):
         return render_node_lines(node.get_container(), render_window_fragments)
-    if isinstance(node, FakeWindow):
+    if is_window(node):
         return [join_line_fragments(line) for line in split_fragment_lines(render_window_fragments(node))] or [""]
-    if isinstance(node, FakeHSplit):
-        lines: list[str] = []
-        for child in node.children:
-            lines.extend(render_node_lines(child, render_window_fragments))
-        return lines
-    if isinstance(node, FakeVSplit):
+    if is_split(node):
         child_lines = [render_node_lines(child, render_window_fragments) for child in node.children]
+        if isinstance(node, HSPLIT_CLASS):
+            lines: list[str] = []
+            for lines_for_child in child_lines:
+                lines.extend(lines_for_child)
+            return lines
         height = max((len(lines) for lines in child_lines), default=0)
         rendered: list[str] = []
         for index in range(height):
             parts: list[str] = []
-            for child, lines in zip(node.children, child_lines):
-                line = lines[index] if index < len(lines) else ""
-                width = window_width(child) if isinstance(child, FakeWindow) else len(line)
+            for child, lines_for_child in zip(node.children, child_lines):
+                line = lines_for_child[index] if index < len(lines_for_child) else ""
+                width = window_width(child) if is_window(child) else len(line)
                 parts.append(line.ljust(width))
             rendered.append("".join(parts))
         return rendered
-    raise TypeError(f"Unsupported fake node: {type(node)!r}")
+    raise TypeError(f"Unsupported node: {type(node)!r}")
 
 
-class FakeTuiHarness:
+class TuiHarness:
     def __init__(self, app) -> None:
         self.app = app
         self.edit_container = self.app.layout.container.get_container()
@@ -410,13 +546,13 @@ class FakeTuiHarness:
 
     def iter_windows(self, node=None):
         node = self.app.layout.container if node is None else node
-        if isinstance(node, FakeDynamicContainer):
+        if is_dynamic_container(node):
             yield from self.iter_windows(node.get_container())
             return
-        if isinstance(node, FakeWindow):
+        if is_window(node):
             yield node
             return
-        if isinstance(node, (FakeHSplit, FakeVSplit)):
+        if is_split(node):
             for child in node.children:
                 yield from self.iter_windows(child)
 
@@ -428,11 +564,12 @@ class FakeTuiHarness:
 
     def render_window_fragments(self, window):
         content = window.content
-        if isinstance(content, FakeFormattedTextControl):
-            return content.fragments()
-        if isinstance(content, FakeBufferControl):
+        if hasattr(content, "text"):
+            value = content.text() if callable(content.text) else content.text
+            return normalize_fragments(value)
+        if hasattr(content, "buffer"):
             return [("", content.buffer.text.ljust(window_width(window)))]
-        if window.char:
+        if getattr(window, "char", None):
             return [("", window.char)]
         return [("", "")]
 
@@ -544,9 +681,9 @@ def make_init_example_remotes() -> list[MODULE.RemoteSelection]:
 
 class TuiTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.fake_modules = FakePromptToolkitModules()
-        self.fake_modules.install()
-        self.addCleanup(self.fake_modules.uninstall)
+        self.prompt_toolkit_modules = PromptToolkitTestModules()
+        self.prompt_toolkit_modules.install()
+        self.addCleanup(self.prompt_toolkit_modules.uninstall)
         self.set_terminal_size(120, 40)
 
     def build_ui(
@@ -555,9 +692,9 @@ class TuiTestCase(unittest.TestCase):
         username: str = "luckydonald",
         theme: str = "rounded",
         remotes: list[MODULE.RemoteSelection] | None = None,
-    ) -> FakeTuiHarness:
+    ) -> TuiHarness:
         app = MODULE.run_tui(remotes or make_sample_remotes(), theme=MODULE.THEMES[theme], username=username)
-        return FakeTuiHarness(app)
+        return TuiHarness(app)
 
     def set_terminal_size(self, columns: int, lines: int) -> None:
         original = MODULE.shutil.get_terminal_size

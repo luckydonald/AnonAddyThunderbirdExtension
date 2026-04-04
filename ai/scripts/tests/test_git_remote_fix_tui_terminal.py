@@ -3,9 +3,10 @@ from __future__ import annotations
 import unittest
 
 from ai.scripts.tests.git_remote_fix_tui_test_support import (
-    FakeTuiHarness,
     MODULE,
+    PROMPT_TOOLKIT_AVAILABLE,
     TuiTestCase,
+    TuiHarness,
     make_init_example_remotes,
     make_sample_remotes,
 )
@@ -93,27 +94,31 @@ class PyteTerminal:
         return self.screen.display[:count]
 
 
-@unittest.skipIf(pyte is None, "pyte is required for terminal redraw tests")
+@unittest.skipIf(pyte is None or not PROMPT_TOOLKIT_AVAILABLE, "prompt_toolkit and pyte are required for terminal redraw tests")
 class TuiTerminalTests(TuiTestCase):
     def freeze_cursor_blink(self) -> None:
         self.set_monotonic_time({"value": 0.10})
 
-    def build_terminal(self, ui: FakeTuiHarness) -> PyteTerminal:
+    def build_terminal_from_lines(self, lines: list[str]) -> PyteTerminal:
         width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
         height = MODULE.shutil.get_terminal_size(fallback=(80, 24)).lines
         terminal = PyteTerminal(width=width, height=height)
-        terminal.seed(ui.screen_lines())
+        terminal.seed(lines)
         return terminal
 
-    def merge_screen_after_keys(self, ui: FakeTuiHarness, keys: list[str]) -> list[str]:
-        terminal = self.build_terminal(ui)
+    def build_terminal(self, ui: TuiHarness) -> PyteTerminal:
+        return self.build_terminal_from_lines(ui.screen_lines())
+
+    def merge_screen_after_keys(self, ui: TuiHarness, keys: list[str], *, initial_lines: list[str] | None = None) -> list[str]:
+        lines = initial_lines or ui.screen_lines()
+        terminal = self.build_terminal_from_lines(lines)
         for key in keys:
             ui.app.renderer.output.clear()
             ui.press(key)
             terminal.apply_calls(ui.app.renderer.output.calls)
-        return terminal.display_lines(len(ui.screen_lines()))
+        return terminal.display_lines(len(lines))
 
-    def padded_screen_lines(self, ui: FakeTuiHarness) -> list[str]:
+    def padded_screen_lines(self, ui: TuiHarness) -> list[str]:
         width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
         return [line.ljust(width)[:width] for line in ui.screen_lines()]
 
@@ -127,17 +132,22 @@ class TuiTerminalTests(TuiTestCase):
         down_keys.extend(["down", "down"])
         up_keys = ["up"] * len(down_keys)
 
-        self.assertEqual(self.padded_screen_lines(ui), EXPECTED_SAMPLE_SCREEN_80X20)
-        self.assertEqual(self.merge_screen_after_keys(ui, down_keys + up_keys), EXPECTED_SAMPLE_SCREEN_80X20)
+        self.assertEqual(
+            self.merge_screen_after_keys(ui, down_keys + up_keys, initial_lines=EXPECTED_SAMPLE_SCREEN_80X20),
+            EXPECTED_SAMPLE_SCREEN_80X20,
+        )
 
     def test_tdd_round4_text_field_two_left_then_back_matches_hardcoded_80x20_screen(self) -> None:
         self.set_terminal_size(80, 20)
         self.freeze_cursor_blink()
         ui = self.build_ui(remotes=make_sample_remotes())
 
-        self.assertEqual(self.padded_screen_lines(ui), EXPECTED_SAMPLE_SCREEN_80X20)
         self.assertEqual(
-            self.merge_screen_after_keys(ui, ["left", "left", "right", "right"]),
+            self.merge_screen_after_keys(
+                ui,
+                ["left", "left", "right", "right"],
+                initial_lines=EXPECTED_SAMPLE_SCREEN_80X20,
+            ),
             EXPECTED_SAMPLE_SCREEN_80X20,
         )
 
