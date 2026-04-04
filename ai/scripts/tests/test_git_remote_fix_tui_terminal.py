@@ -16,6 +16,30 @@ except ModuleNotFoundError:
     pyte = None
 
 
+EXPECTED_SAMPLE_SCREEN_80X20 = [
+    "Enter the git username to use:                                                  ",
+    "  ╭───┬──────────────────────────────────────────╮                              ",
+    "  │ ✎ │ luckydonald▁                             │                              ",
+    "  ╰━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯                              ",
+    "                                                                                ",
+    "Select the remote urls to change:                                               ",
+    "     ◉ origin                                                                   ",
+    "     ├─╴ ● fetch: https://github.com/example/origin                             ",
+    "     │   ╰─╴ ● Add .git suffix                                                  ",
+    "     ╰─╴ ● push : https://github.com/example/origin                             ",
+    "         ╰─╴ ● Add .git suffix                                                  ",
+    "                                                                                ",
+    "     ◑ empty                                                                    ",
+    "                                                                                ",
+    "    ◉ Check all                                                                 ",
+    "    ◎ Check none                                                                ",
+    "                                                                                ",
+    "                                                                                ",
+    "    [ Submit → ]                                                                ",
+    "⇥⟯  focus   ↑|↓⟯  move   ←|→⟯  move cursor   ⏎⟯  next element/submit   𝚛⟯  refre",
+]
+
+
 class PyteTerminal:
     def __init__(self, *, width: int, height: int) -> None:
         self.width = width
@@ -89,6 +113,30 @@ class TuiTerminalTests(TuiTestCase):
     def padded_screen_lines(self, ui: FakeTuiHarness) -> list[str]:
         width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
         return [line.ljust(width)[:width] for line in ui.screen_lines()]
+
+    def test_tdd_round4_full_down_then_back_up_matches_hardcoded_80x20_screen(self) -> None:
+        self.set_terminal_size(80, 20)
+        self.set_monotonic_time({"value": 0.10})
+        ui = self.build_ui(remotes=make_sample_remotes())
+        selectable_tree_rows = sum(1 for line in ui.tree_lines() if line)
+        down_keys = ["down"]
+        down_keys.extend(["down"] * max(0, selectable_tree_rows - 1))
+        down_keys.extend(["down", "down"])
+        up_keys = ["up"] * len(down_keys)
+
+        self.assertEqual(self.padded_screen_lines(ui), EXPECTED_SAMPLE_SCREEN_80X20)
+        self.assertEqual(self.merge_screen_after_keys(ui, down_keys + up_keys), EXPECTED_SAMPLE_SCREEN_80X20)
+
+    def test_tdd_round4_text_field_two_left_then_back_matches_hardcoded_80x20_screen(self) -> None:
+        self.set_terminal_size(80, 20)
+        self.set_monotonic_time({"value": 0.10})
+        ui = self.build_ui(remotes=make_sample_remotes())
+
+        self.assertEqual(self.padded_screen_lines(ui), EXPECTED_SAMPLE_SCREEN_80X20)
+        self.assertEqual(
+            self.merge_screen_after_keys(ui, ["left", "left", "right", "right"]),
+            EXPECTED_SAMPLE_SCREEN_80X20,
+        )
 
     def test_tdd_local_redraw_rewrites_changed_rows_in_place(self) -> None:
         ui = self.build_ui()
