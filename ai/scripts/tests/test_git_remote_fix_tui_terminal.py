@@ -157,6 +157,11 @@ class TuiTerminalTests(TuiTestCase):
         ui = self.build_ui(remotes=make_sample_remotes())
         terminal = self.build_terminal_from_lines(EXPECTED_SAMPLE_SCREEN_80X20)
 
+        self.assertEqual(
+            terminal.display_lines(len(EXPECTED_SAMPLE_SCREEN_80X20)),
+            EXPECTED_SAMPLE_SCREEN_80X20,
+        )
+
         for key in ["left", "left", "left"]:
             ui.app.renderer.output.clear()
             ui.press(key)
