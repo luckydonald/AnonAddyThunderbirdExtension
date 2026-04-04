@@ -825,12 +825,13 @@ def run_tui(
         flush = getattr(output, "flush", None)
         if not callable(erase_end_of_line) or not callable(write):
             return False
+        columns = max(1, terminal_columns())
 
         for row_index, text in sorted(row_updates.items()):
             if not cursor_to_row_start(output, row_index):
                 return False
             erase_end_of_line()
-            write(text)
+            write(text[:columns])
 
         if callable(flush):
             flush()
