@@ -95,6 +95,9 @@ class PyteTerminal:
 
 @unittest.skipIf(pyte is None, "pyte is required for terminal redraw tests")
 class TuiTerminalTests(TuiTestCase):
+    def freeze_cursor_blink(self) -> None:
+        self.set_monotonic_time({"value": 0.10})
+
     def build_terminal(self, ui: FakeTuiHarness) -> PyteTerminal:
         width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
         height = MODULE.shutil.get_terminal_size(fallback=(80, 24)).lines
@@ -116,7 +119,7 @@ class TuiTerminalTests(TuiTestCase):
 
     def test_tdd_round4_full_down_then_back_up_matches_hardcoded_80x20_screen(self) -> None:
         self.set_terminal_size(80, 20)
-        self.set_monotonic_time({"value": 0.10})
+        self.freeze_cursor_blink()
         ui = self.build_ui(remotes=make_sample_remotes())
         selectable_tree_rows = sum(1 for line in ui.tree_lines() if line)
         down_keys = ["down"]
@@ -129,7 +132,7 @@ class TuiTerminalTests(TuiTestCase):
 
     def test_tdd_round4_text_field_two_left_then_back_matches_hardcoded_80x20_screen(self) -> None:
         self.set_terminal_size(80, 20)
-        self.set_monotonic_time({"value": 0.10})
+        self.freeze_cursor_blink()
         ui = self.build_ui(remotes=make_sample_remotes())
 
         self.assertEqual(self.padded_screen_lines(ui), EXPECTED_SAMPLE_SCREEN_80X20)
@@ -160,6 +163,7 @@ class TuiTerminalTests(TuiTestCase):
         )
 
     def test_tdd_round4_single_down_and_up_preserve_merged_screen(self) -> None:
+        self.freeze_cursor_blink()
         scenarios = [
             ("sample", make_sample_remotes()),
             ("init", make_init_example_remotes()),
@@ -174,6 +178,7 @@ class TuiTerminalTests(TuiTestCase):
                     self.assertEqual(merged, expected)
 
     def test_tdd_round4_two_down_and_up_cycles_preserve_merged_screen(self) -> None:
+        self.freeze_cursor_blink()
         scenarios = [
             ("sample", make_sample_remotes()),
             ("init", make_init_example_remotes()),
@@ -188,6 +193,7 @@ class TuiTerminalTests(TuiTestCase):
                     self.assertEqual(merged, expected)
 
     def test_tdd_round4_full_down_and_up_path_preserve_merged_screen(self) -> None:
+        self.freeze_cursor_blink()
         scenarios = [
             ("sample", make_sample_remotes()),
             ("init", make_init_example_remotes()),
@@ -207,12 +213,14 @@ class TuiTerminalTests(TuiTestCase):
                     self.assertEqual(merged, expected)
 
     def test_tdd_round4_single_down_matches_direct_rendered_screen(self) -> None:
+        self.freeze_cursor_blink()
         self.set_terminal_size(120, 28)
         ui = self.build_ui(remotes=make_init_example_remotes())
         merged = self.merge_screen_after_keys(ui, ["down"])
         self.assertEqual(merged, self.padded_screen_lines(ui))
 
     def test_tdd_round4_single_down_keeps_first_remote_on_its_own_row(self) -> None:
+        self.freeze_cursor_blink()
         self.set_terminal_size(120, 28)
         ui = self.build_ui(remotes=make_init_example_remotes())
         merged = self.merge_screen_after_keys(ui, ["down"])
@@ -220,6 +228,7 @@ class TuiTerminalTests(TuiTestCase):
         self.assertEqual(merged[5:11], expected[5:11])
 
     def test_tdd_round4_single_down_keeps_heading_and_input_rows_in_place(self) -> None:
+        self.freeze_cursor_blink()
         self.set_terminal_size(120, 28)
         ui = self.build_ui(remotes=make_init_example_remotes())
         merged = self.merge_screen_after_keys(ui, ["down"])
