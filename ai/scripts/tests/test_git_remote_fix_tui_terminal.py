@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import unittest
 
 from ai.scripts.tests.git_remote_fix_tui_test_support import (
@@ -40,6 +41,213 @@ EXPECTED_SAMPLE_SCREEN_80X20 = [
     "⇥⟯  focus   ↑|↓⟯  move   ←|→⟯  move cursor   ⏎⟯  next element/submit   𝚛⟯  refre",
 ]
 
+ANSI_RESET = "\x1b[0m"
+ANSI_BOLD = "1"
+ANSI_MAGENTA_BOLD = "1;35"
+ANSI_MAGENTA_UNDERLINE = "4;35"
+
+
+@dataclass(frozen=True)
+class ExpectedCell:
+    data: str
+    fg: str = "default"
+    bold: bool = False
+    underscore: bool = False
+
+
+def sgr(code: str, text: str) -> str:
+    return f"\x1b[{code}m{text}{ANSI_RESET}"
+
+
+def style_line(line: str, *segments: tuple[int, int, str]) -> str:
+    pieces: list[str] = []
+    cursor = 0
+    for start, end, code in segments:
+        if start < cursor:
+            raise AssertionError(f"Overlapping styled segments in {line!r}")
+        pieces.append(line[cursor:start])
+        pieces.append(sgr(code, line[start:end]))
+        cursor = end
+    pieces.append(line[cursor:])
+    return "".join(pieces)
+
+
+def parse_expected_cells(line: str) -> list[ExpectedCell]:
+    cells: list[ExpectedCell] = []
+    fg = "default"
+    bold = False
+    underscore = False
+    index = 0
+    while index < len(line):
+        if line[index] == "\x1b":
+            close = line.index("m", index)
+            raw_codes = line[index + 2 : close]
+            codes = raw_codes.split(";") if raw_codes else ["0"]
+            for code in codes:
+                if code == "0":
+                    fg = "default"
+                    bold = False
+                    underscore = False
+                elif code == "1":
+                    bold = True
+                elif code == "4":
+                    underscore = True
+                elif code == "22":
+                    bold = False
+                elif code == "24":
+                    underscore = False
+                elif code == "35":
+                    fg = "magenta"
+                elif code == "39":
+                    fg = "default"
+                else:
+                    raise AssertionError(f"Unsupported ANSI SGR code {code!r} in {line!r}")
+            index = close + 1
+            continue
+        cells.append(ExpectedCell(data=line[index], fg=fg, bold=bold, underscore=underscore))
+        index += 1
+    return cells
+
+
+EXPECTED_SAMPLE_SCREEN_WITH_ANSI_ESCAPES_80X20 = [
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[0],
+        (0, len("Enter the git username to use:"), ANSI_BOLD),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[1],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[1].index("╭"),
+            EXPECTED_SAMPLE_SCREEN_80X20[1].index("╮") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[2],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[2].index("│ ✎ │"),
+            EXPECTED_SAMPLE_SCREEN_80X20[2].index("│ ✎ │") + len("│ ✎ │"),
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[2].index("▁"),
+            EXPECTED_SAMPLE_SCREEN_80X20[2].index("▁") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[2].rindex("│"),
+            EXPECTED_SAMPLE_SCREEN_80X20[2].rindex("│") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[3],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[3].index("╰"),
+            EXPECTED_SAMPLE_SCREEN_80X20[3].index("╯") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+    ),
+    EXPECTED_SAMPLE_SCREEN_80X20[4],
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[5],
+        (0, len("Select the remote urls to change:"), ANSI_BOLD),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[6],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[6].index("◉"),
+            EXPECTED_SAMPLE_SCREEN_80X20[6].index("◉") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[6].index("origin"),
+            EXPECTED_SAMPLE_SCREEN_80X20[6].index("origin") + len("origin"),
+            ANSI_MAGENTA_BOLD,
+        ),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[7],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[7].index("●"),
+            EXPECTED_SAMPLE_SCREEN_80X20[7].index("●") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[7].index("https://github.com/example/origin"),
+            EXPECTED_SAMPLE_SCREEN_80X20[7].index("https://github.com/example/origin")
+            + len("https://github.com/example/origin"),
+            ANSI_MAGENTA_UNDERLINE,
+        ),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[8],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[8].index("●"),
+            EXPECTED_SAMPLE_SCREEN_80X20[8].index("●") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[9],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[9].index("●"),
+            EXPECTED_SAMPLE_SCREEN_80X20[9].index("●") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[9].index("https://github.com/example/origin"),
+            EXPECTED_SAMPLE_SCREEN_80X20[9].index("https://github.com/example/origin")
+            + len("https://github.com/example/origin"),
+            ANSI_MAGENTA_UNDERLINE,
+        ),
+    ),
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[10],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[10].index("●"),
+            EXPECTED_SAMPLE_SCREEN_80X20[10].index("●") + 1,
+            ANSI_MAGENTA_BOLD,
+        ),
+    ),
+    EXPECTED_SAMPLE_SCREEN_80X20[11],
+    EXPECTED_SAMPLE_SCREEN_80X20[12],
+    EXPECTED_SAMPLE_SCREEN_80X20[13],
+    EXPECTED_SAMPLE_SCREEN_80X20[14],
+    EXPECTED_SAMPLE_SCREEN_80X20[15],
+    EXPECTED_SAMPLE_SCREEN_80X20[16],
+    EXPECTED_SAMPLE_SCREEN_80X20[17],
+    EXPECTED_SAMPLE_SCREEN_80X20[18],
+    style_line(
+        EXPECTED_SAMPLE_SCREEN_80X20[19],
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("⇥⟯"),
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("⇥⟯") + len("⇥⟯"),
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("↑|↓⟯"),
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("↑|↓⟯") + len("↑|↓⟯"),
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("←|→⟯"),
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("←|→⟯") + len("←|→⟯"),
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("⏎⟯"),
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("⏎⟯") + len("⏎⟯"),
+            ANSI_MAGENTA_BOLD,
+        ),
+        (
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("𝚛⟯"),
+            EXPECTED_SAMPLE_SCREEN_80X20[19].index("𝚛⟯") + len("𝚛⟯"),
+            ANSI_MAGENTA_BOLD,
+        ),
+    ),
+]
+
 
 class PyteTerminal:
     def __init__(self, *, width: int, height: int) -> None:
@@ -54,7 +262,7 @@ class PyteTerminal:
         for row_index, line in enumerate(lines[: self.height], start=1):
             self.stream.feed(f"\x1b[{row_index};1H")
             self.stream.feed("\x1b[K")
-            self.stream.feed(line[: self.width])
+            self.stream.feed(line)
         self.stream.feed("\x1b[1;1H")
 
     def apply_calls(self, calls: list[tuple]) -> None:
@@ -122,6 +330,24 @@ class TuiTerminalTests(TuiTestCase):
         width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
         return [line.ljust(width)[:width] for line in ui.screen_lines()]
 
+    def assert_terminal_matches_ansi_expected_screen(
+        self,
+        terminal: PyteTerminal,
+        expected_ansi_lines: list[str],
+        expected_plain_lines: list[str],
+    ) -> None:
+        self.assertEqual(terminal.display_lines(len(expected_plain_lines)), expected_plain_lines)
+        for row_index, expected_line in enumerate(expected_ansi_lines):
+            expected_cells = parse_expected_cells(expected_line)
+            self.assertEqual(len(expected_cells), len(expected_plain_lines[row_index]))
+            for column_index, expected_cell in enumerate(expected_cells):
+                actual_cell = terminal.screen.buffer[row_index][column_index]
+                with self.subTest(row=row_index + 1, column=column_index + 1):
+                    self.assertEqual(actual_cell.data, expected_cell.data)
+                    self.assertEqual(actual_cell.fg, expected_cell.fg)
+                    self.assertEqual(actual_cell.bold, expected_cell.bold)
+                    self.assertEqual(actual_cell.underscore, expected_cell.underscore)
+
     def test_tdd_round4_full_down_then_back_up_matches_hardcoded_80x20_screen(self) -> None:
         self.set_terminal_size(80, 20)
         self.freeze_cursor_blink()
@@ -134,6 +360,15 @@ class TuiTerminalTests(TuiTestCase):
 
         self.assertEqual(
             self.merge_screen_after_keys(ui, down_keys + up_keys, initial_lines=EXPECTED_SAMPLE_SCREEN_80X20),
+            EXPECTED_SAMPLE_SCREEN_80X20,
+        )
+
+    def test_tdd_round4_hardcoded_ansi_screen_matches_plain_text_and_styles_in_pyte(self) -> None:
+        self.set_terminal_size(80, 20)
+        terminal = self.build_terminal_from_lines(EXPECTED_SAMPLE_SCREEN_WITH_ANSI_ESCAPES_80X20)
+        self.assert_terminal_matches_ansi_expected_screen(
+            terminal,
+            EXPECTED_SAMPLE_SCREEN_WITH_ANSI_ESCAPES_80X20,
             EXPECTED_SAMPLE_SCREEN_80X20,
         )
 
