@@ -16,8 +16,12 @@ This history is intentionally rooted at `empty/init` from `https://github.com/Em
   * [Setup](#setup)
           * [Shared initial commit](#shared-initial-commit)
   * [Setup: a) Checkout](#setup-a-checkout)
-  * [Setup: b) Rebase Onto `base/mane`](#setup-b-rebase-onto-basemane)
-  * [Setup: c) Merge `base/mane`](#setup-c-merge-basemane)
+      * [Rename branch](#rename-branch)
+        * [Local branch](#local-branch)
+        * [Remote branch](#remote-branch)
+          * [Hosted Git](#hosted-git)
+  * [Setup: b) Rebase Onto `base/base`](#setup-b-rebase-onto-basebase)
+  * [Setup: c) Merge `base/base`](#setup-c-merge-basebase)
   * [After Adopting The Base](#after-adopting-the-base)
 <!-- TOC -->
 
@@ -26,12 +30,12 @@ This history is intentionally rooted at `empty/init` from `https://github.com/Em
 ## Overview
 There are three ways to adopt this:
 
-- start with it from the get-go, creating your branch from `base/mane`.
+- start with it from the get-go, creating your branch from `base/base`.
   - obviously only works if you haven't commited anything yet.
   - otherwise see rebase below, that's basically _"plz pretend I started from that and did all my own commits afterward!"_
-- rebase your repo on top of `base/mane` if you want this base to become part of your linear history 
+- rebase your repo on top of `base/base` if you want this base to become part of your linear history 
   - recommended if your git is not yet used by others
-- merge `base/mane` into your repo if you do not want to rewrite history
+- merge `base/base` into your repo if you do not want to rewrite history
 
 If you only want a one-time copy of the files, just copy them manually. The steps below are for keeping your repo connected to this base over time.
 
@@ -61,7 +65,7 @@ Add the remotes you need:
 
 ```bash
 git remote add base https://github.com/luckydonald/base.git
-git fetch base mane
+git fetch base base
 ```
 
 ###### Shared initial commit
@@ -80,7 +84,7 @@ git fetch base mane
 
 ## Setup: a) Checkout
 
-Use this if you are starting fresh and want your repository branch to begin at `base/mane`.
+Use this if you are starting fresh and want your repository branch to begin at `base/base`.
 
 This is the simplest option, but it only makes sense before you have your own commits on the branch.
 
@@ -89,13 +93,13 @@ We assume you want to give your branch the name `main` here. Replace in the comm
 Initial adoption:
 
 ```bash
-git switch --create main base/mane
+git switch --create main base/base
 ```
 
 If your git version is older and does not support `switch`, use:
 
 ```bash
-git checkout -b main base/mane
+git checkout -b main base/base
 ```
 
 Then point your own repository remote at the branch and publish it as usual:
@@ -104,7 +108,7 @@ Then point your own repository remote at the branch and publish it as usual:
 git push -u origin main
 ```
 
-Future updates work the same as in the other setups: fetch `base`, then either rebase onto `base/mane` or merge `base/mane`, depending on the workflow you chose for ongoing maintenance.
+Future updates work the same as in the other setups: fetch `base`, then either rebase onto `base/base` or merge `base/base`, depending on the workflow you chose for ongoing maintenance.
 
 Notes:
 
@@ -119,8 +123,8 @@ In case you ran above commands, you'd get the `main` branch. If you want to rena
 
 ##### Local branch
 ```shell
-OLD_NAME=main mane
-NEW_NAME=mane base
+OLD_NAME=main
+NEW_NAME=mane
 REMOTE="origin"
 
 git branch -m "${OLD_NAME}" "${NEW_NAME}"
@@ -136,21 +140,21 @@ For example the protected branch settings, and default `git checkout` branch set
 
 
 
-## Setup: b) Rebase Onto `base/mane`
+## Setup: b) Rebase Onto `base/base`
 
 Use this if you want a clean linear history, and you are comfortable rewriting your branch.
 
 Initial adoption:
 
 ```bash
-git rebase --onto base/mane empty/init
+git rebase --onto base/base empty/init
 ```
 
 After that, future updates are just:
 
 ```bash
 git fetch base
-git rebase base/mane
+git rebase base/base
 ```
 
 Notes:
@@ -159,21 +163,21 @@ Notes:
 - if you already pushed the branch, you will usually need `git push --force-with-lease`
 - this is best for personal branches or repos where force-pushes are acceptable
 
-## Setup: c) Merge `base/mane`
+## Setup: c) Merge `base/base`
 
 Use this if you want to preserve existing history and avoid rebasing published branches.
 
 Initial adoption into an unrelated existing repo:
 
 ```bash
-git merge --allow-unrelated-histories --no-ff base/mane
+git merge --allow-unrelated-histories --no-ff base/base
 ```
 
 Future updates:
 
 ```bash
 git fetch base
-git merge --no-ff base/mane
+git merge --no-ff base/base
 ```
 
 Notes:
