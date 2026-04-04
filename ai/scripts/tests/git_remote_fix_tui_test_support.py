@@ -169,42 +169,45 @@ class FakePromptToolkitRuntime:
 class FakeRenderer:
     def __init__(self) -> None:
         self.clear_count = 0
-        self.output = FakeOutput()
+        self.output = OutputRecorder()
 
     def clear(self) -> None:
         self.clear_count += 1
 
 
-class FakeOutput:
+class OutputRecorder:
     def __init__(self) -> None:
-        self.operations: list[tuple] = []
+        self.calls: list[tuple] = []
+
+    def clear(self) -> None:
+        self.calls.clear()
 
     def cursor_goto(self, row: int = 0, column: int = 0) -> None:
-        self.operations.append(("cursor_goto", row, column))
+        self.calls.append(("cursor_goto", row, column))
 
     def cursor_up(self, amount: int) -> None:
-        self.operations.append(("cursor_up", amount))
+        self.calls.append(("cursor_up", amount))
 
     def cursor_down(self, amount: int) -> None:
-        self.operations.append(("cursor_down", amount))
+        self.calls.append(("cursor_down", amount))
 
     def cursor_forward(self, amount: int) -> None:
-        self.operations.append(("cursor_forward", amount))
+        self.calls.append(("cursor_forward", amount))
 
     def cursor_backward(self, amount: int) -> None:
-        self.operations.append(("cursor_backward", amount))
+        self.calls.append(("cursor_backward", amount))
 
     def erase_end_of_line(self) -> None:
-        self.operations.append(("erase_end_of_line",))
+        self.calls.append(("erase_end_of_line",))
 
     def write(self, text: str) -> None:
-        self.operations.append(("write", text))
+        self.calls.append(("write", text))
 
     def write_raw(self, text: str) -> None:
-        self.operations.append(("write_raw", text))
+        self.calls.append(("write_raw", text))
 
     def flush(self) -> None:
-        self.operations.append(("flush",))
+        self.calls.append(("flush",))
 
 
 class FakeApplication:

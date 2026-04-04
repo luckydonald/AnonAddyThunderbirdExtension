@@ -1,0 +1,193 @@
+from __future__ import annotations
+
+import unittest
+
+from ai.scripts.tests.git_remote_fix_tui_test_support import (
+    FakeTuiHarness,
+    MODULE,
+    TuiTestCase,
+    make_init_example_remotes,
+    make_sample_remotes,
+)
+
+try:
+    import pyte
+except ModuleNotFoundError:
+    pyte = None
+
+
+class PyteTerminal:
+    def __init__(self, *, width: int, height: int) -> None:
+        self.width = width
+        self.height = height
+        self.flush_count = 0
+        self.cursor_history: list[tuple[int, int, object]] = []
+        self.screen = pyte.Screen(width, height)
+        self.stream = pyte.Stream(self.screen)
+
+    def seed(self, lines: list[str]) -> None:
+        for row_index, line in enumerate(lines[: self.height], start=1):
+            self.stream.feed(f"\x1b[{row_index};1H")
+            self.stream.feed("\x1b[K")
+            self.stream.feed(line[: self.width])
+        self.stream.feed("\x1b[1;1H")
+
+    def apply_calls(self, calls: list[tuple]) -> None:
+        for call in calls:
+            self.apply_call(call)
+
+    def apply_call(self, call: tuple) -> None:
+        name = call[0]
+        if name == "cursor_goto":
+            self.stream.feed(f"\x1b[{max(1, call[1])};{max(1, call[2])}H")
+            self.cursor_history.append((self.screen.cursor.x, self.screen.cursor.y, self.screen.cursor.attrs))
+            return
+        if name == "cursor_up":
+            self.stream.feed(f"\x1b[{call[1]}A")
+            return
+        if name == "cursor_down":
+            self.stream.feed(f"\x1b[{call[1]}B")
+            return
+        if name == "cursor_forward":
+            self.stream.feed(f"\x1b[{call[1]}C")
+            return
+        if name == "cursor_backward":
+            self.stream.feed(f"\x1b[{call[1]}D")
+            return
+        if name == "erase_end_of_line":
+            self.stream.feed("\x1b[K")
+            return
+        if name in {"write", "write_raw"}:
+            self.stream.feed(call[1])
+            return
+        if name == "flush":
+            self.flush_count += 1
+            return
+        raise AssertionError(f"Unsupported terminal call: {call!r}")
+
+    def display_lines(self, count: int) -> list[str]:
+        return self.screen.display[:count]
+
+
+@unittest.skipIf(pyte is None, "pyte is required for terminal redraw tests")
+class TuiTerminalTests(TuiTestCase):
+    def build_terminal(self, ui: FakeTuiHarness) -> PyteTerminal:
+        width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
+        height = MODULE.shutil.get_terminal_size(fallback=(80, 24)).lines
+        terminal = PyteTerminal(width=width, height=height)
+        terminal.seed(ui.screen_lines())
+        return terminal
+
+    def merge_screen_after_keys(self, ui: FakeTuiHarness, keys: list[str]) -> list[str]:
+        terminal = self.build_terminal(ui)
+        for key in keys:
+            ui.app.renderer.output.clear()
+            ui.press(key)
+            terminal.apply_calls(ui.app.renderer.output.calls)
+        return terminal.display_lines(len(ui.screen_lines()))
+
+    def padded_screen_lines(self, ui: FakeTuiHarness) -> list[str]:
+        width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
+        return [line.ljust(width)[:width] for line in ui.screen_lines()]
+
+    def test_tdd_local_redraw_rewrites_changed_rows_in_place(self) -> None:
+        ui = self.build_ui()
+        terminal = self.build_terminal(ui)
+        ui.app.renderer.output.clear()
+        ui.press("down")
+        terminal.apply_calls(ui.app.renderer.output.calls)
+        self.assertEqual(terminal.display_lines(len(ui.screen_lines())), self.padded_screen_lines(ui))
+        self.assertEqual(terminal.flush_count, 1)
+        self.assertTrue(any(cursor_x == 0 and cursor_y == 1 for cursor_x, cursor_y, _ in terminal.cursor_history))
+
+    def test_tdd_blink_redraw_writes_text_row_without_extra_column_shift(self) -> None:
+        self.set_monotonic_time({"value": 0.75})
+        ui = self.build_ui(theme="boxy")
+        terminal = self.build_terminal(ui)
+        ui.app.renderer.output.clear()
+        ui.press("left", times=4)
+        terminal.apply_calls(ui.app.renderer.output.calls)
+        self.assertTrue(
+            any("  │ ✎ │ luckydonald                              │" in line for line in terminal.display_lines(len(ui.screen_lines())))
+        )
+
+    def test_tdd_round4_single_down_and_up_preserve_merged_screen(self) -> None:
+        scenarios = [
+            ("sample", make_sample_remotes()),
+            ("init", make_init_example_remotes()),
+        ]
+        for height in (20, 28, 40):
+            for label, remotes in scenarios:
+                with self.subTest(height=height, scenario=label):
+                    self.set_terminal_size(120, height)
+                    ui = self.build_ui(remotes=remotes)
+                    expected = self.padded_screen_lines(ui)
+                    merged = self.merge_screen_after_keys(ui, ["down", "up"])
+                    self.assertEqual(merged, expected)
+
+    def test_tdd_round4_two_down_and_up_cycles_preserve_merged_screen(self) -> None:
+        scenarios = [
+            ("sample", make_sample_remotes()),
+            ("init", make_init_example_remotes()),
+        ]
+        for height in (20, 28, 40):
+            for label, remotes in scenarios:
+                with self.subTest(height=height, scenario=label):
+                    self.set_terminal_size(120, height)
+                    ui = self.build_ui(remotes=remotes)
+                    expected = self.padded_screen_lines(ui)
+                    merged = self.merge_screen_after_keys(ui, ["down", "up", "down", "up"])
+                    self.assertEqual(merged, expected)
+
+    def test_tdd_round4_full_down_and_up_path_preserve_merged_screen(self) -> None:
+        scenarios = [
+            ("sample", make_sample_remotes()),
+            ("init", make_init_example_remotes()),
+        ]
+        for height in (20, 28, 40):
+            for label, remotes in scenarios:
+                with self.subTest(height=height, scenario=label):
+                    self.set_terminal_size(120, height)
+                    ui = self.build_ui(remotes=remotes)
+                    selectable_tree_rows = sum(1 for line in ui.tree_lines() if line)
+                    down_keys = ["down"]
+                    down_keys.extend(["down"] * max(0, selectable_tree_rows - 1))
+                    down_keys.extend(["down", "down"])
+                    up_keys = ["up"] * len(down_keys)
+                    expected = self.padded_screen_lines(ui)
+                    merged = self.merge_screen_after_keys(ui, down_keys + up_keys)
+                    self.assertEqual(merged, expected)
+
+    def test_tdd_round4_single_down_matches_direct_rendered_screen(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        merged = self.merge_screen_after_keys(ui, ["down"])
+        self.assertEqual(merged, self.padded_screen_lines(ui))
+
+    def test_tdd_round4_single_down_keeps_first_remote_on_its_own_row(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        merged = self.merge_screen_after_keys(ui, ["down"])
+        expected = self.padded_screen_lines(ui)
+        self.assertEqual(merged[5:11], expected[5:11])
+
+    def test_tdd_round4_single_down_keeps_heading_and_input_rows_in_place(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        merged = self.merge_screen_after_keys(ui, ["down"])
+        expected = self.padded_screen_lines(ui)
+        self.assertEqual(merged[0:5], expected[0:5])
+
+    def test_tdd_round4_local_redraw_targets_terminal_column_one(self) -> None:
+        self.set_terminal_size(120, 28)
+        ui = self.build_ui(remotes=make_init_example_remotes())
+        terminal = self.build_terminal(ui)
+        ui.app.renderer.output.clear()
+        ui.press("down")
+        terminal.apply_calls(ui.app.renderer.output.calls)
+        self.assertTrue(terminal.cursor_history)
+        self.assertTrue(all(cursor_x == 0 for cursor_x, _, _ in terminal.cursor_history), terminal.cursor_history)
+
+
+if __name__ == "__main__":
+    unittest.main()

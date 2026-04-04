@@ -1,92 +1,12 @@
 import unittest
 from ai.scripts.tests.git_remote_fix_tui_test_support import (
-    FakeTuiHarness,
     MODULE,
     TuiTestCase,
     flatten_fragments,
-    make_init_example_remotes,
-    make_sample_remotes,
 )
 
 
-class FakeTerminalBuffer:
-    def __init__(self, lines: list[str], *, width: int, height: int) -> None:
-        padded = [line.ljust(width)[:width] for line in lines[:height]]
-        if len(padded) < height:
-            padded.extend([" " * width for _ in range(height - len(padded))])
-        self.lines = [list(line) for line in padded]
-        self.width = width
-        self.height = height
-        self.row = 0
-        self.column = 0
-
-    def apply(self, operations: list[tuple]) -> None:
-        for operation in operations:
-            name = operation[0]
-            if name == "cursor_goto":
-                self.row = max(0, min(self.height - 1, max(1, operation[1]) - 1))
-                self.column = max(0, min(self.width - 1, max(1, operation[2]) - 1))
-                continue
-            if name == "cursor_up":
-                self.row = max(0, self.row - operation[1])
-                continue
-            if name == "cursor_down":
-                self.row = min(self.height - 1, self.row + operation[1])
-                continue
-            if name == "cursor_forward":
-                self.column = min(self.width - 1, self.column + operation[1])
-                continue
-            if name == "cursor_backward":
-                self.column = max(0, self.column - operation[1])
-                continue
-            if name == "erase_end_of_line":
-                for index in range(self.column, self.width):
-                    self.lines[self.row][index] = " "
-                continue
-            if name in {"write", "write_raw"}:
-                self._write_text(operation[1])
-                continue
-
-    def _write_text(self, text: str) -> None:
-        for character in text:
-            if character == "\r":
-                self.column = 0
-                continue
-            if character == "\n":
-                self.row = min(self.height - 1, self.row + 1)
-                self.column = 0
-                continue
-            if 0 <= self.row < self.height and 0 <= self.column < self.width:
-                self.lines[self.row][self.column] = character
-            self.column += 1
-
-    def rendered_lines(self, count: int) -> list[str]:
-        return ["".join(line) for line in self.lines[:count]]
-
-
 class TuiTddTests(TuiTestCase):
-
-    def build_terminal_buffer(self, ui: FakeTuiHarness) -> FakeTerminalBuffer:
-        lines = ui.screen_lines()
-        return FakeTerminalBuffer(
-            lines,
-            width=max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1),
-            height=MODULE.shutil.get_terminal_size(fallback=(80, 24)).lines,
-        )
-
-    def merged_screen_after_keys(self, ui: FakeTuiHarness, keys: list[str]) -> list[str]:
-        buffer = self.build_terminal_buffer(ui)
-        for key in keys:
-            ui.app.renderer.output.operations.clear()
-            ui.press(key)
-            buffer.apply(ui.app.renderer.output.operations)
-        expected = ui.screen_lines()
-        return buffer.rendered_lines(len(expected))
-
-    def padded_screen_lines(self, ui: FakeTuiHarness) -> list[str]:
-        width = max(MODULE.shutil.get_terminal_size(fallback=(80, 24)).columns, 1)
-        return [line.ljust(width)[:width] for line in ui.screen_lines()]
-
     def test_tdd_starts_with_name_field_focused_and_cursor_at_end(self) -> None:
         ui = self.build_ui()
         self.assertIs(ui.app.layout.current_window, ui.username_window)
@@ -411,27 +331,6 @@ class TuiTddTests(TuiTestCase):
         ui.press("c-c")
         self.assertIsNone(ui.app.exit_result)
 
-    def test_tdd_local_redraw_rewrites_changed_rows_in_place(self) -> None:
-        ui = self.build_ui()
-        ui.app.renderer.output.operations.clear()
-        ui.press("down")
-        operations = ui.app.renderer.output.operations
-        self.assertEqual(operations[0:3], [("cursor_goto", 2, 1), ("erase_end_of_line",), ("write", "  ╭───┬──────────────────────────────────────────╮")])
-        self.assertIn(("cursor_goto", 7, 1), operations)
-        self.assertIn(("write", "⋑    ◉ origin"), operations)
-        self.assertEqual(operations[-1], ("flush",))
-
-    def test_tdd_blink_redraw_writes_text_row_without_extra_column_shift(self) -> None:
-        clock = {"value": 0.75}
-        self.set_monotonic_time(clock)
-        ui = self.build_ui(theme="boxy")
-        ui.app.renderer.output.operations.clear()
-        ui.press("left", times=4)
-        self.assertIn(
-            ("write", "  │ ✎ │ luckydonald                              │"),
-            ui.app.renderer.output.operations,
-        )
-
     def test_tdd_scroll_wheel_moves_like_up_and_down(self) -> None:
         ui = self.build_ui()
         ui.press("scrolldown")
@@ -457,82 +356,6 @@ class TuiTddTests(TuiTestCase):
         self.assertEqual(len(ui.tree_lines()), 7)
         self.assertIn(ui.selected_tree_line_index(), range(2, 5))
         self.assertTrue(any("empty" in line for line in ui.tree_lines()))
-
-    def test_tdd_round4_single_down_and_up_preserve_merged_screen(self) -> None:
-        scenarios = [
-            ("sample", make_sample_remotes()),
-            ("init", make_init_example_remotes()),
-        ]
-        for height in (20, 28, 40):
-            for label, remotes in scenarios:
-                with self.subTest(height=height, scenario=label):
-                    self.set_terminal_size(120, height)
-                    ui = self.build_ui(remotes=remotes)
-                    expected = self.padded_screen_lines(ui)
-                    merged = self.merged_screen_after_keys(ui, ["down", "up"])
-                    self.assertEqual(merged, expected)
-
-    def test_tdd_round4_two_down_and_up_cycles_preserve_merged_screen(self) -> None:
-        scenarios = [
-            ("sample", make_sample_remotes()),
-            ("init", make_init_example_remotes()),
-        ]
-        for height in (20, 28, 40):
-            for label, remotes in scenarios:
-                with self.subTest(height=height, scenario=label):
-                    self.set_terminal_size(120, height)
-                    ui = self.build_ui(remotes=remotes)
-                    expected = self.padded_screen_lines(ui)
-                    merged = self.merged_screen_after_keys(ui, ["down", "up", "down", "up"])
-                    self.assertEqual(merged, expected)
-
-    def test_tdd_round4_full_down_and_up_path_preserve_merged_screen(self) -> None:
-        scenarios = [
-            ("sample", make_sample_remotes()),
-            ("init", make_init_example_remotes()),
-        ]
-        for height in (20, 28, 40):
-            for label, remotes in scenarios:
-                with self.subTest(height=height, scenario=label):
-                    self.set_terminal_size(120, height)
-                    ui = self.build_ui(remotes=remotes)
-                    selectable_tree_rows = sum(1 for line in ui.tree_lines() if line)
-                    down_keys = ["down"]
-                    down_keys.extend(["down"] * max(0, selectable_tree_rows - 1))
-                    down_keys.extend(["down", "down"])
-                    up_keys = ["up"] * len(down_keys)
-                    expected = self.padded_screen_lines(ui)
-                    merged = self.merged_screen_after_keys(ui, down_keys + up_keys)
-                    self.assertEqual(merged, expected)
-
-    def test_tdd_round4_single_down_matches_direct_rendered_screen(self) -> None:
-        self.set_terminal_size(120, 28)
-        ui = self.build_ui(remotes=make_init_example_remotes())
-        merged = self.merged_screen_after_keys(ui, ["down"])
-        self.assertEqual(merged, self.padded_screen_lines(ui))
-
-    def test_tdd_round4_single_down_keeps_first_remote_on_its_own_row(self) -> None:
-        self.set_terminal_size(120, 28)
-        ui = self.build_ui(remotes=make_init_example_remotes())
-        merged = self.merged_screen_after_keys(ui, ["down"])
-        expected = self.padded_screen_lines(ui)
-        self.assertEqual(merged[5:11], expected[5:11])
-
-    def test_tdd_round4_single_down_keeps_heading_and_input_rows_in_place(self) -> None:
-        self.set_terminal_size(120, 28)
-        ui = self.build_ui(remotes=make_init_example_remotes())
-        merged = self.merged_screen_after_keys(ui, ["down"])
-        expected = self.padded_screen_lines(ui)
-        self.assertEqual(merged[0:5], expected[0:5])
-
-    def test_tdd_round4_local_redraw_targets_terminal_column_one(self) -> None:
-        self.set_terminal_size(120, 28)
-        ui = self.build_ui(remotes=make_init_example_remotes())
-        ui.app.renderer.output.operations.clear()
-        ui.press("down")
-        cursor_gotos = [operation for operation in ui.app.renderer.output.operations if operation[0] == "cursor_goto"]
-        self.assertTrue(cursor_gotos)
-        self.assertTrue(all(operation[2] == 1 for operation in cursor_gotos), cursor_gotos)
 
 
 if __name__ == "__main__":
