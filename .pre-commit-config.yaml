@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: no-co-authored-by
         name: Reject Co-Authored-By in commit messages
-        entry: uv run --no-sync python ai/scripts/git/hooks/commit/reject_co_authored_by.py
+        entry: uv run --no-sync python ai/scripts/git/hook/commit/reject_co_authored_by.py
         language: system
         stages: [commit-msg]
         always_run: true
