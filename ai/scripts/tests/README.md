@@ -33,7 +33,7 @@ uv run --project ai/scripts python ai/scripts/tests/test_git_remote_fix.py
 From the repository root:
 
 ```bash
-uv run --project ai/scripts python ai/scripts/git/remote/git_remote_fix.py
+uv run --project ai/scripts python ai/scripts/git/remote/fix_username.py
 ```
 
 All commands assume `uv` will resolve dependencies from [`ai/scripts/pyproject.toml`](/Users/user/Documents/programming/Python/base/ai/scripts/pyproject.toml).

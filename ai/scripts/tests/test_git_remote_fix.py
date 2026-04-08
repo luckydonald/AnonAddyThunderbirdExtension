@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1] / "git" / "remote"
-MODULE_PATH = ROOT / "git_remote_fix.py"
+MODULE_PATH = ROOT / "fix_username.py"
 SPEC = importlib.util.spec_from_file_location("git_remote_fix", MODULE_PATH)
 MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
