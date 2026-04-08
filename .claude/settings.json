@@ -37,7 +37,14 @@
       "Bash(.claude/hooks/save-prompt.sh)",
       "Bash(echo \"exit: $?\")",
       "Bash(git add:*)",
+      "Bash(git diff --stat)",
       "Bash(make commit:*)"
     ]
-  }
+  },
+  "deny": [
+    "Bash(git add .)",
+    "Bash(git add .:*)",
+    "Bash(git add -A)",
+    "Bash(git add -A:*)"
+  ]
 }
