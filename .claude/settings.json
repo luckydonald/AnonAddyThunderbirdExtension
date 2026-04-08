@@ -14,18 +14,29 @@
   },
   "permissions": {
     "allow": [
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(yarn)",
+      "Bash(make)",
       "Bash(poetry install:*)",
       "Bash(yarn install:*)",
       "Bash(uv sync:*)",
+      "Bash(yarn type-check:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(npx vitest:*)",
       "Bash(uv run ruff check:*)",
       "Bash(uv run pytest:*)",
       "Bash(poetry run pytests:*)",
       "Bash(yarn test:unit:*)",
+      "Bash(yarn build-check:*)",
       "Bash(yarn run type-check:*)",
       "Bash(yarn run lint:*)",
+      "Bash(yarn lint:*)",
+      "Bash(yarn build:*)",
       "Bash(./scripts/append_and_clear_summary.sh)",
       "Bash(.claude/hooks/save-prompt.sh)",
       "Bash(echo \"exit: $?\")",
+      "Bash(git add:*)",
       "Bash(make commit:*)"
     ]
   }
