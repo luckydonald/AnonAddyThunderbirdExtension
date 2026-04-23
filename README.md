@@ -61,10 +61,12 @@ Choose merge if:
 # Installation
 ## Setup
 
-Add the remotes you need:
+Add the remotes you need, as below.
+We assume your username would be `luckydonald` on GitHub, otherwise remove the `luckydonald@` part from the repository URLs, or replace with your own.
+Specifying the username is only needed if you have more than one GitHub account configured on your machine (e.g. private and work).
 
 ```bash
-git remote add base https://github.com/luckydonald/base.git
+git remote add base https://luckydonald@github.com/luckydonald/base.git
 git fetch base base
 ```
 
@@ -73,7 +75,7 @@ git fetch base base
 > > If your repository does not already descend from `empty/init`, and you want to merge cleanly later, and it's okay to rewrite its history, re-root it once:
 > 
 > 1. ```bash
->    git remote add empty https://github.com/EmptyAAS/empty.git
+>    git remote add empty https://luckydonald@github.com/EmptyAAS/empty.git
 >    git fetch empty init
 >    ```
 > 2. ```bash
@@ -88,24 +90,24 @@ Use this if you are starting fresh and want your repository branch to begin at `
 
 This is the simplest option, but it only makes sense before you have your own commits on the branch.
 
-We assume you want to give your branch the name `main` here. Replace in the commands below as needed.
+We assume you want to give your branch the name `mane` here. Replace in the commands below as needed.
 
 Initial adoption:
 
 ```bash
-git switch --create main base/base
+git switch --create mane base/base
 ```
 
 If your git version is older and does not support `switch`, use:
 
 ```bash
-git checkout -b main base/base
+git checkout -b mane base/base
 ```
 
 Then point your own repository remote at the branch and publish it as usual:
 
 ```bash
-git push -u origin main
+git push -u origin mane
 ```
 
 Future updates work the same as in the other setups: fetch `base`, then either rebase onto `base/base` or merge `base/base`, depending on the workflow you chose for ongoing maintenance.
