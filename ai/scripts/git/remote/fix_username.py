@@ -38,7 +38,7 @@ class GitCommandError(RuntimeError):
     pass
 
 
-@dataclass(slots=True)
+@dataclass
 class GitHubUrlInfo:
     original_url: str
     split: SplitResult
@@ -49,7 +49,7 @@ class GitHubUrlInfo:
     has_git_suffix: bool
 
 
-@dataclass(slots=True)
+@dataclass
 class RemoteUrlSelection:
     kind: Literal["fetch", "push"]
     original_url: str
@@ -96,7 +96,7 @@ class RemoteUrlSelection:
             self.add_git_suffix = value
 
 
-@dataclass(slots=True)
+@dataclass
 class RemoteSelection:
     name: str
     fetch: RemoteUrlSelection
@@ -128,7 +128,7 @@ class RemoteSelection:
         self.push.set_all(value)
 
 
-@dataclass(slots=True)
+@dataclass
 class UrlPreview:
     remote_name: str
     kind: Literal["fetch", "push"]
@@ -136,13 +136,13 @@ class UrlPreview:
     new_url: str
 
 
-@dataclass(slots=True)
+@dataclass
 class ExecutionPlan:
     previews: list[UrlPreview]
     commands: list[list[str]]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ThemeGlyphs:
     name: str
     remote_icons: dict[str, str]
@@ -239,14 +239,14 @@ THEMES: dict[str, ThemeGlyphs] = {
 }
 
 
-@dataclass(slots=True)
+@dataclass
 class TreeRow:
     kind: Literal["remote", "url", "git"]
     remote_index: int
     url_kind: Literal["fetch", "push"] | None = None
 
 
-@dataclass(slots=True)
+@dataclass
 class ActionItem:
     action_id: str
     label: str
@@ -530,7 +530,7 @@ def run_tui(
     scroll_down_key = getattr(Keys, "ScrollDown", "scrolldown") if Keys is not None else "scrolldown"
     scroll_up_key = getattr(Keys, "ScrollUp", "scrollup") if Keys is not None else "scrollup"
 
-    @dataclass(slots=True)
+    @dataclass
     class UiState:
         remotes: list[RemoteSelection]
         theme: ThemeGlyphs
@@ -703,7 +703,7 @@ def run_tui(
                 return False
             return True
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass(frozen=True)
     class RedrawSnapshot:
         focus_group: str
         tree_index: int
