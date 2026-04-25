@@ -3,6 +3,11 @@
 
 
 
+########################################
+##### START OF base's `.gitignore` #####
+########################################
+# technically including the lines above.
+
 
 
 ### VisualStudioCode template
@@ -651,6 +656,8 @@ secring.*
 # subsplit (multi-repo)
 .subsplit
 .subsplit/
+**/.subsplit
+**/.subsplit/
 
 # docker
 docker-compose.override.yml
@@ -658,6 +665,7 @@ docker-compose.production.yml
 
 # typical files
 somewhere.py
+**/somewhere.py
 
 # Node, in subfolders
 **/node_modules/
@@ -672,5 +680,9 @@ certs/
 /docker-compose.production.yml
 **/gitinfo_values.py
 **/gitinfo_values.pye
+
+######################################
+##### END OF base's `.gitignore` #####
+######################################
 
 # automalically added unversioned files:
