@@ -24,7 +24,7 @@ indent_style = space
 indent_size = 4
 
 # Use 2 spaces for the HTML files as well as js-ish stuff.
-[*.{js,html,ts,vue,json}]
+[*.{js,jsx,mjs,cjs,html,ts,tsx,mts,cts,vue,json,json5,yml,yaml,css,scss,sass,less,styl}]
 indent_style = space
 indent_size = 2
 
@@ -32,6 +32,12 @@ indent_size = 2
 [**.min.js]
 indent_style = ignore
 insert_final_newline = ignore
+
+[*.svg]
+insert_final_newline = ignore  # otherwise you might get diffs after using editors.
+indent_style = tab
+indent_size = 2
+end_of_line = lf
 
 # Makefiles always use tabs for indentation, and fail otherwise
 [Makefile]

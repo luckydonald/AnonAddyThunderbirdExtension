@@ -672,7 +672,9 @@ somewhere.py
 
 # Environment in custom-ish formats
 **/*.env
+**/*.env*
 **/*.env.*
+!/.env.example
 !**/*.example.env
 
 # Misc stuff
@@ -680,6 +682,89 @@ certs/
 /docker-compose.production.yml
 **/gitinfo_values.py
 **/gitinfo_values.pye
+
+# vue preset
+/dist
+
+/tests/e2e/reports/
+selenium-debug.log
+chromedriver.log
+geckodriver.log
+
+
+# local env files
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# filesystem/npm crap
+node_modules
+node_modules.*.bak
+node_modules.bak.*
+dist-ssr
+
+# test suit results
+/cypress/videos/
+/cypress/screenshots/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+
+.eslintcache
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
+
+# Vitest
+__screenshots__/
+
+# Vite
+*.timestamp-*-*.mjs
+
+test-results/
+playwright-report/
+
+**/.spacetimedb.master-key.txt
+**/.spacetimedb.master-key.*.txt
+!**/.spacetimedb.master-key.example.txt
+**/spacetime.local.json
+
+# Yarn 4
+# https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+# inside .yarn, so should already be ignored, but make sure to not accidentally add big ass zip of node modules.
+install-state.gz
+**/install-state.gz
+
+# generic foo.local.bar files
+*.local
+**/*.local.*
+!**/*.local.example.*
+
 
 ######################################
 ##### END OF base's `.gitignore` #####
