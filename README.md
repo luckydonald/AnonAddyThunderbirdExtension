@@ -188,6 +188,15 @@ Notes:
 - this is the safer choice for shared branches
 - if your repo already shares `empty/init` as an ancestor, the initial `--allow-unrelated-histories` is not needed
 
+### All code for c) as a single copy pastable one:
+```shell
+git remote add empty https://luckydonald@github.com/EmptyAAS/empty.git
+git remote add base https://luckydonald@github.com/luckydonald/base.git
+git fetch empty init
+git fetch base base
+git merge --allow-unrelated-histories empty/init
+git merge --no-ff base/base
+```
 ## After Adopting The Base
 
 Once the base is present in your repo, the files provided by this repo live in your repo like normal files. In particular, the `ai/scripts/*` helpers are intended to be run from inside the consuming repository.
