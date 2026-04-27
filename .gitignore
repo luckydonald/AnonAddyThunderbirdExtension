@@ -765,6 +765,8 @@ install-state.gz
 **/*.local.*
 !**/*.local.example.*
 
+# Don't ignore the libs we've written ourselves.
+!src/lib/
 
 ######################################
 ##### END OF base's `.gitignore` #####
