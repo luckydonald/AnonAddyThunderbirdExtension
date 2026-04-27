@@ -58,6 +58,9 @@
       "Bash(echo \"exit: $?\")",
       "Bash(git add:*)",
       "Bash(git diff --stat)",
+      "Bash(git status:*)",
+      "Bash(git status --short)",
+      "Bash(git branch --show-current)",
       "Bash(git check-ignore:*)",
       "Bash(make commit:*)"
     ]
