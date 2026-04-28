@@ -30,6 +30,7 @@
       "Bash(ls:*)",
       "Bash(yarn)",
       "Bash(make)",
+      "Bash(uv --version)",
       "Bash(poetry install:*)",
       "Bash(yarn install:*)",
       "Bash(uv sync:*)",
