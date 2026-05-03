@@ -21,6 +21,6 @@ Adopt these rules for every commit made this session:
 
    <multiline body: what changed, why, key decisions>
    ```
-   Scope examples: `[github]`, `[frontend]`, `[stdb]`, `[api]`
+   Scope examples: `[.idea]`, `[git]` (gitignore etc.), `[github]` (workflows, issue templates, …), `[frontend]`, `[db]`, [stdb]` (spacetimedb), `[api]`, `[backend]`, `[docker]`, `[coolify]`, `[infra]`, … 
 
 5. **Stage only files changed by the current task.** Never stage `ai/git/pending-commit.md` (it is gitignored).

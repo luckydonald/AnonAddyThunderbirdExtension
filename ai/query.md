@@ -90,3 +90,11 @@ as well.
 ⏺ Committed as d16d0a4. Note that .claude/settings.json wasn't picked up by git (likely gitignored), so only hook.sh was included in the commit — the settings change is still live
    on disk and active.
 
+❯ Alright, commit that fix
+
+❯ What does `Attribution is controlled via the settings.json` in the error message? I think that must be removed.
+
+❯ Commit.
+
+❯ /rebase-ai-prompt-commits
+
