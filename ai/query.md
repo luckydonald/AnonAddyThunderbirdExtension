@@ -40,3 +40,5 @@ So like our git hook would, if it were to run first/regardless (but it clearly s
 
 ❯ Commit, with prefix `[base] ai: Run: …`.
 
+❯ wait, this commit contained `Co-Authored-By`. Why could we commit?
+

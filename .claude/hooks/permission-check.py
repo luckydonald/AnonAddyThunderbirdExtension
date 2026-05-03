@@ -86,7 +86,7 @@ def check_git_commit(argv):
     """Return denial reason if commit message contains Co-Authored-By, else None."""
     messages = collect_commit_messages(argv)
     combined = "\n".join(messages)
-    if "co-authored-by" in combined.lower():
+    if "co-authored-by:" in combined.lower():
         return (
             "Co-Authored-By attribution is not allowed. Remove the 'Co-Authored-By: ...' "
             "trailer from the commit message. Attribution is controlled via the "
@@ -106,6 +106,18 @@ def main():
         command = data.get("tool_input", {}).get("command", "")
         if not command:
             print("{}")
+            return
+
+        # Fast path: if the raw command string looks like a git commit and contains
+        # Co-Authored-By (colon required, matching the trailer format), deny immediately
+        # before shlex parsing — this catches heredoc-wrapped messages that shlex can't parse.
+        stripped = command.strip()
+        if stripped.startswith("git commit") and "co-authored-by:" in stripped.lower():
+            print(json.dumps(deny(
+                "Co-Authored-By attribution is not allowed. Remove the 'Co-Authored-By: ...' "
+                "trailer from the commit message. Attribution is controlled via the "
+                "'attribution' key in settings.json."
+            )))
             return
 
         try:
