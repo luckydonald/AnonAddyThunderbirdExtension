@@ -25,3 +25,18 @@
 ----
 
 #### Previous user prompts:
+❯ The problem with the failed commit (which is not relevant) is `Co-Authored-By`. There should be a git commit hook - which would prevent this - and should be made sure to work by claude's init script - but never triggers?
+Ah, I figured that the "deny" in the claude settings is executed first.
+Is there a "on-deny" hook or similar we can hook into, to enhance it with that information that the `Co-Authored-By' and git actions which blindly add all files (`git add . …`, `git add -A …` etc.) are not allowed, instead of just the `Error: Permission to use Bash with command … has been denied.`.
+So like our git hook would, if it were to run first/regardless (but it clearly shouldn't. Again, enrich the deny output)
+
+❯ Yes, support both `git commit -m "*Co-Authored-By*"` and `git commit -F` where the file with the commit message is given, which we can then look into as well, to make sure. Support multiple variants of those flags, combined, too. If everything else fails, we still got the commit hook after all.
+
+❯ _The only way to get rich messages is to remove the deny entries and let the `PermissionRequest` hook own the decision. The hook still denies — it just does so with explanation_ so the `PermissionRequest` hook only runs after the `deny` list?
+
+❯ _PermissionRequest hook is effectively "runs before the *interactive* permission prompt, but after the *automatic* deny check."_ This is speculative, right? Can we check that in docs or somewhere?
+
+❯ Create a hook for logging the plan mode decisions. Similar as we hook into `UserPromptSubmit`, I want to document the decisions taken when those multiple choice questions are asked - if possible with the full options to choose from - so it's clear later what the reasoning looked like.
+
+❯ Commit, with prefix `[base] ai: Run: …`.
+

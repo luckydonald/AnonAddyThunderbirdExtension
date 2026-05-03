@@ -1,5 +1,18 @@
 {
   "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/permission-check.py",
+            "timeout": 5,
+            "statusMessage": "Checking command policy..."
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
@@ -76,10 +89,6 @@
       "Bash(make commit:*)"
     ],
     "deny": [
-      "Bash(git add .)",
-      "Bash(git add .:*)",
-      "Bash(git add -A)",
-      "Bash(git add -A:*)",
       "Read(**/.env*)",
       "Read(**/env.php*)",
       "Read(**/*.pem)",
