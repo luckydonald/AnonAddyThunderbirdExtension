@@ -116,7 +116,7 @@ def main():
         # text is invisible to collect_commit_messages. Scanning the raw command string
         # catches those cases because the heredoc body is present verbatim.
         stripped = command.strip()
-        if stripped.startswith("git commit") and "co-authored-by:" in stripped.lower():
+        if "git commit" in stripped and "co-authored-by:" in stripped.lower():
             print(json.dumps(deny(
                 "Co-Authored-By attribution is not allowed. Remove the 'Co-Authored-By: ...' "
                 "trailer from the commit message. Attribution is controlled via the "

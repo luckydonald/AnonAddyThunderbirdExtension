@@ -249,6 +249,23 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertFalse(is_denied(run_hook(heredoc_cmd)))
 
+    def test_git_commit_compound_command_with_trailer_denied(self):
+        # Compound `git add ... && git commit -m "..."` — the command does not start
+        # with "git commit", so startswith() would miss it. The substring check catches it.
+        cmd = (
+            "git add ai/scripts/save-decision/hook.sh .claude/settings.json "
+            "&& git commit -m \"$(cat <<'EOF'\n"
+            "      ai: add PostToolUse hook to log AskUserQuestion decisions\n"
+            "\n"
+            "      Records each plan-mode question, its options, and the selected answer\n"
+            "      to ai/decisions.md after AskUserQuestion resolves.\n"
+            "\n"
+            "      Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n"
+            "      EOF\n"
+            "      )\""
+        )
+        self.assertTrue(is_denied(run_hook(cmd)))
+
     def test_non_bash_tool_allowed(self):
         out = run_hook("git add -A", tool_name="Edit")
         self.assertFalse(is_denied(out))

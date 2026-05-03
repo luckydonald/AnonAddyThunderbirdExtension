@@ -69,3 +69,24 @@ as well.
 
 ❯ commit this change
 
+❯ Check d16d0a4f685c2871cda1b09a4ea56445d23f2d64, it could slip through.
+
+⏺ The settings.json edit is saved on disk but git doesn't track it as modified — likely it's in .gitignore or was already committed. The new ai/scripts/save-decision/hook.sh is
+  untracked. Let me commit both:                                                                                                                                                   
+                                                                                                                                                                                   
+⏺ Bash(git add ai/scripts/save-decision/hook.sh .claude/settings.json && git commit -m "$(cat <<'EOF'                                                                              
+      ai: add PostToolUse hook to log AskUserQuestion decisions                                                                                                                    
+                                                                                                                                                                                   
+      Records each plan-mode question, its options, and the selected answer
+      to ai/decisions.md after AskUserQuestion resolves.                                                                                                                           
+                                                                                                                                                                                 
+      Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+      EOF
+      )")
+  ⎿  [base d16d0a4] ai: add PostToolUse hook to log AskUserQuestion decisions
+      1 file changed, 71 insertions(+)
+      create mode 100755 ai/scripts/save-decision/hook.sh
+
+⏺ Committed as d16d0a4. Note that .claude/settings.json wasn't picked up by git (likely gitignored), so only hook.sh was included in the commit — the settings change is still live
+   on disk and active.
+
