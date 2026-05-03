@@ -90,7 +90,8 @@
       "Bash(git ls-tree:*)",
       "Bash(git fetch:*)",
       "Bash(git check-ignore:*)",
-      "Bash(make commit:*)"
+      "Bash(make commit:*)",
+      "Bash(command -v pre-commit)"
     ],
     "deny": [
       "Read(**/.env*)",
