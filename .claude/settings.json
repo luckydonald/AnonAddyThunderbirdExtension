@@ -76,12 +76,12 @@
       "Bash(git fetch:*)",
       "Bash(git check-ignore:*)",
       "Bash(make commit:*)"
+    ],
+    "deny": [
+      "Bash(git add .)",
+      "Bash(git add .:*)",
+      "Bash(git add -A)",
+      "Bash(git add -A:*)"
     ]
-  },
-  "deny": [
-    "Bash(git add .)",
-    "Bash(git add .:*)",
-    "Bash(git add -A)",
-    "Bash(git add -A:*)"
-  ]
+  }
 }
