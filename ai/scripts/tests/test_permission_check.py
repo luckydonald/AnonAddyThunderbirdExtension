@@ -160,6 +160,30 @@ class CheckGitCommitTests(unittest.TestCase):
         argv = ["git", "commit", "-m", "fix: add Co-Authored-By detection logic"]
         self.assertIsNone(MODULE.check_git_commit(argv))
 
+    def test_co_authored_by_heredoc_caught_by_shlex_path(self):
+        # When shlex parses `git commit -m "$(cat <<'EOF'\n...\nEOF\n)"`, the entire
+        # $(cat ...) becomes the literal -m value — including any Co-Authored-By:
+        # trailer inside the heredoc body. collect_commit_messages sees it directly,
+        # without needing the raw-string fast path.
+        # We test check_git_commit with shlex-parsed argv to prove the shlex path
+        # catches it on its own.
+        import shlex
+        cmd = (
+            "git commit -m \"$(cat <<'EOF'\n"
+            "      [base] ai: Run: add PermissionRequest hook\n"
+            "\n"
+            "      Replace generic deny-list entries.\n"
+            "      Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n"
+            "      EOF\n"
+            "      )\""
+        )
+        argv = shlex.split(cmd)
+        # Confirm shlex did not error and yielded the unexpanded $(...) as the -m value
+        self.assertEqual(argv[:3], ["git", "commit", "-m"])
+        self.assertIn("Co-Authored-By:", argv[3])
+        # The shlex path (collect_commit_messages) must catch it
+        self.assertIsNotNone(MODULE.check_git_commit(argv))
+
     def test_co_authored_by_in_file_denied(self):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("fix: thing\n\nCo-Authored-By: User <u@example.com>\n")
@@ -189,8 +213,10 @@ class IntegrationTests(unittest.TestCase):
         )
 
     def test_git_commit_heredoc_with_trailer_denied(self):
-        # Simulates Claude's heredoc commit pattern — shlex can't parse this,
-        # so the raw-string fast path must catch it.
+        # Simulates Claude's heredoc commit pattern. shlex parses successfully but
+        # yields the unexpanded $(cat <<'EOF'...) expression as the -m value, so
+        # collect_commit_messages never sees the actual message text. The raw-string
+        # fast path catches it by scanning the full command string directly.
         heredoc_cmd = (
             "git commit -m \"$(cat <<'EOF'\n"
             "fix: something\n\n"
@@ -204,6 +230,22 @@ class IntegrationTests(unittest.TestCase):
             "git commit -m \"$(cat <<'EOF'\n"
             "fix: something clean\n"
             "EOF\n)\""
+        )
+        self.assertFalse(is_denied(run_hook(heredoc_cmd)))
+
+    def test_git_commit_heredoc_prose_mention_allowed(self):
+        # Body mentions "Co-Authored-By detection" as prose — no colon, not a trailer.
+        # This is the exact pattern that slipped through before the fix was applied.
+        heredoc_cmd = (
+            "git commit -m \"$(cat <<'EOF'\n"
+            "      [base] ai: Run: add PermissionRequest hook for git add and Co-Authored-By policy\n"
+            "\n"
+            "      Replace generic deny-list entries for `git add .` / `git add -A` with a\n"
+            "      `PermissionRequest` hook that returns rich denial reasons. Also adds\n"
+            "      Co-Authored-By detection for `git commit` messages (via -m, --message=,\n"
+            "      or -F file). The commit-msg hook remains as final fallback.\n"
+            "      EOF\n"
+            "      )\""
         )
         self.assertFalse(is_denied(run_hook(heredoc_cmd)))
 

@@ -110,7 +110,11 @@ def main():
 
         # Fast path: if the raw command string looks like a git commit and contains
         # Co-Authored-By (colon required, matching the trailer format), deny immediately
-        # before shlex parsing — this catches heredoc-wrapped messages that shlex can't parse.
+        # before shlex parsing. When the message is passed via a heredoc like
+        # `git commit -m "$(cat <<'EOF'\n...\nEOF\n)"`, shlex parses successfully but
+        # yields the unexpanded `$(...)` expression as the -m value — the actual message
+        # text is invisible to collect_commit_messages. Scanning the raw command string
+        # catches those cases because the heredoc body is present verbatim.
         stripped = command.strip()
         if stripped.startswith("git commit") and "co-authored-by:" in stripped.lower():
             print(json.dumps(deny(
