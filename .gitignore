@@ -765,8 +765,16 @@ install-state.gz
 **/*.local.*
 !**/*.local.example.*
 
+# cache
+.cache/
+
 # Don't ignore the libs we've written ourselves.
 !src/lib/
+
+# Don't ignore .gitkeep
+!.gitkeep
+!**/.gitkeep
+!/**/.gitkeep
 
 ######################################
 ##### END OF base's `.gitignore` #####
