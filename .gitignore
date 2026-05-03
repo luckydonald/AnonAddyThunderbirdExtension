@@ -823,6 +823,7 @@ install-state.gz
 !ai/scripts/
 !ai/scripts/**
 ai/git/pending-commit.md
+ai/git/rebase-msg-*.md
 
 # Don't ignore the libs we've written ourselves.
 !src/lib/

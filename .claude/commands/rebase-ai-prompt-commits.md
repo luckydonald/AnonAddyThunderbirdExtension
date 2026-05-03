@@ -17,7 +17,7 @@ done
 
 **2. Plan groups.** For each `ai: updated prompt` commit (only `ai/query.md`), assign it as `fixup` under its nearest code commit. Flag mislabeled commits (wrong message for actual file content).
 
-**3. Write renamed commit messages** to `/tmp/rebase-msg-<sha>.txt` for any commits needing a label fix.
+**3. Write renamed commit messages** to `/ai/git/rebase-msg-<sha>.md` for any commits needing a label fix.
 
 **4. Write the rebase todo script**
 ```bash
@@ -26,7 +26,7 @@ cat > "$1" << 'REBASE'
 pick <first-code-commit>
 fixup <query-commit>
 fixup <query-commit>
-exec git commit --amend -F /tmp/rebase-msg-<sha>.txt
+exec git commit --amend -F /ai/git/rebase-msg-<sha>.md
 pick <next-code-commit>
 fixup <query-commit>
 ...
