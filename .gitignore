@@ -822,7 +822,7 @@ install-state.gz
 # AI folder
 !ai/scripts/
 !ai/scripts/**
-ai/pending-commit.txt
+ai/pending-commit.md
 
 # Don't ignore the libs we've written ourselves.
 !src/lib/

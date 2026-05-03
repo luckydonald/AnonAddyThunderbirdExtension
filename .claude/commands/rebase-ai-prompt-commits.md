@@ -42,7 +42,7 @@ GIT_SEQUENCE_EDITOR=/tmp/git-rebase-todo.sh git rebase -i origin/<upstream>
 ```
 
 **6. Optional — rewrite HEAD as branch summary**
-Write to `ai/pending-commit.txt`:
+Write to `ai/pending-commit.md`:
 ```
 [scope] category: ai: Run: <summary>
 
@@ -51,4 +51,4 @@ Branch <name> based on origin/<upstream> @ <sha>.
 - bullet: what changed and why
 - bullet: key decisions
 ```
-Then: `git commit --amend -F ai/pending-commit.txt`
+Then: `git commit --amend -F ai/pending-commit.md`
