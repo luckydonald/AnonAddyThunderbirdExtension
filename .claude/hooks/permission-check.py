@@ -89,8 +89,7 @@ def check_git_commit(argv):
     if "co-authored-by:" in combined.lower():
         return (
             "Co-Authored-By attribution is not allowed. Remove the 'Co-Authored-By: ...' "
-            "trailer from the commit message. Attribution is controlled via the "
-            "'attribution' key in settings.json."
+            "trailer from the commit message."
         )
     return None
 
@@ -119,8 +118,7 @@ def main():
         if "git commit" in stripped and "co-authored-by:" in stripped.lower():
             print(json.dumps(deny(
                 "Co-Authored-By attribution is not allowed. Remove the 'Co-Authored-By: ...' "
-                "trailer from the commit message. Attribution is controlled via the "
-                "'attribution' key in settings.json."
+                "trailer from the commit message."
             )))
             return
 

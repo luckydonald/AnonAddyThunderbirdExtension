@@ -282,6 +282,7 @@ class IntegrationTests(unittest.TestCase):
         out = run_hook('git commit -m "fix\n\nCo-Authored-By: X <x@x.com>"')
         reason = out["hookSpecificOutput"]["permissionDecisionReason"]
         self.assertIn("Co-Authored-By", reason)
+        self.assertNotIn("settings.json", reason)
 
 
 if __name__ == "__main__":
