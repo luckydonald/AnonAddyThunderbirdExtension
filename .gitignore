@@ -819,6 +819,9 @@ install-state.gz
 # cache
 .cache/
 
+# AI stuff
+.playwright-mcp/page-*.yml
+
 # AI folder
 !ai/scripts/
 !ai/scripts/**
