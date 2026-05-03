@@ -29,7 +29,16 @@ fi
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 1
 cd "$ROOT" || exit 2
 
-mkdir -p ai
+# Reroute log path when running inside the `base` repo
+_ORIGIN_URL=$(git remote get-url origin 2>/dev/null)
+_REMOTE_NAMES=$(git remote | sort | tr '\n' ' ' | xargs)
+if [ "$(basename "$ROOT")" = "base" ] \
+  && [ "$_REMOTE_NAMES" = "empty origin" ] \
+  && printf '%s' "$_ORIGIN_URL" | grep -qE 'luckydonald/base(\.git)?$'; then
+  PROMPT_LOG="ai/°base/query.md"
+fi
+
+mkdir -p "$(dirname "${PROMPT_LOG}")"
 env
 
 # If query.md has staged changes, save old HEAD + staged blobs to re-apply after commit

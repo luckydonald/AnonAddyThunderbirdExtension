@@ -72,3 +72,12 @@ as well.
 ❯ /rebase-ai-prompt-commits
 
 ❯ /btw, is there a charater suited for folder/file prefixes to imply "this is not very useful folder, don't look inside" like the dot would - and not taking up much space (dot is just a small symbol at the bottom of the "character field"), but which will in a typical folder/file sort appear _after_ all others - i.e. after `Z`?
+
+❯ I've used `ai/°base` now, as that one is still easy enough to type on pretty much every system.
+Anyway, back to the `base` repo:
+The @ai/scripts/save-prompt/hook.sh (and @ai/scripts/save-decision/hook.sh analogous) shall check if the current repo is `base` repo (this current singular prompt execution is) based on folder name and the fact that the remotes are `origin https://luckydonald@github.com/luckydonald/base.git` and `empty   https://luckydonald@github.com/EmptyAAS/empty.git`.
+It shall not be a guard, but instead of writing to `ai/query.md` it shall write to `ai/°base/query.md`.
+So check that:
+1. the folder name is `base`
+2. it has only `origin` and `empty` set as remotes
+3. the url of origin is luckydonald/base (`.git`, `luckydonald@` optional)

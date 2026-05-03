@@ -21,7 +21,16 @@ fi
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 1
 cd "$ROOT" || exit 2
 
-mkdir -p ai
+# Reroute log path when running inside the `base` repo
+_ORIGIN_URL=$(git remote get-url origin 2>/dev/null)
+_REMOTE_NAMES=$(git remote | sort | tr '\n' ' ' | xargs)
+if [ "$(basename "$ROOT")" = "base" ] \
+  && [ "$_REMOTE_NAMES" = "empty origin" ] \
+  && printf '%s' "$_ORIGIN_URL" | grep -qE 'luckydonald/base(\.git)?$'; then
+  DECISION_LOG="ai/°base/decisions.md"
+fi
+
+mkdir -p "$(dirname "${DECISION_LOG}")"
 
 # If decisions.md has staged changes, save blobs to re-apply after commit
 STAGED_HASH=$(git ls-files --stage "${DECISION_LOG}" 2>/dev/null | awk '{print $2}')
