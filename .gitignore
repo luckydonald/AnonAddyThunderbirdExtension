@@ -38,8 +38,6 @@ xcuserdata/
 [Ll]ib64
 [Ll]ocal
 [Ss]cripts
-!ai/scripts/
-!ai/scripts/**
 pyvenv.cfg
 .venv
 pip-selfcheck.json
@@ -820,6 +818,11 @@ install-state.gz
 
 # cache
 .cache/
+
+# AI folder
+!ai/scripts/
+!ai/scripts/**
+ai/pending-commit.txt
 
 # Don't ignore the libs we've written ourselves.
 !src/lib/
