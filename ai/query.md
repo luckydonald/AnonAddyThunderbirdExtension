@@ -67,3 +67,5 @@ as well.
 
 ❯ Now duplicate that test case with a proper co-Authored, and assert it fails because of shlex detecting it, not shlex erroring/the raw `x in y` workaround from earlier.
 
+❯ commit this change
+
