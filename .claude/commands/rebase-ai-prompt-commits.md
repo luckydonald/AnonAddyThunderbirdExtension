@@ -1,5 +1,5 @@
 ---
-name: rebasing-ai-prompt-commits
+name: rebase-ai-prompt-commits
 description: Rebases the current branch to group stray `ai: updated prompt` commits (ai/query.md-only) into their neighboring code commits using non-interactive rebase. Fixes mislabeled commits. Optionally rewrites HEAD as a branch summary. Invoke on demand before merging or reviewing a branch.
 ---
 
