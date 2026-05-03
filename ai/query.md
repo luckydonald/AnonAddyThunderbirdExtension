@@ -42,3 +42,5 @@ So like our git hook would, if it were to run first/regardless (but it clearly s
 
 ❯ wait, this commit contained `Co-Authored-By`. Why could we commit?
 
+❯ Create proper test for it in the ai/tests folder.
+

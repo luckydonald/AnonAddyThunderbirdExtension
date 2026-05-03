@@ -62,6 +62,8 @@
       "Bash(uv run pytest:*)",
       "Bash(uv run python -m pytest:*)",
       "Bash(poetry run pytests:*)",
+      "Bash(python3 -m pytest ai/scripts/tests/test_permission_check.py:*)",
+      "Bash(python3 -m unittest ai.scripts.tests.test_permission_check:*)",
       "Bash(yarn test:unit:*)",
       "Bash(cargo test:*)",
       "Bash(yarn build-check:*)",
