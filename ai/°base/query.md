@@ -71,3 +71,4 @@ as well.
 
 ❯ /rebase-ai-prompt-commits
 
+❯ /btw, is there a charater suited for folder/file prefixes to imply "this is not very useful folder, don't look inside" like the dot would - and not taking up much space (dot is just a small symbol at the bottom of the "character field"), but which will in a typical folder/file sort appear _after_ all others - i.e. after `Z`?
