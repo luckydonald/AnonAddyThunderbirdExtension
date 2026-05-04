@@ -81,3 +81,7 @@ So check that:
 1. the folder name is `base`
 2. it has only `origin` and `empty` set as remotes
 3. the url of origin is luckydonald/base (`.git`, `luckydonald@` optional)
+
+❯ Set up the Git LFS to support `.png` and `.jp(e)g`. Make sure the `README.md` contains the necessary commands for setup.
+❯ /committing-with-lplp-style
+

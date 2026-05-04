@@ -105,6 +105,7 @@
       "Bash(git fetch:*)",
       "Bash(git stash:*)",
       "Bash(make commit:*)",
+      "Bash(git lfs install)",
       "Bash(command -v pre-commit)"
     ],
     "deny": [

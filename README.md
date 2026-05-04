@@ -200,3 +200,13 @@ git merge --no-ff base/base
 ## After Adopting The Base
 
 Once the base is present in your repo, the files provided by this repo live in your repo like normal files. In particular, the `ai/scripts/*` helpers are intended to be run from inside the consuming repository.
+
+### Git LFS
+
+This base tracks binary image files (`.png`, `.jpg`, `.jpeg`) with [Git LFS](https://git-lfs.com). After cloning or adopting the base, run:
+
+```bash
+git lfs install
+```
+
+This is a one-time setup per machine. The `.gitattributes` file already defines which file types are tracked, so no additional `git lfs track` calls are needed.
