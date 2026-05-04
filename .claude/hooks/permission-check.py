@@ -86,7 +86,8 @@ def check_git_commit(argv):
     """Return denial reason if commit message contains Co-Authored-By, else None."""
     messages = collect_commit_messages(argv)
     combined = "\n".join(messages)
-    if "co-authored-by:" in combined.lower():
+    combined_lower = combined.lower()
+    if "co-authored-by:" in combined_lower or "noreply@anthropic" in combined_lower:
         return (
             "Co-Authored-By attribution is not allowed. Remove the 'Co-Authored-By: ...' "
             "trailer from the commit message."
@@ -108,14 +109,19 @@ def main():
             return
 
         # Fast path: if the raw command string looks like a git commit and contains
-        # Co-Authored-By (colon required, matching the trailer format), deny immediately
-        # before shlex parsing. When the message is passed via a heredoc like
-        # `git commit -m "$(cat <<'EOF'\n...\nEOF\n)"`, shlex parses successfully but
-        # yields the unexpanded `$(...)` expression as the -m value — the actual message
-        # text is invisible to collect_commit_messages. Scanning the raw command string
-        # catches those cases because the heredoc body is present verbatim.
+        # Co-Authored-By (colon required, matching the trailer format) or the
+        # Anthropic noreply email, deny immediately before shlex parsing. When the
+        # message is passed via a heredoc like `git commit -m "$(cat <<'EOF'\n...\nEOF\n)"`,
+        # shlex parses successfully but yields the unexpanded `$(...)` expression as the
+        # -m value — the actual message text is invisible to collect_commit_messages.
+        # Scanning the raw command string catches those cases because the heredoc body
+        # is present verbatim.
         stripped = command.strip()
-        if "git commit" in stripped and "co-authored-by:" in stripped.lower():
+        _stripped_lower = stripped.lower()
+        if "git commit" in stripped and (
+            "co-authored-by:" in _stripped_lower
+            or "noreply@anthropic" in _stripped_lower
+        ):
             print(json.dumps(deny(
                 "Co-Authored-By attribution is not allowed. Remove the 'Co-Authored-By: ...' "
                 "trailer from the commit message."

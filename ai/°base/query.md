@@ -92,3 +92,7 @@ So check that:
 
 ❯ commit, then follow /rebase-ai-prompt-commits
 
+❯ Earlier you mananged to commit with `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic>` again. Analyze why this managed to get past the `PermissionRequest` check.
+The commit which I since rebased and fixed was `base 5338ebc` with the title `ai: skip logging for internal tooling prompt command`, so you can match it in the earlier log.
+In any way, also add `<noreply@anthropic>` to the "forbidden" strings, like `Co-Authored-By`.
+
