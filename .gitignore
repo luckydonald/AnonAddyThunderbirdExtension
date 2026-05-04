@@ -43,7 +43,9 @@ pyvenv.cfg
 pip-selfcheck.json
 
 ### Eclipse template
+*.pydevproject
 .metadata
+.gradle
 bin/
 tmp/
 *.tmp
@@ -54,6 +56,9 @@ local.properties
 .settings/
 .loadpath
 .recommenders
+
+# Eclipse Core
+.project
 
 # External tool builders
 .externalToolBuilders/
