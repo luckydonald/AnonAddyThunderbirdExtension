@@ -68,6 +68,7 @@ Specifying the username is only needed if you have more than one GitHub account 
 ```bash
 git remote add base https://luckydonald@github.com/luckydonald/base.git
 git fetch base base
+git lfs install
 ```
 
 ###### Shared initial commit
@@ -194,6 +195,7 @@ git remote add empty https://luckydonald@github.com/EmptyAAS/empty.git
 git remote add base https://luckydonald@github.com/luckydonald/base.git
 git fetch empty init
 git fetch base base
+git lfs install
 git merge --allow-unrelated-histories empty/init
 git merge --no-ff base/base
 ```
@@ -203,10 +205,4 @@ Once the base is present in your repo, the files provided by this repo live in y
 
 ### Git LFS
 
-This base tracks binary image files (`.png`, `.jpg`, `.jpeg`) with [Git LFS](https://git-lfs.com). After cloning or adopting the base, run:
-
-```bash
-git lfs install
-```
-
-This is a one-time setup per machine. The `.gitattributes` file already defines which file types are tracked, so no additional `git lfs track` calls are needed.
+This base tracks binary image files (`.png`, `.jpg`, `.jpeg`) with [Git LFS](https://git-lfs.com). The `git lfs install` command in the setup steps above is a one-time setup per machine. The `.gitattributes` file already defines which file types are tracked, so no additional `git lfs track` calls are needed.

@@ -85,3 +85,5 @@ So check that:
 ❯ Set up the Git LFS to support `.png` and `.jp(e)g`. Make sure the `README.md` contains the necessary commands for setup.
 ❯ /committing-with-lplp-style
 
+❯ That readme change for git lfs install is not very thorough. It shall be part of the install section properly, and definitly also in the quick copy-past command block.
+
