@@ -13,7 +13,10 @@ Adopt these rules for every commit made this session:
    - Last message is `ai: updated prompt` → **amend** it
    - Otherwise → create a new commit
 
-3. **Always write the message to `ai/git/pending-commit.md` first**, then pass it with `-F ai/git/pending-commit.md`. Never inline the message.
+3. **Always write the message to `ai/git/pending-commit.md` first** like this:
+   1. run exactly the whitelisted command `rm ai/git/pending-commit.md || echo 'was gone'`, which makes sure it's not gonna cause "stale unread file" issues.
+   2. Write to `ai/git/pending-commit.md` using the preferred Built-in/MCP tool.
+   3. Pass it to the commit with `-F ai/git/pending-commit.md`. Never inline the message in the command, to avoid the need for user confirmations.
 
 4. **Message format:**
    ```

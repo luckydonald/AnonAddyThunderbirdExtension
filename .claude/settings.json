@@ -105,6 +105,8 @@
       "Bash(git fetch:*)",
       "Bash(git stash:*)",
       "Bash(make commit:*)",
+      "Bash(rm ai/git/pending-commit.md || echo 'was gone')",
+      "Bash(rm ai/git/pending-commit.md)",
       "Bash(git lfs install)",
       "Bash(command -v pre-commit)"
     ],
