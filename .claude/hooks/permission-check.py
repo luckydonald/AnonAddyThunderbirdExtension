@@ -4,6 +4,7 @@
 import json
 import shlex
 import sys
+import traceback
 
 
 def deny(reason):
@@ -14,6 +15,17 @@ def deny(reason):
             "permissionDecisionReason": reason,
         }
     }
+
+
+def deny_error(e):
+    tb = traceback.format_exc()
+    return deny(
+        f"COMMAND AUDIT ERROR: While trying to calculate if this command is allowed "
+        f"to execute, the script encountered an error. STOP EXECUTION NOW, and show "
+        f"the error to the user, so they can ask for that script to be fixed. Do not "
+        f"attempt to work around it unless specifically asked to by the user. "
+        f"Error message: {type(e).__name__}: {e}\n\nStacktrace:\n{tb}"
+    )
 
 
 def check_git_add(argv):
@@ -125,13 +137,7 @@ def main():
         try:
             argv = shlex.split(command)
         except ValueError as e:
-            print(json.dumps(deny(
-                f"COMMAND AUDIT ERROR: While trying to calculate if this command is allowed "
-                f"to execute, the script encountered an error. STOP EXECUTION NOW, and show "
-                f"the error to the user, so they can ask for that script to be fixed. Do not "
-                f"attempt to work around it unless specifically asked to by the user. "
-                f"Error message: {e}"
-            )))
+            print(json.dumps(deny_error(e)))
             return
 
         if len(argv) < 2 or argv[0] != "git":
@@ -151,13 +157,7 @@ def main():
         else:
             print("{}")
     except Exception as e:
-        print(json.dumps(deny(
-            f"COMMAND AUDIT ERROR: While trying to calculate if this command is allowed "
-            f"to execute, the script encountered an error. STOP EXECUTION NOW, and show "
-            f"the error to the user, so they can ask for that script to be fixed. Do not "
-            f"attempt to work around it unless specifically asked to by the user. "
-            f"Error message: {type(e).__name__}: {e}"
-        )))
+        print(json.dumps(deny_error(e)))
 
 
 if __name__ == "__main__":

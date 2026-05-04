@@ -96,6 +96,8 @@ So check that:
 The commit which I since rebased and fixed was `base 5338ebc` with the title `ai: skip logging for internal tooling prompt command`, so you can match it in the earlier log.
 In any way, also add `<noreply@anthropic>` to the "forbidden" strings, like `Co-Authored-By`.
 
-❯ For those kind of exceptions in there, make sure to raise those errors. Like instead, return a deny with the following deny text:
-> COMMAND AUDIT ERROR: While trying to calcilate if this command is allowed to execute, the script encountered an error. STOP EXECUTION NOW, and show the error to the user, so they can ask for that script to be fixed. Do not attempt to work around it unless specifically asked to by the user. Error message: ...
+❯ For those kind of exceptions in there, make sure to raise those errors. Like instead, return a "deny" with the following deny text:
+> COMMAND AUDIT ERROR: While trying to calculate if this command is allowed to execute, the script encountered an error. STOP EXECUTION NOW, and show the error to the user, so they can ask for that script to be fixed. Do not attempt to work around it unless specifically asked to by the user. Error message: ...
+
+❯ As it's duplicated, have a func for that. Also the stacktrace should be shown.
 
