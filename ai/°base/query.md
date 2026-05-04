@@ -92,3 +92,5 @@ So check that:
 
 ❯ Edit @ai/scripts/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `rebase-ai-prompt-commits.md`.
 
+❯ commit, then follow /rebase-ai-prompt-commits
+

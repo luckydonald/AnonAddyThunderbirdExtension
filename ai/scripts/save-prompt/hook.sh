@@ -25,6 +25,13 @@ if [ -z "$PROMPT" ]; then
   exit 0
 fi
 
+# Ignore single-command prompts that are internal tooling invocations
+case "$(echo "$PROMPT" | xargs)" in
+  "/committing-with-lplp-style"|"rebase-ai-prompt-commits.md")
+    exit 0
+    ;;
+esac
+
 # Work from the git root
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 1
 cd "$ROOT" || exit 2
