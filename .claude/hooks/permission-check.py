@@ -60,11 +60,8 @@ def collect_commit_messages(argv):
                 if path == "-":
                     # stdin — cannot inspect
                     continue
-                try:
-                    with open(path) as f:
-                        messages.append(f.read())
-                except OSError:
-                    pass
+                with open(path) as f:
+                    messages.append(f.read())
             else:
                 i += 1
         elif arg.startswith("--file="):
@@ -72,11 +69,8 @@ def collect_commit_messages(argv):
             i += 1
             if path == "-":
                 continue
-            try:
-                with open(path) as f:
-                    messages.append(f.read())
-            except OSError:
-                pass
+            with open(path) as f:
+                messages.append(f.read())
         else:
             i += 1
     return messages
@@ -130,8 +124,14 @@ def main():
 
         try:
             argv = shlex.split(command)
-        except ValueError:
-            print("{}")
+        except ValueError as e:
+            print(json.dumps(deny(
+                f"COMMAND AUDIT ERROR: While trying to calculate if this command is allowed "
+                f"to execute, the script encountered an error. STOP EXECUTION NOW, and show "
+                f"the error to the user, so they can ask for that script to be fixed. Do not "
+                f"attempt to work around it unless specifically asked to by the user. "
+                f"Error message: {e}"
+            )))
             return
 
         if len(argv) < 2 or argv[0] != "git":
@@ -150,8 +150,14 @@ def main():
             print(json.dumps(deny(reason)))
         else:
             print("{}")
-    except Exception:
-        print("{}")
+    except Exception as e:
+        print(json.dumps(deny(
+            f"COMMAND AUDIT ERROR: While trying to calculate if this command is allowed "
+            f"to execute, the script encountered an error. STOP EXECUTION NOW, and show "
+            f"the error to the user, so they can ask for that script to be fixed. Do not "
+            f"attempt to work around it unless specifically asked to by the user. "
+            f"Error message: {type(e).__name__}: {e}"
+        )))
 
 
 if __name__ == "__main__":
