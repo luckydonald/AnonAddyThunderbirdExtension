@@ -12,6 +12,8 @@ Adopt these rules for every commit made this session:
 2. **Check the last commit before committing:**
    - Last message is `ai: updated prompt` → **amend** it
    - Otherwise → create a new commit
+   - If more than one chained past commits are titled `ai: updated prompt` they probably should be included, too. 
+     - In that case the `/rebase-ai-prompt-commits` command/skill describes how to rebase & include them.
 
 3. **Always write the message to `ai/git/pending-commit.md` first** like this:
    1. run exactly the whitelisted command `rm ai/git/pending-commit.md || echo 'was gone'`, which makes sure it's not gonna cause "stale unread file" issues.
