@@ -88,9 +88,7 @@ So check that:
 
 ❯ Also add the command for pre-commit, too.
 
-❯ Edit @ai/scripts/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `rebase-ai-prompt-commits.md`.
-
-❯ Edit @ai/scripts/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `rebase-ai-prompt-commits.md`.
+❯ Edit @ai/scripts/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `/rebase-ai-prompt-commits`.
 
 ❯ commit, then follow /rebase-ai-prompt-commits
 
