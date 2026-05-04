@@ -87,3 +87,5 @@ So check that:
 
 ❯ That readme change for git lfs install is not very thorough. It shall be part of the install section properly, and definitly also in the quick copy-past command block.
 
+❯ Also add the command for pre-commit, too.
+
