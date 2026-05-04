@@ -83,11 +83,12 @@ So check that:
 3. the url of origin is luckydonald/base (`.git`, `luckydonald@` optional)
 
 ❯ Set up the Git LFS to support `.png` and `.jp(e)g`. Make sure the `README.md` contains the necessary commands for setup.
-❯ /committing-with-lplp-style
 
 ❯ That readme change for git lfs install is not very thorough. It shall be part of the install section properly, and definitly also in the quick copy-past command block.
 
 ❯ Also add the command for pre-commit, too.
 
-❯ /committing-with-lplp-style
+❯ Edit @ai/scripts/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `rebase-ai-prompt-commits.md`.
+
+❯ Edit @ai/scripts/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `rebase-ai-prompt-commits.md`.
 
