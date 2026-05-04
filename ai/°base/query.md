@@ -89,3 +89,5 @@ So check that:
 
 ❯ Also add the command for pre-commit, too.
 
+❯ /committing-with-lplp-style
+

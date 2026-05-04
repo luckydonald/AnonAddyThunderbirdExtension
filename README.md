@@ -69,6 +69,7 @@ Specifying the username is only needed if you have more than one GitHub account 
 git remote add base https://luckydonald@github.com/luckydonald/base.git
 git fetch base base
 git lfs install
+pre-commit install
 ```
 
 ###### Shared initial commit
@@ -196,6 +197,7 @@ git remote add base https://luckydonald@github.com/luckydonald/base.git
 git fetch empty init
 git fetch base base
 git lfs install
+pre-commit install
 git merge --allow-unrelated-histories empty/init
 git merge --no-ff base/base
 ```
