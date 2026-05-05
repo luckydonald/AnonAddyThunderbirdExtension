@@ -60,7 +60,7 @@ def _install_hooks():
 
         # Install pre-commit hooks
         result = subprocess.run(
-            [sys.executable, "-m", "pre_commit", "install", "--hook-type", "commit-msg"],
+            [sys.executable, "-m", "pre_commit", "install", "--hooks-type", "commit-msg"],
             cwd=repo_root,
             capture_output=True,
         )
@@ -69,7 +69,7 @@ def _install_hooks():
             print("✓ Pre-commit hooks installed", file=sys.stderr)
         else:
             print(
-                f"Warning: pre-commit hook installation had issues: {result.stderr.decode()}",
+                f"Warning: pre-commit hooks installation had issues: {result.stderr.decode()}",
                 file=sys.stderr,
             )
     except Exception as e:

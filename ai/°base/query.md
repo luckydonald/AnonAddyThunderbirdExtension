@@ -27,12 +27,12 @@ So like our git hook would, if it were to run first/regardless (but it clearly s
 ❯ Test for
 ```shell
 git commit -m "$(cat <<'EOF'
-      [base] ai: Run: add PermissionRequest hook for git add and Co-Authored-By policy
+      [base] ai: Run: add PermissionRequest hooks for git add and Co-Authored-By policy
 
       Replace generic deny-list entries for `git add .` / `git add -A` with a
-      `PermissionRequest` hook that returns rich denial reasons. Also adds
+      `PermissionRequest` hooks that returns rich denial reasons. Also adds
       Co-Authored-By detection for `git commit` messages (via -m, --message=,
-      or -F file). The commit-msg hook remains as final fallback.
+      or -F file). The commit-msg hooks remains as final fallback.
       EOF
       )"
 ```

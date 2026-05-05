@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./ai/scripts/init/checkout.sh",
+            "command": "./scripts/°base/init/checkout.sh",
             "statusMessage": "Setting up git hooks",
             "async": true
           }
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./ai/scripts/save-decision/hook.sh 'claude'",
+            "command": "./scripts/°base/save-decision/hook.sh 'claude'",
             "async": true
           }
         ]
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./ai/scripts/save-prompt/hook.sh 'claude'",
+            "command": "./scripts/°base/save-prompt/hook.sh 'claude'",
             "async": true
           }
         ]
@@ -74,7 +74,8 @@
       "Bash(uv run pytest:*)",
       "Bash(uv run python -m pytest:*)",
       "Bash(poetry run pytests:*)",
-      "Bash(python3 -m pytest ai/scripts/tests/test_permission_check.py:*)",
+      "Bash(python3 -m pytest scripts/°base/tests/test_permission_check.py:*)",
+      "Bash(python3 -m pytest scripts/°base/init/checkout.sh)",
       "Bash(python3 -m unittest ai.scripts.tests.test_permission_check:*)",
       "Bash(python3 -m unittest ai.scripts.tests.test_permission_check.IntegrationTests.test_git_commit_heredoc_prose_mention_allowed:*)",
       "Bash(python3 -m unittest ai.scripts.tests.test_permission_check.CheckGitCommitTests.test_co_authored_by_heredoc_caught_by_shlex_path:*)",

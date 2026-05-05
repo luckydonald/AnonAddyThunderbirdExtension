@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PostToolUse hook (AskUserQuestion): appends plan-mode decisions to ai/decisions.md and commits it.
+# PostToolUse hooks (AskUserQuestion): appends plan-mode decisions to ai/decisions.md and commits it.
 
 DECISION_LOG="ai/decisions.md"
 DECISION_COMMIT_TEMPLATE="ai/commit-templates/decision.md"

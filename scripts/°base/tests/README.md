@@ -1,15 +1,15 @@
-# ai/scripts/tests
+# scripts/°base/tests
 
-Tests for the Python helpers in [`ai/scripts/`](/Users/user/Documents/programming/Python/base/ai/scripts).
+Tests for the Python helpers in [`scripts/°base/`](/Users/user/Documents/programming/Python/base/scripts/°base).
 
-The local project environment for these helpers lives in [`ai/scripts/pyproject.toml`](/Users/user/Documents/programming/Python/base/ai/scripts/pyproject.toml).
+The local project environment for these helpers lives in [`scripts/°base/pyproject.toml`](/Users/user/Documents/programming/Python/base/scripts/°base/pyproject.toml).
 
 ## Run the whole test folder
 
 From the repository root:
 
 ```bash
-uv run --project ai/scripts python -m unittest discover -s ai/scripts/tests -v
+uv run --project scripts/°base python -m unittest discover -s scripts/°base/tests -v
 ```
 
 ## Run only `git_remote_fix`
@@ -17,7 +17,7 @@ uv run --project ai/scripts python -m unittest discover -s ai/scripts/tests -v
 From the repository root:
 
 ```bash
-uv run --project ai/scripts python -m unittest ai.scripts.tests.test_git_remote_fix -v
+uv run --project scripts/°base python -m unittest ai.scripts.tests.test_git_remote_fix -v
 ```
 
 ## Run the test file directly
@@ -25,7 +25,7 @@ uv run --project ai/scripts python -m unittest ai.scripts.tests.test_git_remote_
 From the repository root:
 
 ```bash
-uv run --project ai/scripts python ai/scripts/tests/test_git_remote_fix.py
+uv run --project scripts/°base python scripts/°base/tests/test_git_remote_fix.py
 ```
 
 ## Run the interactive helper
@@ -33,7 +33,7 @@ uv run --project ai/scripts python ai/scripts/tests/test_git_remote_fix.py
 From the repository root:
 
 ```bash
-uv run --project ai/scripts python ai/scripts/git/remote/fix_username.py
+uv run --project scripts/°base python scripts/°base/git/remote/fix_username.py
 ```
 
-All commands assume `uv` will resolve dependencies from [`ai/scripts/pyproject.toml`](/Users/user/Documents/programming/Python/base/ai/scripts/pyproject.toml).
+All commands assume `uv` will resolve dependencies from [`scripts/°base/pyproject.toml`](/Users/user/Documents/programming/Python/base/scripts/°base/pyproject.toml).

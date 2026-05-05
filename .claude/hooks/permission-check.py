@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PermissionRequest hook: enforces git add and Co-Authored-By policies."""
+"""PermissionRequest hooks: enforces git add and Co-Authored-By policies."""
 
 import json
 import shlex

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# ai/scripts/init/checkout.sh
+# scripts/°base/init/checkout.sh
 #
 # One-shot repo setup: installs git hooks (pre-commit framework + git-lfs)
 # and cleans up stale yorkie hooks left behind by the old Vue CLI tooling.
 #
 # Intended to be run:
-#   - By the Claude SessionStart hook (automatic)
+#   - By the Claude SessionStart hooks (automatic)
 #   - After `git clone` / `git checkout` (manual or via post-checkout)
 #   - Idempotent: safe to run multiple times.
 
@@ -23,7 +23,7 @@ remove_yorkie_hooks() {
     [ -f "$hook_file" ] || continue
     # Skip .sample files
     [[ "$hook_file" == *.sample ]] && continue
-    # Check if it's a yorkie hook
+    # Check if it's a yorkie hooks
     if head -2 "$hook_file" | grep -q '#yorkie'; then
       rm "$hook_file"
     fi
@@ -44,7 +44,7 @@ if command -v git-lfs >/dev/null 2>&1; then
 fi
 
 # ─── 4. Install pre-commit hooks ────────────────────────────────────────────
-# Installs commit-msg and pre-commit hook types as configured in
+# Installs commit-msg and pre-commit hooks types as configured in
 # .pre-commit-config.yaml
 if command -v pre-commit >/dev/null 2>&1; then
   pre-commit install --hook-type pre-commit >/dev/null 2>&1 || true

@@ -170,7 +170,7 @@ class CheckGitCommitTests(unittest.TestCase):
         import shlex
         cmd = (
             "git commit -m \"$(cat <<'EOF'\n"
-            "      [base] ai: Run: add PermissionRequest hook\n"
+            "      [base] ai: Run: add PermissionRequest hooks\n"
             "\n"
             "      Replace generic deny-list entries.\n"
             "      Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n"
@@ -238,12 +238,12 @@ class IntegrationTests(unittest.TestCase):
         # This is the exact pattern that slipped through before the fix was applied.
         heredoc_cmd = (
             "git commit -m \"$(cat <<'EOF'\n"
-            "      [base] ai: Run: add PermissionRequest hook for git add and Co-Authored-By policy\n"
+            "      [base] ai: Run: add PermissionRequest hooks for git add and Co-Authored-By policy\n"
             "\n"
             "      Replace generic deny-list entries for `git add .` / `git add -A` with a\n"
-            "      `PermissionRequest` hook that returns rich denial reasons. Also adds\n"
+            "      `PermissionRequest` hooks that returns rich denial reasons. Also adds\n"
             "      Co-Authored-By detection for `git commit` messages (via -m, --message=,\n"
-            "      or -F file). The commit-msg hook remains as final fallback.\n"
+            "      or -F file). The commit-msg hooks remains as final fallback.\n"
             "      EOF\n"
             "      )\""
         )
@@ -253,9 +253,9 @@ class IntegrationTests(unittest.TestCase):
         # Compound `git add ... && git commit -m "..."` — the command does not start
         # with "git commit", so startswith() would miss it. The substring check catches it.
         cmd = (
-            "git add ai/scripts/save-decision/hook.sh .claude/settings.json "
+            "git add ai/scripts/save-decision/save-decision.sh .claude/settings.json "
             "&& git commit -m \"$(cat <<'EOF'\n"
-            "      ai: add PostToolUse hook to log AskUserQuestion decisions\n"
+            "      ai: add PostToolUse hooks to log AskUserQuestion decisions\n"
             "\n"
             "      Records each plan-mode question, its options, and the selected answer\n"
             "      to ai/decisions.md after AskUserQuestion resolves.\n"

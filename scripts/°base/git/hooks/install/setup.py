@@ -26,7 +26,7 @@ def _install_hooks():
 
         # Install pre-commit hooks
         result = subprocess.run(
-            [sys.executable, "-m", "pre_commit", "install", "--hook-type", "commit-msg"],
+            [sys.executable, "-m", "pre_commit", "install", "--hooks-type", "commit-msg"],
             cwd=repo_root,
             capture_output=True,
         )

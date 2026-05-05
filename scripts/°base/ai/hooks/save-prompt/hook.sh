@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# UserPromptSubmit hook: appends the user's prompt to ai/query.md and commits it.
+# UserPromptSubmit hooks: appends the user's prompt to ai/query.md and commits it.
 
 PROMPT_LOG="ai/query.md"
 PROMPT_COMMIT_TEMPLATE="ai/commit-templates/prompt.md"
