@@ -98,3 +98,10 @@ In any way, also add `<noreply@anthropic>` to the "forbidden" strings, like `Co-
 ❯ Fix @.claude/hooks/permission-check.py - it allowed the last commit, clearly with `Co-Authored-By`.
 Also figure out why the pre-commit hook (@ai/scripts/git/hook/commit/reject_co_authored_by.py) did not trigger or did not prevent it either (`git lfs` interfering?)
 ❯ First commit via commit style - the previous fixes you already did.
+
+❯ If there is husky, make sure it plays nicely with the rest, and the result is what we want.
+Is that yorkie still needed/installed? Should we uninstall it then?
+Yeah, in the end I'd want `pre-commit install --hook-type commit-msg`, that makes sense.
+In fact there's also the push one, check out the claude `SessionStart` hook which tries to set it as there's no proper husky-like thingo available otherwise.
+Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
+❯ yes, continue with the checkout.sh consolidation

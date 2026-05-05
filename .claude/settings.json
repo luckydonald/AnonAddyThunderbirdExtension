@@ -18,8 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git config --unset-all core.hooksPath 2>/dev/null; python -m pre_commit install --hook-type commit-msg 2>/dev/null || true",
-            "statusMessage": "Installing pre-commit hooks",
+            "command": "./ai/scripts/init/checkout.sh",
+            "statusMessage": "Setting up git hooks",
             "async": true
           }
         ]
