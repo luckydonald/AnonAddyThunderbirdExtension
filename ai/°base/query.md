@@ -44,10 +44,10 @@ as well.
 
 ❯ Check d16d0a4f685c2871cda1b09a4ea56445d23f2d64, it could slip through.
 
-⏺ The settings.json edit is saved on disk but git doesn't track it as modified — likely it's in .gitignore or was already committed. The new ai/scripts/save-decision/hook.sh is
+⏺ The settings.json edit is saved on disk but git doesn't track it as modified — likely it's in .gitignore or was already committed. The new scripts/°base/ai/hooks/save-decision/hook.sh is
   untracked. Let me commit both:
 
-⏺ Bash(git add ai/scripts/save-decision/hook.sh .claude/settings.json && git commit -m "$(cat <<'EOF'
+⏺ Bash(git add scripts/°base/ai/hooks/save-decision/hook.sh .claude/settings.json && git commit -m "$(cat <<'EOF'
       ai: add PostToolUse hook to log AskUserQuestion decisions
 
       Records each plan-mode question, its options, and the selected answer
@@ -58,7 +58,7 @@ as well.
       )")
   ⎿  [base d16d0a4] ai: add PostToolUse hook to log AskUserQuestion decisions
       1 file changed, 71 insertions(+)
-      create mode 100755 ai/scripts/save-decision/hook.sh
+      create mode 100755 scripts/°base/ai/hooks/save-decision/hook.sh
 
 ⏺ Committed as d16d0a4. Note that .claude/settings.json wasn't picked up by git (likely gitignored), so only hook.sh was included in the commit — the settings change is still live
    on disk and active.
@@ -75,7 +75,7 @@ as well.
 ❯ I've used `ai/°base` now, as that one is still easy enough to type on pretty much every system.
 
 ❯ Anyway, back to the `base` repo:
-The @ai/scripts/save-prompt/hook.sh (and @ai/scripts/save-decision/hook.sh analogous) shall check if the current repo is `base` repo (this current singular prompt execution is) based on folder name and the fact that the remotes are `origin https://luckydonald@github.com/luckydonald/base.git` and `empty   https://luckydonald@github.com/EmptyAAS/empty.git`.
+The @scripts/°base/ai/hooks/save-prompt/hook.sh (and @scripts/°base/ai/hooks/save-decision/hook.sh analogous) shall check if the current repo is `base` repo (this current singular prompt execution is) based on folder name and the fact that the remotes are `origin https://luckydonald@github.com/luckydonald/base.git` and `empty   https://luckydonald@github.com/EmptyAAS/empty.git`.
 It shall not be a guard, but instead of writing to `ai/query.md` it shall write to `ai/°base/query.md`.
 So check that:
 1. the folder name is `base`
@@ -86,7 +86,7 @@ So check that:
 ❯ That readme change for git lfs install is not very thorough. It shall be part of the installation section properly, and definitly also in the quick copy-past command block.
 ❯ Also add the command for pre-commit, too.
 
-❯ Edit @ai/scripts/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `/rebase-ai-prompt-commits`.
+❯ Edit @scripts/°base/ai/hooks/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `/rebase-ai-prompt-commits`.
 
 ❯ Earlier you managed to commit with `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic>` again. Analyze why this managed to get past the `PermissionRequest` check.
 The commit which I since rebased and fixed was `base 5338ebc` with the title `ai: skip logging for internal tooling prompt command`, so you can match it in the earlier log.

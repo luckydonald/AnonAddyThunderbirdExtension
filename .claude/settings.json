@@ -93,7 +93,7 @@
       "Bash(yarn build:*)",
       "Bash(cargo check:*)",
       "Bash(uv add:*)",
-      "Bash(.claude/hooks/save-prompt.sh)",
+      "Bash(scripts/°base/ai/hooks/save-prompt/hook.sh)",
       "Bash(echo \"exit: $?\")",
       "Bash(git add:*)",
       "Bash(git log:*)",
