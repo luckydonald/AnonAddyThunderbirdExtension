@@ -101,6 +101,23 @@ def check_git_commit(argv):
     return None
 
 
+def split_on_shell_operators(argv):
+    """Split a shlex-parsed argv on shell operators (&&, ||, ;) into sub-commands."""
+    operators = {"&&", "||", ";"}
+    sub_commands = []
+    current = []
+    for token in argv:
+        if token in operators:
+            if current:
+                sub_commands.append(current)
+            current = []
+        else:
+            current.append(token)
+    if current:
+        sub_commands.append(current)
+    return sub_commands
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -140,22 +157,27 @@ def main():
             print(json.dumps(deny_error(e)))
             return
 
-        if len(argv) < 2 or argv[0] != "git":
-            print("{}")
-            return
+        # Split on shell operators (&&, ||, ;) to check each sub-command
+        # shlex treats these as regular tokens, so we must split manually.
+        sub_commands = split_on_shell_operators(argv)
 
-        subcommand = argv[1]
-        reason = None
+        for sub_argv in sub_commands:
+            if len(sub_argv) < 2 or sub_argv[0] != "git":
+                continue
 
-        if subcommand == "add":
-            reason = check_git_add(argv)
-        elif subcommand == "commit":
-            reason = check_git_commit(argv)
+            subcommand = sub_argv[1]
+            reason = None
 
-        if reason:
-            print(json.dumps(deny(reason)))
-        else:
-            print("{}")
+            if subcommand == "add":
+                reason = check_git_add(sub_argv)
+            elif subcommand == "commit":
+                reason = check_git_commit(sub_argv)
+
+            if reason:
+                print(json.dumps(deny(reason)))
+                return
+
+        print("{}")
     except Exception as e:
         print(json.dumps(deny_error(e)))
 

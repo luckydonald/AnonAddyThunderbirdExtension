@@ -95,3 +95,6 @@ In any way, also add `<noreply@anthropic>` to the "forbidden" strings, like `Co-
 > COMMAND AUDIT ERROR: While trying to calculate if this command is allowed to execute, the script encountered an error. STOP EXECUTION NOW, and show the error to the user, so they can ask for that script to be fixed. Do not attempt to work around it unless specifically asked to by the user. Error message: ...
 ❯ As it's duplicated, have a func for that. Also, the stacktrace should be shown.
 
+❯ Fix @.claude/hooks/permission-check.py - it allowed the last commit, clearly with `Co-Authored-By`.
+Also figure out why the pre-commit hook (@ai/scripts/git/hook/commit/reject_co_authored_by.py) did not trigger or did not prevent it either (`git lfs` interfering?)
+❯ First commit via commit style - the previous fixes you already did.
