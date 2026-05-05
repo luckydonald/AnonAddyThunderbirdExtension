@@ -828,10 +828,19 @@ install-state.gz
 .playwright-mcp/page-*.yml
 
 # AI folder
-!ai/scripts/
-!ai/scripts/**
 ai/git/pending-commit.md
 ai/git/rebase-msg-*.md
+
+# Scripts folder
+!/scripts/
+!ai/scripts/
+
+!/scripts/**
+!ai/scripts/**
+
+/scripts/.venv
+/ai/scripts/.venv
+
 
 # Don't ignore the libs we've written ourselves.
 !src/lib/
