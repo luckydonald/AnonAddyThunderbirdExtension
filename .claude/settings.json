@@ -109,7 +109,9 @@
       "Bash(rm ai/git/pending-commit.md || echo 'was gone')",
       "Bash(rm ai/git/pending-commit.md)",
       "Bash(git lfs install)",
-      "Bash(command -v pre-commit)"
+      "Bash(command -v pre-commit)",
+      "Bash(git rebase --continue)",
+      "Bash(echo \"---\")"
     ],
     "deny": [
       "Read(**/.env*)",
