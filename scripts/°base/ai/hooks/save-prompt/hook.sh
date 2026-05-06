@@ -27,7 +27,7 @@ fi
 
 # Ignore single-command prompts that are internal tooling invocations
 case "$(echo "$PROMPT" | xargs)" in
-  "/committing-with-lplp-style"|"/rebase-ai-prompt-commits")
+  "/committing-with-lplp-style"|"/rebase-ai-prompt-commits"|"commit"|"Commit"|"yes commit"|"commit please"|"commit pls"|"commit plz"|"keep committing"|"always commit")
     exit 0
     ;;
 esac
