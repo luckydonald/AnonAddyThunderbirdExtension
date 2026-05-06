@@ -33,6 +33,9 @@ case "$(echo "$PROMPT" | xargs)" in
   "commit"|"Commit"|"yes commit"|"commit please"|"commit pls"|"commit plz"|"keep committing"|"always commit")
     exit 0
     ;;
+  "/rename")
+    exit 0
+    ;;
 esac
 
 # Work from the git root
