@@ -105,3 +105,68 @@ Yeah, in the end I'd want `pre-commit install --hook-type commit-msg`, that make
 In fact there's also the push one, check out the claude `SessionStart` hook which tries to set it as there's no proper husky-like thingo available otherwise.
 Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 ❯ yes, continue with the checkout.sh consolidation
+❯ `ai: recorded decision` should be squashed/amended the same way `ai: updated prompt` does
+
+❯ Write me a hook where changing/creating a plan copies it to ài/plans/*.md` and commits it via claude hook py script
+
+
+> How should plan files be named in `ai/plans/`?
+> - Timestamp + slug
+> - Slug only (overwrites)
+> - Timestamp only
+> 
+> Which Claude Code event should trigger this?
+> - PostToolUse on ExitPlanMode
+> - Both ExitPlanMode and EnterPlanMode
+> → _PostToolUse on ExitPlanMode_ sounds reasonable. What about hooking to the tool use to write to the ~/.claude/plans (or is it different?) directory?
+>   _Timestamp + slug_ makes kinda sense if we come up with similar named plans - but is that really realistic? Commit will already carry the timestamps - so maybe an numeric prefix like `001_refactor-auth.md`?
+> ```json
+> {
+>   "questions": [
+>     {
+>       "question": "How should plan files be named in `ai/plans/`?",
+>       "header": "Filename",
+>       "options": [
+>         {
+>           "label": "Timestamp + slug",
+>           "description": "`2026-05-12-235959-refactor-auth.md` — one new file per ExitPlanMode call, slug from first heading."
+>         },
+>         {
+>           "label": "Slug only (overwrites)",
+>           "description": "`refactor-auth.md` — re-saving a plan with the same heading overwrites; cleaner history but loses revisions."
+>         },
+>         {
+>           "label": "Timestamp only",
+>           "description": "`2026-05-12-235959.md` — simplest, no slug logic, but harder to skim the directory."
+>         }
+>       ],
+>       "multiSelect": false
+>     },
+>     {
+>       "question": "Which Claude Code event should trigger this?",
+>       "header": "Trigger",
+>       "options": [
+>         {
+>           "label": "PostToolUse on ExitPlanMode",
+>           "description": "Fires when I finalize a plan via ExitPlanMode (the only built-in tool that carries a `plan` field). Also fires on plan updates in the same session."
+>         },
+>         {
+>           "label": "Both ExitPlanMode and EnterPlanMode",
+>           "description": "Also snapshot when entering plan mode — but EnterPlanMode has no plan content yet, so this would mostly be a no-op."
+>         }
+>       ],
+>       "multiSelect": false
+>     }
+>   ],
+>   "answers": {
+>     "Which Claude Code event should trigger this?": "_PostToolUse on ExitPlanMode_ sounds reasonable. What about hooking to the tool use to write to the ~/.claude/plans (or is it different?) directory?",
+>     "How should plan files be named in `ai/plans/`?": "_Timestamp + slug_ makes kinda sense if we come up with similar named plans - but is that really realistic? Commit will already carry the timestamps - so maybe an numeric prefix like `001_refactor-auth.md`?"
+>   }
+> }
+> ```
+> 
+
+❯ test it by entering plan mode
+
+❯ It also does the base detection as ususal?
+

@@ -253,7 +253,7 @@ class IntegrationTests(unittest.TestCase):
         # Compound `git add ... && git commit -m "..."` — the command does not start
         # with "git commit", so startswith() would miss it. The substring check catches it.
         cmd = (
-            "git add scripts/°base/ai/hooks/save-decision/hook.sh .claude/settings.json "
+            "git add scripts/°base/ai/hooks/save-decision/hook.py .claude/settings.json "
             "&& git commit -m \"$(cat <<'EOF'\n"
             "      ai: add PostToolUse hooks to log AskUserQuestion decisions\n"
             "\n"

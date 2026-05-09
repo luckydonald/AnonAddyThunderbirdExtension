@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/°base/save-decision/hook.sh 'claude'",
+            "command": "python3 ./scripts/°base/ai/hooks/save-decision/hook.py 'claude'",
             "async": true
           }
         ]
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/°base/save-prompt/hook.sh 'claude'",
+            "command": "python3 ./scripts/°base/ai/hooks/save-prompt/hook.py 'claude'",
             "async": true
           }
         ]
@@ -93,7 +93,7 @@
       "Bash(yarn build:*)",
       "Bash(cargo check:*)",
       "Bash(uv add:*)",
-      "Bash(scripts/°base/ai/hooks/save-prompt/hook.sh)",
+      "Bash(python3 scripts/°base/ai/hooks/save-prompt/hook.py)",
       "Bash(echo \"exit: $?\")",
       "Bash(git add:*)",
       "Bash(git log:*)",

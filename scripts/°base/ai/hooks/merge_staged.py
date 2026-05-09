@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""
-Apply the diff (base → staged) onto new_head.
+"""Apply the diff (base → staged) onto new_head.
 
 End-of-file insertions are placed at the actual end of result, i.e. after
 any content new_head already appended — so the final order is:
 
     [previous content]  [new_head's append]  [staged additions]
 
-Usage: merge-staged.py <base> <staged> <new_head> <out>
+Usage (CLI): merge_staged.py <base> <staged> <new_head> <out>
 Exit 0 on success.
 """
-import sys
+from __future__ import annotations
+
 import difflib
+import sys
+from pathlib import Path
 
 
-def read_lines(path):
+def _read_lines(path: str | Path) -> list[str]:
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
             return f.readlines()
@@ -22,7 +24,7 @@ def read_lines(path):
         return []
 
 
-def merge(base, staged, new_head):
+def merge(base: list[str], staged: list[str], new_head: list[str]) -> list[str]:
     result = list(new_head)
     base_len = len(base)
     offset = 0  # how many lines result has grown/shrunk relative to base so far
@@ -37,7 +39,7 @@ def merge(base, staged, new_head):
         # so they land after whatever new_head already appended.
         if i1 >= base_len:
             pos = len(result)
-            end_pos = pos  # nothing to delete from result at this phantom position
+            end_pos = pos
         else:
             pos = i1 + offset
             end_pos = i2 + offset
@@ -55,19 +57,18 @@ def merge(base, staged, new_head):
     return result
 
 
-def main():
+def _main() -> int:
     if len(sys.argv) != 5:
         print(f"Usage: {sys.argv[0]} <base> <staged> <new_head> <out>", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
-    base = read_lines(sys.argv[1])
-    staged = read_lines(sys.argv[2])
-    new_head = read_lines(sys.argv[3])
-    out_path = sys.argv[4]
+    base = _read_lines(sys.argv[1])
+    staged = _read_lines(sys.argv[2])
+    new_head = _read_lines(sys.argv[3])
 
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.writelines(merge(base, staged, new_head))
+    Path(sys.argv[4]).write_text("".join(merge(base, staged, new_head)), encoding="utf-8")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_main())
