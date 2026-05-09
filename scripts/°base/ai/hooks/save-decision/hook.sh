@@ -12,6 +12,17 @@ INPUT=$(cat)
 NUM_QUESTIONS=$(printf '%s' "$INPUT" | jq '.tool_input.questions | length // 0')
 QUESTIONS_JSON=$(printf '%s' "$INPUT" | jq '.tool_input')
 
+# Picked answer(s). Accept both a bare string and the harness's `{answers: {q: a}}`
+# shape; fall back to a tostring so we never silently drop an unfamiliar payload.
+ANSWER=$(printf '%s' "$INPUT" | jq -r '
+  if (.tool_response // null) == null then empty
+  elif (.tool_response | type) == "string" then .tool_response
+  elif (.tool_response.answers // null | type) == "object" then
+    (.tool_response.answers | to_entries | map(.value) | join("\n"))
+  else (.tool_response | tostring)
+  end
+')
+
 # Skip if nothing meaningful was captured
 if [ -z "$NUM_QUESTIONS" ] || [ "$NUM_QUESTIONS" = "0" ] || [ "$NUM_QUESTIONS" = "null" ]; then
   exit 0
@@ -57,6 +68,17 @@ fi
           [ -n "$opt" ] && printf '> - %s\n' "$opt"
         done
   done
+  if [ -n "$ANSWER" ]; then
+    first=1
+    while IFS= read -r line; do
+      if [ "$first" -eq 1 ]; then
+        printf '> → %s\n' "$line"
+        first=0
+      else
+        printf '>   %s\n' "$line"
+      fi
+    done <<< "$ANSWER"
+  fi
   printf '> ```json\n'
   printf '%s\n' "$QUESTIONS_JSON" | sed 's/^/> /'
   printf '> ```\n'
