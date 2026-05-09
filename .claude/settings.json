@@ -111,6 +111,7 @@
       "Bash(git lfs install)",
       "Bash(command -v pre-commit)",
       "Bash(git rebase --continue)",
+      "Bash(tree)",
       "Bash(echo \"---\")"
     ],
     "deny": [
