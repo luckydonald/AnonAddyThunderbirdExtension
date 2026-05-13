@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from _lib import append_and_commit, read_payload, resolve_log_path  # noqa: E402
+from _lib import append_and_commit, read_payload, resolve_log_path, slugify  # noqa: E402
 
 
 def _flatten_answer(tool_response) -> str:
@@ -65,18 +65,22 @@ def _render_block(tool_input: dict, answer: str) -> str:
 def main() -> int:
     payload = read_payload()
     tool_input = payload.get("tool_input") or {}
-    if not (tool_input.get("questions") or []):
+    questions = tool_input.get("questions") or []
+    if not questions:
         return 0
 
     answer = _flatten_answer(payload.get("tool_response"))
     block = _render_block(tool_input, answer)
 
+    first_question = questions[0].get("question", "") if isinstance(questions[0], dict) else ""
+    slug = slugify(first_question, fallback="decision")
+
     log_path = resolve_log_path("ai/query.md", "ai/°base/query.md")
     append_and_commit(
         log_path,
         block,
-        commit_template_relpath="ai/commit-templates/prompt.md",
-        default_commit_msg="ai: updated prompt",
+        commit_template_relpath="ai/commit-templates/decision.md",
+        default_commit_msg=f"ai: save decision {slug}",
     )
     return 0
 

@@ -174,3 +174,33 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 
 ❯ while at it, fo the same for the plan questions (`save-decision`)
 
+> How should save-decision (AskUserQuestion) commits be handled?
+> - Give them a distinct message
+> - Leave shared `ai: updated prompt`
+> → Give them a distinct message
+> ```json
+> {
+>   "questions": [
+>     {
+>       "question": "How should save-decision (AskUserQuestion) commits be handled?",
+>       "header": "Decision msg",
+>       "options": [
+>         {
+>           "label": "Give them a distinct message",
+>           "description": "e.g. `ai: save decision`. Hooks get distinct, more readable in `git log`, and the skills list all three patterns: `ai: updated prompt`, `ai: save decision`, `ai: save plan <NNN>_<slug>`."
+>         },
+>         {
+>           "label": "Leave shared `ai: updated prompt`",
+>           "description": "No-op — save-decision already shares save-prompt's message and target file, so the existing skill rules already amend/fixup them. I'll just double-check the wording in the skills doesn't accidentally exclude them."
+>         }
+>       ],
+>       "multiSelect": false
+>     }
+>   ],
+>   "answers": {
+>     "How should save-decision (AskUserQuestion) commits be handled?": "Give them a distinct message"
+>   }
+> }
+> ```
+> 
+

@@ -29,6 +29,20 @@ def read_payload() -> dict:
         return {}
 
 
+def slugify(text: str, *, max_len: int = 60, fallback: str = "untitled") -> str:
+    """First non-empty line → lowercase, non-alphanumeric runs → ``-``, capped."""
+    line = ""
+    for raw in (text or "").splitlines():
+        candidate = raw.strip().lstrip("#").strip()
+        if candidate:
+            line = candidate
+            break
+    if not line:
+        return fallback
+    slug = re.sub(r"[^a-z0-9]+", "-", line.lower()).strip("-")[:max_len].rstrip("-")
+    return slug or fallback
+
+
 def _git_text(*args: str) -> str:
     result = subprocess.run(["git", *args], capture_output=True, text=True)
     return (result.stdout or "").strip()

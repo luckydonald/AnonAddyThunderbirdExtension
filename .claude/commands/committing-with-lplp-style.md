@@ -1,6 +1,6 @@
 ---
 name: committing-with-lplp-style
-description: Activates the lplp-pipbuck commit style for the current session. Commits after every completed task, amends the last commit if its message is `ai: updated prompt`, writes messages via ai/git/pending-commit.md, never commits unrelated files. Use when the user opts in to this style at session start, or explicitly asks to enable it.
+description: Activates the lplp-pipbuck commit style for the current session. Commits after every completed task, amends the last commit if its message is an `ai:` auto-commit (`ai: updated prompt`, `ai: save decision …`, or `ai: save plan …`), writes messages via ai/git/pending-commit.md, never commits unrelated files. Use when the user opts in to this style at session start, or explicitly asks to enable it.
 ---
 
 # lplp Commit Style
@@ -10,9 +10,9 @@ Adopt these rules for every commit made this session:
 1. **Commit after every completed task.** Never leave work uncommitted.
 
 2. **Check the last 2 commits before committing:**
-   - Last message is `ai: updated prompt` → **amend** it
-   - Otherwise → create a new commit
-   - If more than one chained past commits are titled `ai: updated prompt` they probably should be included, too. 
+   - Last message matches one of the `ai:` auto-commit patterns — `ai: updated prompt`, `ai: save decision <slug>`, or `ai: save plan <NNN>_<slug>` → **amend** it.
+   - Otherwise → create a new commit.
+   - If more than one chained past commits are `ai:` auto-commits (`ai: updated prompt`, `ai: save decision …`, and/or `ai: save plan …`) they probably should be included, too.
      - In that case the `/rebase-ai-prompt-commits` command/skill describes how to rebase & include them.
 
 3. **Always write the message to `ai/git/pending-commit.md` first** like this:
