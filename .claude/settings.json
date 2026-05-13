@@ -35,6 +35,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./scripts/°base/ai/hooks/save-plan/hook.py",
+            "async": true
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [

@@ -170,3 +170,7 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 
 ❯ It also does the base detection as ususal?
 
+❯ Now update all the skills mentioning other `ai:` prefixes to work with this as well.
+
+❯ while at it, fo the same for the plan questions (`save-decision`)
+
