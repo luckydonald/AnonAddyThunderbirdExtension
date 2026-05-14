@@ -21,6 +21,12 @@
             "command": "\"$(git rev-parse --show-toplevel)/scripts/°base/init/checkout.sh\"",
             "statusMessage": "Setting up git hooks",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/°base/ai/hooks/record-memory/hook.py\"",
+            "statusMessage": "Syncing memory hardlinks",
+            "async": true
           }
         ]
       }
@@ -42,6 +48,16 @@
           {
             "type": "command",
             "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/°base/ai/hooks/save-plan/hook.py\"",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/°base/ai/hooks/record-memory/hook.py\"",
             "async": true
           }
         ]

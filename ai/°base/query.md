@@ -356,3 +356,108 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 
 yes, draft that.
 
+❯ Create a hook to record a memory. Actually follow the hardlink strategy from @scripts/°base/memories/hardlink_memories.sh @scripts/°base/memories/unlink_memories.sh but with single-file hardlinks, which will be renamed to match the content (there's a headline-to-slug func somewhere, I believe in `_lib.py`.)
+
+> When should the hook fire?
+> - PostToolUse on Write/Edit
+> - SessionStart
+> - Both
+> 
+> What text should slugify() use to derive the destination filename?
+> - Frontmatter `name:` field
+> - Frontmatter `description:` field
+> - First body heading or non-empty line
+> 
+> Where do the hardlinks live in the repo?
+> - <git-root>/.claude/memory/
+> - <git-root>/.claude/memories/
+> 
+> Should the hook auto-commit the new/updated hardlinked file (and MEMORY.md) like save-prompt does?
+> - Yes, auto-commit
+> - No, just hardlink
+> → Both
+>   actually the original filename is actually already fine.
+>   ai/memory
+>   Yes, auto-commit
+> ```json
+> {
+>   "questions": [
+>     {
+>       "question": "When should the hook fire?",
+>       "header": "Trigger",
+>       "options": [
+>         {
+>           "label": "PostToolUse on Write/Edit",
+>           "description": "After every Write or Edit touches a file inside the per-project memory dir. Most reactive: a new memory is hardlinked the instant it's saved."
+>         },
+>         {
+>           "label": "SessionStart",
+>           "description": "On every Claude session start, sync all memory files at once (like checkout.sh). Simpler; misses mid-session writes until next session."
+>         },
+>         {
+>           "label": "Both",
+>           "description": "PostToolUse for the live case, plus SessionStart as a catch-up safety net."
+>         }
+>       ],
+>       "multiSelect": false
+>     },
+>     {
+>       "question": "What text should slugify() use to derive the destination filename?",
+>       "header": "Slug source",
+>       "options": [
+>         {
+>           "label": "Frontmatter `name:` field",
+>           "description": "e.g. `feedback-lplp-never-drop-ai-autocommits` → destination `feedback-lplp-never-drop-ai-autocommits.md`. Already kebab-case; matches how I name memories. Stable across edits unless `name:` itself changes."
+>         },
+>         {
+>           "label": "Frontmatter `description:` field",
+>           "description": "Slugify the human-readable one-liner. More descriptive filename but changes whenever you tweak the description."
+>         },
+>         {
+>           "label": "First body heading or non-empty line",
+>           "description": "What slugify() naturally does. Memory files don't have body headings today, so this falls through to the first prose line — noisy."
+>         }
+>       ],
+>       "multiSelect": false
+>     },
+>     {
+>       "question": "Where do the hardlinks live in the repo?",
+>       "header": "Destination",
+>       "options": [
+>         {
+>           "label": "<git-root>/.claude/memory/",
+>           "description": "Singular, matches the existing whole-folder hardlink script's destination convention."
+>         },
+>         {
+>           "label": "<git-root>/.claude/memories/",
+>           "description": "Plural, matches the `scripts/°base/memories/` source-script directory name."
+>         }
+>       ],
+>       "multiSelect": false
+>     },
+>     {
+>       "question": "Should the hook auto-commit the new/updated hardlinked file (and MEMORY.md) like save-prompt does?",
+>       "header": "Auto-commit",
+>       "options": [
+>         {
+>           "label": "Yes, auto-commit",
+>           "description": "Same pattern as save-prompt/save-decision/save-plan — commit message `ai: record memory <slug>` (or similar). Memory edits show up as commits like prompts/plans do."
+>         },
+>         {
+>           "label": "No, just hardlink",
+>           "description": "Create the hardlink and stop. User stages/commits memories when they're ready, alongside related code changes. Avoids commit noise."
+>         }
+>       ],
+>       "multiSelect": false
+>     }
+>   ],
+>   "answers": {
+>     "When should the hook fire?": "Both",
+>     "What text should slugify() use to derive the destination filename?": "actually the original filename is actually already fine.",
+>     "Where do the hardlinks live in the repo?": "ai/memory",
+>     "Should the hook auto-commit the new/updated hardlinked file (and MEMORY.md) like save-prompt does?": "Yes, auto-commit"
+>   }
+> }
+> ```
+> 
+
