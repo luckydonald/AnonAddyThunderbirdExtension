@@ -461,3 +461,5 @@ yes, draft that.
 > ```
 > 
 
+❯ if you used one of the hardlink folder scripts, it should savely uninstall that folder mount/hardlink.
+

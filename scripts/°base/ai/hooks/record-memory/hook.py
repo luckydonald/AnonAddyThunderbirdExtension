@@ -124,6 +124,107 @@ def _git_root() -> Path | None:
     return Path(result.stdout.strip())
 
 
+def _is_bind_mount(p: Path) -> bool:
+    """Best-effort detect of a bind mount at ``p``."""
+    try:
+        result = subprocess.run(
+            ["mountpoint", "-q", str(p)], capture_output=True
+        )
+        return result.returncode == 0
+    except (OSError, FileNotFoundError):
+        # `mountpoint` is Linux-only. Fall back to stat: a mountpoint sits on
+        # a different device than its parent directory.
+        try:
+            return p.stat().st_dev != p.parent.stat().st_dev
+        except OSError:
+            return False
+
+
+def _legacy_link_candidates(subproject: Path) -> list[Path]:
+    """Plausible legacy locations where ``hardlink_memories.sh`` would have
+    planted a whole-folder link to the source memory dir. We check the two
+    common spots; deeper `find` matches are out of scope.
+
+    Uses ``absolute()`` (not ``resolve()``) so the candidate path is the
+    legacy entry itself, not what its symlink-ancestors might point at."""
+    seen: set[Path] = set()
+    out: list[Path] = []
+    git_root = _git_root()
+    for base in (subproject, git_root):
+        if base is None:
+            continue
+        legacy = (base / ".claude" / "memory").absolute()
+        if legacy in seen:
+            continue
+        seen.add(legacy)
+        out.append(legacy)
+    return out
+
+
+def _uninstall_legacy(legacy: Path, src_dir: Path) -> bool | None:
+    """Remove a legacy whole-folder link at ``legacy`` pointing at ``src_dir``.
+
+    Only the symlink case is removed automatically — that's the safe, common
+    fallback used by ``hardlink_memories.sh`` on systems that don't allow
+    directory hardlinks. Bind mounts and directory hardlinks need privileged
+    cleanup we shouldn't attempt silently from a hook (the directory-hardlink
+    case is particularly dangerous: ``rmtree`` follows into the shared inode
+    and nukes the source contents).
+
+    Returns:
+      - ``True``  if a symlink was unlinked,
+      - ``False`` if nothing legacy-shaped is here,
+      - ``None``  if a bind mount or directory hardlink was detected and the
+        user should run ``scripts/°base/memories/unlink_memories.sh`` manually.
+    """
+    if legacy.is_symlink():
+        try:
+            if legacy.resolve() == src_dir.resolve():
+                legacy.unlink()  # removes the symlink, not the target
+                return True
+        except OSError:
+            pass
+        return False
+
+    if not legacy.exists():
+        return False
+
+    # Past this point legacy is a real (non-symlink) filesystem entry.
+    # Safety: never act on the source dir itself, even if reached via some
+    # exotic path equivalence.
+    try:
+        if legacy.resolve() == src_dir.resolve():
+            return False
+    except OSError:
+        pass
+
+    if _is_bind_mount(legacy):
+        return None
+
+    if legacy.is_dir() and _same_inode(legacy, src_dir):
+        return None
+
+    return False
+
+
+def _uninstall_legacy_all(subproject: Path, src_dir: Path) -> None:
+    for legacy in _legacy_link_candidates(subproject):
+        result = _uninstall_legacy(legacy, src_dir)
+        if result is True:
+            print(
+                f"record-memory: removed legacy whole-folder memory symlink at {legacy}",
+                file=sys.stderr,
+            )
+        elif result is None:
+            print(
+                f"record-memory: a bind mount or directory hardlink remains at {legacy}; "
+                f"the new per-file hooks won't disturb it, but it duplicates memory "
+                f"state in your repo. Run `scripts/°base/memories/unlink_memories.sh` "
+                f"to remove it.",
+                file=sys.stderr,
+            )
+
+
 def main() -> int:
     if _git_root() is None:
         return 0
@@ -150,6 +251,9 @@ def main() -> int:
         return 0
 
     # SessionStart (and any other event) — full catch-up sync.
+    # Clean up any legacy whole-folder link planted by `hardlink_memories.sh`
+    # so the new per-file hardlinks don't duplicate memory state in the repo.
+    _uninstall_legacy_all(subproject, src_dir)
     changed = _sync_all(src_dir, dst_dir)
     _commit(dst_dir_rel, changed)
     return 0
