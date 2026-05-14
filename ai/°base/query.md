@@ -465,3 +465,5 @@ yes, draft that.
 
 ❯ Document right in the code, too, as you'll not look at commit messages in the future... lol
 
+❯ /plan (actually don't plan, but test that this does commit the prompt and - once completed - also `ai(/°base)/plans/*.md`.)
+

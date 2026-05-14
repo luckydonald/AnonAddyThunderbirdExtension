@@ -142,6 +142,7 @@
       "Bash(git rebase --continue)",
       "Bash(pkill -f \"vite\")",
       "Bash(tree)",
+      "Skill(/committing-with-lplp-style)",
       "Bash(echo \"---\")"
     ],
     "deny": [
