@@ -208,3 +208,16 @@ Once the base is present in your repo, the files provided by this repo live in y
 ### Git LFS
 
 This base tracks binary image files (`.png`, `.jpg`, `.jpeg`) with [Git LFS](https://git-lfs.com). The `git lfs install` command in the setup steps above is a one-time setup per machine. The `.gitattributes` file already defines which file types are tracked, so no additional `git lfs track` calls are needed.
+
+### Monorepo subfolders: per-subfolder `.claude/`
+
+If you've merged `base` at the top of a monorepo but intend to run Claude from a subfolder (e.g. `monorepo/some_project/`), Claude Code's settings discovery starts at the launch directory and won't reach the root-level `.claude/` from there. Run the helper once inside each subfolder where you want Claude:
+
+```bash
+cd some_project
+../scripts/°base/init/link-subproject-claude.sh
+```
+
+This creates a relative symlink `some_project/.claude → ../.claude`, so the same `.claude/settings.json` and `.claude/hooks/permission-check.py` apply. The hooks themselves locate `scripts/°base/` via `git rev-parse --show-toplevel`, so they work from any depth. AI artifacts then land under the subfolder — `some_project/ai/query.md`, `some_project/ai/plans/…` — while commits still go to the single monorepo git, with git-root-relative paths like `some_project/ai/query.md`.
+
+The helper is idempotent (no-ops if the symlink already points at the right place), refuses to clobber a non-symlink `.claude/`, and exits cleanly at the git root, so it's safe to re-run or wire into your own setup script.

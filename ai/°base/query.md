@@ -346,3 +346,13 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 
 ❯ final smoke test after git-add fix
 
+❯ is the sub-dir/sub-project initialisation documented?
+
+❯ > ⏺ No — the only documentation is the header comment inside link-subproject-claude.sh itself. The README.md has the standalone-consuming-repo merge workflow but nothing about
+>  monorepo subfolders or running the symlink helper.
+>
+>  Worth adding a short subsection to README.md under "After Adopting The Base" — one paragraph + a code block showing the cd some_project && 
+>  ../scripts/°base/init/link-subproject-claude.sh step, with a note that artifacts then land in some_project/ai/…. Want me to draft that?
+
+yes, draft that.
+
