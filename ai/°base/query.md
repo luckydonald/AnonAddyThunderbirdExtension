@@ -114,7 +114,7 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 > - Timestamp + slug
 > - Slug only (overwrites)
 > - Timestamp only
-> 
+>
 > Which Claude Code event should trigger this?
 > - PostToolUse on ExitPlanMode
 > - Both ExitPlanMode and EnterPlanMode
@@ -164,7 +164,7 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 >   }
 > }
 > ```
-> 
+>
 
 ❯ test it by entering plan mode
 
@@ -202,7 +202,7 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 >   }
 > }
 > ```
-> 
+>
 
 ❯ I want to make all claude hooks to work with monorepos too. so this whole repo is merged, but claude is meant to run in a subfolder, like `some_project`.
 
@@ -210,17 +210,17 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 > - Per-subfolder .claude/
 > - Single .claude/ at monorepo root
 > - Both, with subfolder overriding
-> 
+>
 > Where should the AI artifacts (ai/query.md, ai/plans/, ai/git/pending-commit.md) be written when Claude runs in a subfolder of a monorepo?
 > - Inside the subfolder
 > - At the monorepo root, namespaced
 > - At the monorepo root, single shared log
-> 
+>
 > How should hooks locate the shared scripts/°base/ helpers when cwd is a subfolder and scripts/°base/ may live higher up?
 > - Walk up from cwd to find scripts/°base/
 > - Use $CLAUDE_PROJECT_DIR
 > - Always at git root
-> 
+>
 > The current `_is_inside_base_repo` check reroutes paths to ai/°base/ and (similarly) wraps scripts under scripts/°base/. Should the monorepo case reuse the same °base reroute or be treated as a 'consuming repo'?
 > - Treat monorepo as consuming repo
 > - Always reroute when scripts/°base/ exists in same tree
@@ -317,7 +317,7 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 >   }
 > }
 > ```
-> 
+>
 
 ❯ sunny-monorepo-smoke-test-base
 
@@ -342,7 +342,7 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 >   ]
 > }
 > ```
-> 
+>
 
 ❯ final smoke test after git-add fix
 
@@ -351,7 +351,7 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 ❯ > ⏺ No — the only documentation is the header comment inside link-subproject-claude.sh itself. The README.md has the standalone-consuming-repo merge workflow but nothing about
 >  monorepo subfolders or running the symlink helper.
 >
->  Worth adding a short subsection to README.md under "After Adopting The Base" — one paragraph + a code block showing the cd some_project && 
+>  Worth adding a short subsection to README.md under "After Adopting The Base" — one paragraph + a code block showing the cd some_project &&
 >  ../scripts/°base/init/link-subproject-claude.sh step, with a note that artifacts then land in some_project/ai/…. Want me to draft that?
 
 yes, draft that.
@@ -362,16 +362,16 @@ yes, draft that.
 > - PostToolUse on Write/Edit
 > - SessionStart
 > - Both
-> 
+>
 > What text should slugify() use to derive the destination filename?
 > - Frontmatter `name:` field
 > - Frontmatter `description:` field
 > - First body heading or non-empty line
-> 
+>
 > Where do the hardlinks live in the repo?
 > - <git-root>/.claude/memory/
 > - <git-root>/.claude/memories/
-> 
+>
 > Should the hook auto-commit the new/updated hardlinked file (and MEMORY.md) like save-prompt does?
 > - Yes, auto-commit
 > - No, just hardlink
@@ -459,21 +459,14 @@ yes, draft that.
 >   }
 > }
 > ```
-> 
+>
 
 ❯ if you used one of the hardlink folder scripts, it should savely uninstall that folder mount/hardlink.
-
 ❯ Document right in the code, too, as you'll not look at commit messages in the future... lol
 
 ❯ /plan (actually don't plan, but test that this does commit the prompt and - once completed - also `ai(/°base)/plans/*.md`.)
-
 ❯ /plan (actually don't plan, but test that this does commit the prompt and - once completed - also `ai(/°base)/plans/*.md` — this is test run 3)
-
 ❯ /plan (test run 4)
-
-❯ /plan` (test run 5)
-
 ❯ /plan (test run 5)
-
 ❯ I've added a commit, please take that into account.
 
