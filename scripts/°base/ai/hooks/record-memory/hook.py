@@ -140,13 +140,44 @@ def _is_bind_mount(p: Path) -> bool:
             return False
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# DANGER ZONE — legacy whole-folder link cleanup.
+#
+# The functions below remove the whole-folder memory link planted by
+# `scripts/°base/memories/hardlink_memories.sh` so the new per-file hardlinks
+# don't duplicate state. Sounds innocent — it isn't. Things you must NOT
+# "simplify":
+#
+# 1. `_legacy_link_candidates` uses `.absolute()`, not `.resolve()`.
+#    `.resolve()` follows symlinks, so a candidate `<root>/.claude/memory` that
+#    IS a symlink to the source dir resolves to the source itself — and we'd
+#    happily delete it.
+#
+# 2. `_uninstall_legacy` checks the symlink case FIRST and short-circuits with
+#    `legacy.unlink()` (which removes the symlink, not its target). Don't move
+#    this check below the directory branches, and don't replace `unlink` with
+#    anything that recurses.
+#
+# 3. NEVER `shutil.rmtree()` (or `rm -rf`) a path that has the same inode as
+#    the source dir. Directory hardlinks share the inode and ALL contents —
+#    rmtree walks into the shared inode and removes the source files too.
+#    Past me did this; the only reason it isn't catastrophic is that those
+#    memories were already committed to git on the destination side and we
+#    could `git checkout` them back. Don't rely on that next time.
+#
+# Bind mounts and directory hardlinks therefore return `None` and warn the user
+# to run `unlink_memories.sh` interactively. That script has the sudo/systemd/
+# fstab unwind logic; this hook does not, deliberately.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 def _legacy_link_candidates(subproject: Path) -> list[Path]:
     """Plausible legacy locations where ``hardlink_memories.sh`` would have
-    planted a whole-folder link to the source memory dir. We check the two
-    common spots; deeper `find` matches are out of scope.
+    planted a whole-folder link to the source memory dir.
 
-    Uses ``absolute()`` (not ``resolve()``) so the candidate path is the
-    legacy entry itself, not what its symlink-ancestors might point at."""
+    Uses ``absolute()`` (not ``resolve()``) — see the DANGER ZONE notice above.
+    The candidate must be the legacy entry itself, not what its symlink
+    follows to."""
     seen: set[Path] = set()
     out: list[Path] = []
     git_root = _git_root()
@@ -164,23 +195,26 @@ def _legacy_link_candidates(subproject: Path) -> list[Path]:
 def _uninstall_legacy(legacy: Path, src_dir: Path) -> bool | None:
     """Remove a legacy whole-folder link at ``legacy`` pointing at ``src_dir``.
 
-    Only the symlink case is removed automatically — that's the safe, common
-    fallback used by ``hardlink_memories.sh`` on systems that don't allow
-    directory hardlinks. Bind mounts and directory hardlinks need privileged
-    cleanup we shouldn't attempt silently from a hook (the directory-hardlink
-    case is particularly dangerous: ``rmtree`` follows into the shared inode
-    and nukes the source contents).
+    See the DANGER ZONE notice above before changing this function.
+
+    Only the symlink case is removed automatically — that's what
+    ``hardlink_memories.sh`` falls back to when directory hardlinks aren't
+    allowed (macOS always; Linux outside root). Bind mounts and directory
+    hardlinks need `unlink_memories.sh` to undo safely.
 
     Returns:
-      - ``True``  if a symlink was unlinked,
-      - ``False`` if nothing legacy-shaped is here,
-      - ``None``  if a bind mount or directory hardlink was detected and the
-        user should run ``scripts/°base/memories/unlink_memories.sh`` manually.
+      - ``True``  → a symlink was unlinked,
+      - ``False`` → nothing legacy-shaped is here (path missing, real
+        unrelated directory, etc.),
+      - ``None``  → bind mount or directory hardlink detected; caller warns
+        and leaves it alone.
     """
+    # Symlink case FIRST — don't reorder. `.unlink()` removes the symlink
+    # entry itself, not the directory it points at.
     if legacy.is_symlink():
         try:
             if legacy.resolve() == src_dir.resolve():
-                legacy.unlink()  # removes the symlink, not the target
+                legacy.unlink()
                 return True
         except OSError:
             pass
@@ -189,9 +223,9 @@ def _uninstall_legacy(legacy: Path, src_dir: Path) -> bool | None:
     if not legacy.exists():
         return False
 
-    # Past this point legacy is a real (non-symlink) filesystem entry.
-    # Safety: never act on the source dir itself, even if reached via some
-    # exotic path equivalence.
+    # Past this point `legacy` is a real (non-symlink) filesystem entry.
+    # Defense in depth: never act on the source dir itself, even if some
+    # exotic path equivalence got us here.
     try:
         if legacy.resolve() == src_dir.resolve():
             return False
@@ -201,6 +235,9 @@ def _uninstall_legacy(legacy: Path, src_dir: Path) -> bool | None:
     if _is_bind_mount(legacy):
         return None
 
+    # Directory hardlink: same inode as source. We CANNOT remove this from
+    # here. `os.rmdir` only works on empty dirs; `shutil.rmtree` would follow
+    # the shared inode and delete the source contents. Hand off to the user.
     if legacy.is_dir() and _same_inode(legacy, src_dir):
         return None
 

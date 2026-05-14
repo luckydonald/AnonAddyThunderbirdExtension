@@ -463,3 +463,5 @@ yes, draft that.
 
 ❯ if you used one of the hardlink folder scripts, it should savely uninstall that folder mount/hardlink.
 
+❯ Document right in the code, too, as you'll not look at commit messages in the future... lol
+
