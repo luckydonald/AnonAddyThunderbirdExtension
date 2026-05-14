@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""PostToolUse hook for ExitPlanMode: snapshot the plan into
+"""PostToolUse hook for Write and ExitPlanMode: snapshot the plan into
 ``ai/plans/NNN_slug.md`` (or ``ai/°base/plans/...`` inside the base meta-repo)
 and commit just that new file.
 
-Each ExitPlanMode call produces a new numbered file; revisions don't overwrite
-prior plans, so the directory reads as a chronological log.
+Fires on:
+- ``Write`` — when the plan file (~/.claude/plans/*.md) is written during
+  plan mode; captures intermediate saves.
+- ``ExitPlanMode`` — when the user approves the plan.
+
+Deduplication: if the most-recent plan file already has identical content
+(e.g. Write and ExitPlanMode fire for the same text), the second call is a
+no-op.  Each distinct content version gets its own numbered file.
 """
 from __future__ import annotations
 
@@ -54,19 +60,34 @@ def _plan_from_response(tool_response) -> str:
     return ""
 
 
-def _debug_dump(payload: dict) -> None:
-    import tempfile
-    dbg = Path(tempfile.gettempdir()) / "save-plan-debug.json"
-    dbg.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+def _plan_from_write(tool_input: dict) -> str:
+    """Extract plan text when the Write tool writes to ~/.claude/plans/*.md."""
+    file_path = tool_input.get("file_path") or ""
+    if not re.search(r"/\.claude/plans/[^/]+\.md$", file_path):
+        return ""
+    return (tool_input.get("content") or "").strip()
+
+
+def _already_saved(plans_dir: Path, plan: str) -> bool:
+    """True if the most-recent numbered plan file has identical content."""
+    files = sorted(plans_dir.glob("[0-9]*_*.md"))
+    if not files:
+        return False
+    return files[-1].read_text(encoding="utf-8").strip() == plan
 
 
 def main() -> int:
     payload = read_payload()
-    _debug_dump(payload)
+    tool_name = payload.get("tool_name", "")
     tool_input = payload.get("tool_input") or {}
-    plan = (tool_input.get("plan") or "").strip()
-    if not plan:
-        plan = _plan_from_response(payload.get("tool_response"))
+
+    if tool_name == "Write":
+        plan = _plan_from_write(tool_input)
+    else:
+        plan = (tool_input.get("plan") or "").strip()
+        if not plan:
+            plan = _plan_from_response(payload.get("tool_response"))
+
     if not plan:
         return 0
 
@@ -75,6 +96,9 @@ def main() -> int:
     sentinel = resolve_log_path("ai/plans/.dir", "ai/°base/plans/.dir")
     plans_dir = sentinel.parent
     plans_dir.mkdir(parents=True, exist_ok=True)
+
+    if _already_saved(plans_dir, plan):
+        return 0
 
     prefix = _next_prefix(plans_dir)
     slug = slugify(plan, fallback="plan")

@@ -478,3 +478,5 @@ Example:
 
 From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 
+❯ /plan some example plan which will be changed to test this
+
