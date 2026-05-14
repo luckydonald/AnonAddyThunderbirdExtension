@@ -8,6 +8,7 @@ prior plans, so the directory reads as a chronological log.
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -26,10 +27,44 @@ def _next_prefix(plans_dir: Path) -> str:
     return f"{highest + 1:03d}"
 
 
+def _plan_from_response(tool_response) -> str:
+    """Read plan content from the ExitPlanMode tool_response.
+
+    The harness writes the plan to a file and embeds the path in the response
+    as "Your plan has been saved to: <path>".  We parse that path and read
+    the file so we don't have to reproduce the full plan text in tool_input.
+    """
+    if tool_response is None:
+        return ""
+    if isinstance(tool_response, str):
+        text = tool_response
+    elif isinstance(tool_response, dict):
+        raw = tool_response.get("content") or tool_response.get("result") or ""
+        if isinstance(raw, list):
+            text = "\n".join(
+                item.get("text", "") for item in raw
+                if isinstance(item, dict) and item.get("type") == "text"
+            )
+        else:
+            text = str(raw)
+    else:
+        text = json.dumps(tool_response, ensure_ascii=False)
+
+    m = re.search(r"Your plan has been saved to:\s*(\S+)", text)
+    if not m:
+        return ""
+    plan_file = Path(m.group(1).strip())
+    if plan_file.is_file():
+        return plan_file.read_text(encoding="utf-8").strip()
+    return ""
+
+
 def main() -> int:
     payload = read_payload()
     tool_input = payload.get("tool_input") or {}
     plan = (tool_input.get("plan") or "").strip()
+    if not plan:
+        plan = _plan_from_response(payload.get("tool_response"))
     if not plan:
         return 0
 
