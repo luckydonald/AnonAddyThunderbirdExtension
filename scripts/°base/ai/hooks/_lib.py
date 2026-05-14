@@ -52,11 +52,16 @@ def _git_bytes(*args: str) -> bytes:
     return subprocess.run(["git", *args], capture_output=True).stdout or b""
 
 
-def _is_inside_base_repo(root: Path) -> bool:
-    """True iff we are inside the `base` meta-repo: working tree named `base`,
-    remotes are exactly `empty` and `origin`, origin pointing at luckydonald/base.
+def _is_inside_base_repo(subproject_root: Path) -> bool:
+    """True iff we are inside the `base` meta-repo: subproject directory named
+    `base`, remotes are exactly `empty` and `origin`, origin pointing at
+    luckydonald/base.
+
+    In a stand-alone consuming repo, subproject_root == git_root and the name
+    won't be `base`, so this returns False. In a monorepo, subproject_root is
+    the per-project directory below the git root and again won't match.
     """
-    if root.name != "base":
+    if subproject_root.name != "base":
         return False
     remotes = sorted(_git_text("remote").split())
     if remotes != ["empty", "origin"]:
@@ -64,7 +69,15 @@ def _is_inside_base_repo(root: Path) -> bool:
     return bool(re.search(r"luckydonald/base(\.git)?$", _git_text("remote", "get-url", "origin")))
 
 
-def _chdir_to_repo() -> Path:
+def _subproject_root() -> Path:
+    """The directory Claude was launched from. Claude Code sets
+    ``CLAUDE_PROJECT_DIR`` for hook commands; manual invocations and the test
+    suite fall back to the current working directory."""
+    raw = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
+    return Path(raw).resolve()
+
+
+def _chdir_to_git_root() -> Path:
     root = _git_text("rev-parse", "--show-toplevel")
     if not root:
         sys.exit(1)
@@ -73,11 +86,14 @@ def _chdir_to_repo() -> Path:
 
 
 def resolve_log_path(default_relpath: str, base_relpath: str) -> Path:
-    """Cd to the git root and return the absolute log path (with the base-repo
-    reroute applied). Creates parent directories as needed."""
-    root = _chdir_to_repo()
-    relpath = base_relpath if _is_inside_base_repo(root) else default_relpath
-    log_path = root / relpath
+    """Return the absolute AI-artifact path under the *subproject* root (with
+    the base-repo reroute applied) and cd to the git root so subsequent git
+    operations resolve relpaths uniformly. Creates parent directories as
+    needed."""
+    subproject = _subproject_root()
+    _chdir_to_git_root()
+    relpath = base_relpath if _is_inside_base_repo(subproject) else default_relpath
+    log_path = (subproject / relpath).resolve()
     log_path.parent.mkdir(parents=True, exist_ok=True)
     return log_path
 
@@ -104,7 +120,9 @@ def _staged_snapshot(relpath: str) -> tuple[Path, Path] | None:
 
 
 def _commit_message(template_relpath: str, default_msg: str) -> str:
-    template = Path(template_relpath)
+    # Templates live alongside the AI artifacts, so they're subproject-scoped
+    # (relevant in monorepos where cwd is the git root, not the subproject).
+    template = _subproject_root() / template_relpath
     if not template.is_file():
         return default_msg
     text = template.read_text(encoding="utf-8").replace("\n", "").replace("\r", "").strip()
@@ -152,6 +170,9 @@ def append_and_commit(
         f.write(content)
 
     msg = _commit_message(commit_template_relpath, default_commit_msg)
+    # `git commit --only` requires the path to be tracked, so make sure the
+    # file is in the index first. Idempotent on already-tracked files.
+    subprocess.run(["git", "add", "--", relpath], capture_output=True)
     subprocess.run(["git", "commit", "--only", relpath, "-m", msg], capture_output=True)
 
     if snap is not None:

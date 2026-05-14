@@ -204,3 +204,145 @@ Ah, maybe we can merge those as `ai/scripts/init/checkout.sh`?
 > ```
 > 
 
+❯ I want to make all claude hooks to work with monorepos too. so this whole repo is merged, but claude is meant to run in a subfolder, like `some_project`.
+
+> Where does .claude/ live when base is merged into a monorepo and Claude runs from a subfolder?
+> - Per-subfolder .claude/
+> - Single .claude/ at monorepo root
+> - Both, with subfolder overriding
+> 
+> Where should the AI artifacts (ai/query.md, ai/plans/, ai/git/pending-commit.md) be written when Claude runs in a subfolder of a monorepo?
+> - Inside the subfolder
+> - At the monorepo root, namespaced
+> - At the monorepo root, single shared log
+> 
+> How should hooks locate the shared scripts/°base/ helpers when cwd is a subfolder and scripts/°base/ may live higher up?
+> - Walk up from cwd to find scripts/°base/
+> - Use $CLAUDE_PROJECT_DIR
+> - Always at git root
+> 
+> The current `_is_inside_base_repo` check reroutes paths to ai/°base/ and (similarly) wraps scripts under scripts/°base/. Should the monorepo case reuse the same °base reroute or be treated as a 'consuming repo'?
+> - Treat monorepo as consuming repo
+> - Always reroute when scripts/°base/ exists in same tree
+> - Detect via a marker file
+> → Via the git merge of this `base` repo, I believe _2. Single .claude/ at monorepo root_ applies. This means the subfolder does not have a `.claude` folder after the merge automatically, and the hooks will not trigger. Confirm if that is correct? My goal would be either _1. Per-subfolder .claude/_ or _3. Both, with subfolder overriding_, but we need to decide how that's implemented - for the first I could imagine a symlink maybe?
+>   Inside the subfolder
+>   Always at git root
+>   Treat monorepo as consuming repo
+> ```json
+> {
+>   "questions": [
+>     {
+>       "question": "Where does .claude/ live when base is merged into a monorepo and Claude runs from a subfolder?",
+>       "header": "Layout",
+>       "options": [
+>         {
+>           "label": "Per-subfolder .claude/",
+>           "description": "Each consuming subfolder (e.g. some_project/.claude/) carries its own settings.json + hooks. Multiple Claude projects can coexist in one git tree with independent configs."
+>         },
+>         {
+>           "label": "Single .claude/ at monorepo root",
+>           "description": "One .claude/settings.json at the git root applies wherever Claude is launched. Hooks resolve the active subproject from cwd at runtime."
+>         },
+>         {
+>           "label": "Both, with subfolder overriding",
+>           "description": "Root .claude/ provides defaults; per-subfolder .claude/ extends/overrides. Claude Code's discovery already does this if both exist."
+>         }
+>       ],
+>       "multiSelect": false
+>     },
+>     {
+>       "question": "Where should the AI artifacts (ai/query.md, ai/plans/, ai/git/pending-commit.md) be written when Claude runs in a subfolder of a monorepo?",
+>       "header": "Artifact location",
+>       "options": [
+>         {
+>           "label": "Inside the subfolder",
+>           "description": "e.g. some_project/ai/query.md, some_project/ai/plans/. Each subproject has its own AI workspace. Commits still go to the single monorepo git."
+>         },
+>         {
+>           "label": "At the monorepo root, namespaced",
+>           "description": "e.g. ai/some_project/query.md at git root, keyed by the subfolder name. One shared ai/ tree."
+>         },
+>         {
+>           "label": "At the monorepo root, single shared log",
+>           "description": "All subprojects append to the same ai/query.md at the monorepo root."
+>         }
+>       ],
+>       "multiSelect": false
+>     },
+>     {
+>       "question": "How should hooks locate the shared scripts/°base/ helpers when cwd is a subfolder and scripts/°base/ may live higher up?",
+>       "header": "Script discovery",
+>       "options": [
+>         {
+>           "label": "Walk up from cwd to find scripts/°base/",
+>           "description": "Hooks (and the settings.json command paths) discover scripts/°base/ by walking parents. Works whether scripts/°base/ lives in the subfolder or at the git root."
+>         },
+>         {
+>           "label": "Use $CLAUDE_PROJECT_DIR",
+>           "description": "Claude Code sets $CLAUDE_PROJECT_DIR for hook commands; settings.json uses ${CLAUDE_PROJECT_DIR}/scripts/°base/... or similar. Subproject-scoped commands."
+>         },
+>         {
+>           "label": "Always at git root",
+>           "description": "scripts/°base/ is shared and always lives at the monorepo git root. Hooks resolve via `git rev-parse --show-toplevel`."
+>         }
+>       ],
+>       "multiSelect": false
+>     },
+>     {
+>       "question": "The current `_is_inside_base_repo` check reroutes paths to ai/°base/ and (similarly) wraps scripts under scripts/°base/. Should the monorepo case reuse the same °base reroute or be treated as a 'consuming repo'?",
+>       "header": "°base reroute",
+>       "options": [
+>         {
+>           "label": "Treat monorepo as consuming repo",
+>           "description": "No °base reroute — write to ai/query.md, ai/plans/ inside the subfolder. The °base reroute only triggers when you're working ON the base meta-repo itself."
+>         },
+>         {
+>           "label": "Always reroute when scripts/°base/ exists in same tree",
+>           "description": "If scripts/°base/ exists in the current scope, use the °base-prefixed variants (ai/°base/query.md, etc.). Keeps base-internal artifacts out of consuming-repo namespace."
+>         },
+>         {
+>           "label": "Detect via a marker file",
+>           "description": "Add an explicit marker (e.g. scripts/°base/.is-base-repo) that the hook checks, instead of name-based heuristic."
+>         }
+>       ],
+>       "multiSelect": false
+>     }
+>   ],
+>   "answers": {
+>     "Where does .claude/ live when base is merged into a monorepo and Claude runs from a subfolder?": "Via the git merge of this `base` repo, I believe _2. Single .claude/ at monorepo root_ applies. This means the subfolder does not have a `.claude` folder after the merge automatically, and the hooks will not trigger. Confirm if that is correct? My goal would be either _1. Per-subfolder .claude/_ or _3. Both, with subfolder overriding_, but we need to decide how that's implemented - for the first I could imagine a symlink maybe?",
+>     "Where should the AI artifacts (ai/query.md, ai/plans/, ai/git/pending-commit.md) be written when Claude runs in a subfolder of a monorepo?": "Inside the subfolder",
+>     "How should hooks locate the shared scripts/°base/ helpers when cwd is a subfolder and scripts/°base/ may live higher up?": "Always at git root",
+>     "The current `_is_inside_base_repo` check reroutes paths to ai/°base/ and (similarly) wraps scripts under scripts/°base/. Should the monorepo case reuse the same °base reroute or be treated as a 'consuming repo'?": "Treat monorepo as consuming repo"
+>   }
+> }
+> ```
+> 
+
+❯ sunny-monorepo-smoke-test-base
+
+> Which path style for monorepo hooks?
+> - Git root anchored
+> - $CLAUDE_PROJECT_DIR
+> → Git root anchored
+> ```json
+> {
+>   "questions": [
+>     {
+>       "question": "Which path style for monorepo hooks?",
+>       "options": [
+>         {
+>           "label": "Git root anchored"
+>         },
+>         {
+>           "label": "$CLAUDE_PROJECT_DIR"
+>         }
+>       ]
+>     }
+>   ]
+> }
+> ```
+> 
+
+❯ final smoke test after git-add fix
+

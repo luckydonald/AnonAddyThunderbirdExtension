@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/°base/init/checkout.sh",
+            "command": "\"$(git rev-parse --show-toplevel)/scripts/°base/init/checkout.sh\"",
             "statusMessage": "Setting up git hooks",
             "async": true
           }
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/°base/ai/hooks/save-decision/hook.py 'claude'",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/°base/ai/hooks/save-decision/hook.py\" 'claude'",
             "async": true
           }
         ]
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/°base/ai/hooks/save-plan/hook.py",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/°base/ai/hooks/save-plan/hook.py\"",
             "async": true
           }
         ]
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./scripts/°base/ai/hooks/save-prompt/hook.py 'claude'",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/°base/ai/hooks/save-prompt/hook.py\" 'claude'",
             "async": true
           }
         ]
@@ -90,6 +90,7 @@
       "Bash(python3 -m unittest ai.scripts.tests.test_permission_check.IntegrationTests.test_git_commit_heredoc_prose_mention_allowed:*)",
       "Bash(python3 -m unittest ai.scripts.tests.test_permission_check.CheckGitCommitTests.test_co_authored_by_heredoc_caught_by_shlex_path:*)",
       "Bash(yarn test:unit:*)",
+      "Bash(yarn test:coverage:*)",
       "Bash(cargo test:*)",
       "Bash(yarn build-check:*)",
       "Bash(yarn run type-check:*)",
@@ -121,6 +122,7 @@
       "Bash(git lfs install)",
       "Bash(command -v pre-commit)",
       "Bash(git rebase --continue)",
+      "Bash(pkill -f \"vite\")",
       "Bash(tree)",
       "Bash(echo \"---\")"
     ],
