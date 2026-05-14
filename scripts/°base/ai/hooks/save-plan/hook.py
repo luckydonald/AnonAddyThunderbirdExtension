@@ -28,34 +28,29 @@ def _next_prefix(plans_dir: Path) -> str:
 
 
 def _plan_from_response(tool_response) -> str:
-    """Read plan content from the ExitPlanMode tool_response.
+    """Extract plan text from the ExitPlanMode tool_response dict.
 
-    The harness writes the plan to a file and embeds the path in the response
-    as "Your plan has been saved to: <path>".  We parse that path and read
-    the file so we don't have to reproduce the full plan text in tool_input.
+    The harness sends tool_response as a dict with a "plan" key (the plan
+    text) and an optional "filePath" key.  Older/unknown shapes are handled
+    as fallbacks.
     """
     if tool_response is None:
         return ""
-    if isinstance(tool_response, str):
-        text = tool_response
-    elif isinstance(tool_response, dict):
-        raw = tool_response.get("content") or tool_response.get("result") or ""
-        if isinstance(raw, list):
-            text = "\n".join(
-                item.get("text", "") for item in raw
-                if isinstance(item, dict) and item.get("type") == "text"
-            )
-        else:
-            text = str(raw)
-    else:
-        text = json.dumps(tool_response, ensure_ascii=False)
-
-    m = re.search(r"Your plan has been saved to:\s*(\S+)", text)
-    if not m:
+    if isinstance(tool_response, dict):
+        # Primary: harness puts the plan text directly in tool_response["plan"]
+        plan = tool_response.get("plan") or ""
+        if plan.strip():
+            return plan.strip()
+        # Secondary: read the file if a path was provided
+        file_path = tool_response.get("filePath") or ""
+        if file_path:
+            p = Path(file_path)
+            if p.is_file():
+                return p.read_text(encoding="utf-8").strip()
         return ""
-    plan_file = Path(m.group(1).strip())
-    if plan_file.is_file():
-        return plan_file.read_text(encoding="utf-8").strip()
+    if isinstance(tool_response, str):
+        # Legacy/fallback: plain-string response containing the plan
+        return tool_response.strip()
     return ""
 
 

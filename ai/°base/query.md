@@ -469,3 +469,9 @@ yes, draft that.
 
 ❯ /plan (actually don't plan, but test that this does commit the prompt and - once completed - also `ai(/°base)/plans/*.md` — this is test run 3)
 
+❯ /plan (test run 4)
+
+❯ /plan` (test run 5)
+
+❯ /plan (test run 5)
+
