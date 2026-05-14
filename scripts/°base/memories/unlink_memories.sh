@@ -3,23 +3,49 @@
 
 # Tested on:
 # - Fedora 43
+# - macOS (Darwin)
 
 # Removes the links from `hardlink_memory.sh` - see that file for documentation.
 
 set -euo pipefail
 
+OS=$(uname -s)
+
 # -------------------------------------------------
 # Helper: resolve absolute path without trailing slash
+# Works on Linux (GNU realpath) and macOS (no realpath -m; falls back to python3)
 abs_path() {
-    local p
-    p=$(realpath -m "$1")
+    local p="$1" result
+    if command -v realpath &>/dev/null && result=$(realpath -m "$p" 2>/dev/null); then
+        echo "${result%/}"
+        return
+    fi
+    if command -v python3 &>/dev/null; then
+        result=$(python3 -c "import os,sys; print(os.path.abspath(sys.argv[1]))" "$p")
+        echo "${result%/}"
+        return
+    fi
     echo "${p%/}"
 }
 
+# Helper: get inode number (Linux: stat -c %i; macOS: stat -f %i)
+get_inode() {
+    if [[ "$OS" == "Darwin" ]]; then
+        stat -f %i "$1" 2>/dev/null
+    else
+        stat -c %i "$1" 2>/dev/null
+    fi
+}
+
 # Helper: Check if a mount exists
+# macOS lacks `mountpoint`; use `mount` output instead
 is_mounted() {
     local target="$1"
-    mountpoint -q "$target" 2>/dev/null
+    if [[ "$OS" == "Darwin" ]]; then
+        mount 2>/dev/null | grep -q " on ${target} ("
+    else
+        mountpoint -q "$target" 2>/dev/null
+    fi
 }
 
 # Helper: Check if systemd is available
@@ -74,8 +100,25 @@ src_memory=$(get_claude_memory_path "$git_root")
 dst_memory="$target_claude_dir/memory"
 
 echo "Checking for links at: $dst_memory"
+echo "                  and: $src_memory"
 
 # 4. Check what type of link exists
+
+# Reversed softlink: Claude memory location → repo (created by softlink fallback)
+if [[ -L "$src_memory" ]] && [[ "$(readlink "$src_memory")" == "$dst_memory" ]]; then
+    echo "Found: Reversed softlink ($src_memory → $dst_memory)"
+    read -rp "Remove symlink? Files in repo (.claude/memory) are NOT deleted. (y/n) " response
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+        echo "Skipping removal."
+        exit 0
+    fi
+    rm "$src_memory"
+    echo "✓ Reversed softlink removed."
+    echo "  Files remain in repo at: $dst_memory"
+    echo "  Claude memory location ($src_memory) is now disconnected."
+    exit 0
+fi
+
 if [[ ! -e "$dst_memory" && ! -L "$dst_memory" ]]; then
     echo "✓ Already cleaned up (nothing at $dst_memory)"
     exit 0
@@ -112,7 +155,11 @@ if is_mounted "$dst_memory"; then
         echo "Removing fstab entry..."
         fstab_backup="/etc/fstab.bak.$(date +%s).unlink"
         sudo cp /etc/fstab "$fstab_backup"
-        sudo sed -i "\|^$(echo "$src_memory" | sed 's/\//\\\//g')\s|d" /etc/fstab
+        if [[ "$OS" == "Darwin" ]]; then
+            sudo sed -i '' "\|^$(echo "$src_memory" | sed 's/\//\\\//g')[[:space:]]|d" /etc/fstab
+        else
+            sudo sed -i "\|^$(echo "$src_memory" | sed 's/\//\\\//g')\s|d" /etc/fstab
+        fi
         echo "fstab entry removed (backup: $fstab_backup)"
     fi
 
@@ -144,8 +191,8 @@ fi
 
 # Check if it's a hardlink (same inode)
 if [[ -d "$dst_memory" ]]; then
-    src_ino=$(stat -c %i "$src_memory" 2>/dev/null || echo "")
-    dst_ino=$(stat -c %i "$dst_memory" 2>/dev/null || echo "")
+    src_ino=$(get_inode "$src_memory" || echo "")
+    dst_ino=$(get_inode "$dst_memory" || echo "")
     if [[ -n "$src_ino" && -n "$dst_ino" && "$src_ino" == "$dst_ino" ]]; then
         echo "Found: Hardlink"
         echo "  inode: $dst_ino"

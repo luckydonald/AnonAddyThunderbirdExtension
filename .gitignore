@@ -703,6 +703,9 @@ secring.*
 **/*.bak
 **/*.bak.*
 
+# idea
+.run/*local*.run.xml
+
 # temporary files
 **/tmp.py
 **/*.tmp.*
@@ -738,6 +741,8 @@ certs/
 /docker-compose.production.yml
 **/gitinfo_values.py
 **/gitinfo_values.pye
+**/*.swo
+**/.DS_Store
 
 # vue preset
 /dist
@@ -849,6 +854,12 @@ ai/git/rebase-msg-*.md
 !.gitkeep
 !**/.gitkeep
 !/**/.gitkeep
+
+# coverage output
+coverage/
+
+# idea
+.run/*local*.run.xml
 
 ######################################
 ##### END OF base's `.gitignore` #####

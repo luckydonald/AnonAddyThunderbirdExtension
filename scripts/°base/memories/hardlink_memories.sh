@@ -3,6 +3,7 @@
 
 # Tested on:
 # - Fedora 43
+# - macOS (Darwin)
 
 # QUERY:
 #
@@ -33,12 +34,34 @@
 
 set -euo pipefail
 
+OS=$(uname -s)
+
 # -------------------------------------------------
 # Helper: resolve absolute path without trailing slash
+# Works on Linux (GNU realpath) and macOS (no realpath -m; falls back to python3)
 abs_path() {
-    local p
-    p=$(realpath -m "$1")
+    local p="$1" result
+    # GNU realpath with -m (allows non-existent components)
+    if command -v realpath &>/dev/null && result=$(realpath -m "$p" 2>/dev/null); then
+        echo "${result%/}"
+        return
+    fi
+    # macOS / no GNU coreutils: python3 abspath
+    if command -v python3 &>/dev/null; then
+        result=$(python3 -c "import os,sys; print(os.path.abspath(sys.argv[1]))" "$p")
+        echo "${result%/}"
+        return
+    fi
     echo "${p%/}"
+}
+
+# Helper: get inode number (Linux: stat -c %i; macOS: stat -f %i)
+get_inode() {
+    if [[ "$OS" == "Darwin" ]]; then
+        stat -f %i "$1" 2>/dev/null
+    else
+        stat -c %i "$1" 2>/dev/null
+    fi
 }
 
 # Helper: get Claude memory folder path for a git repo
@@ -91,29 +114,48 @@ src_memory=$(get_claude_memory_path "$git_root")
 dst_memory="$target_claude_dir/memory"
 
 # If destination already exists and is a hard link to the source → nothing to do
-if [[ -e "$dst_memory" ]]; then
-    src_inode=$(stat -c %i "$src_memory")
-    dst_inode=$(stat -c %i "$dst_memory")
+if [[ -e "$dst_memory" ]] && [[ -e "$src_memory" ]]; then
+    src_inode=$(get_inode "$src_memory")
+    dst_inode=$(get_inode "$dst_memory")
     if [[ $src_inode -eq $dst_inode ]]; then
         echo "Hard link already in place at $dst_memory"
         exit 0
     fi
 fi
 
-# 5. If destination exists but is NOT a hard link, merge contents
+# Reversed softlink already in place: Claude memory location → repo
+if [[ -L "$src_memory" ]] && [[ "$(readlink "$src_memory")" == "$dst_memory" ]]; then
+    echo "Reversed softlink already in place: $src_memory → $dst_memory"
+    exit 0
+fi
+
+# Forward softlink already in place: repo → Claude memory location
+if [[ -L "$dst_memory" ]] && [[ "$(readlink "$dst_memory")" == "$src_memory" ]]; then
+    echo "Forward softlink already in place: $dst_memory → $src_memory"
+    exit 0
+fi
+
+# 5. If destination exists as a real dir (not a link), merge its contents into
+#    src_memory so hardlink/mount can replace dst with a link to src.
 if [[ -d "$dst_memory" && ! -L "$dst_memory" ]]; then
-    echo "Merging existing contents into source memory..."
+    echo "Merging existing repo memory contents into Claude memory location..."
+    mkdir -p "$src_memory"
     # copy only items that don't already exist in source
     rsync -a --ignore-existing "$dst_memory"/ "$src_memory"/
-    # remove the now‑empty destination directory
+    # remove the now‑empty destination directory so we can create a link there
     rm -rf "$dst_memory"
 fi
 
 # -------------------------------------------------
 # Helper: Check if a mount already exists
+# macOS lacks `mountpoint`; use `mount` output instead
 is_mounted() {
     local target="$1"
-    mountpoint -q "$target" 2>/dev/null
+    if [[ "$OS" == "Darwin" ]]; then
+        mount 2>/dev/null | grep -q " on ${target} ("
+    else
+        mountpoint -q "$target" 2>/dev/null
+    fi
 }
 
 # Helper: Check if a path is in fstab
@@ -233,6 +275,12 @@ try_mount() {
     local src="$1"
     local dst="$2"
 
+    # macOS does not support bind mounts natively (needs bindfs from Homebrew)
+    if [[ "$OS" == "Darwin" ]]; then
+        echo "macOS does not support bind mounts natively. Skipping to softlink."
+        return 1
+    fi
+
     echo "Attempting bind mount..."
 
     # Check if already mounted
@@ -306,13 +354,29 @@ fi
 
 echo "✗ Mount failed or declined"
 
-# Fall back to softlink
-echo "Creating softlink as final fallback..."
-if ln -s "$src_memory" "$dst_memory"; then
-    # Verify symlink
-    if [[ -L "$dst_memory" ]] && [[ "$(readlink "$dst_memory")" == "$src_memory" ]]; then
-        echo "✓ Softlink created and verified: $dst_memory → $src_memory"
-        echo "⚠ Note: This is a softlink, not a hardlink or mount. It may not work in all contexts."
+# Fall back to REVERSED softlink:
+#   Real files live in the repo (.claude/memory).
+#   The Claude memory location (~/.claude/projects/.../memory) becomes a symlink
+#   pointing into the repo, so 'git add .claude/memory' works normally.
+echo "Creating reversed softlink (files live in repo; Claude memory location symlinks here)..."
+
+mkdir -p "$dst_memory"
+
+# If src_memory still exists as a real dir (e.g. hardlink/mount was skipped entirely),
+# migrate its content into the repo dir before replacing it with the symlink.
+if [[ -d "$src_memory" && ! -L "$src_memory" ]]; then
+    echo "Migrating existing Claude memory content into repo..."
+    rsync -a --ignore-existing "$src_memory"/ "$dst_memory"/
+    rm -rf "$src_memory"
+fi
+
+# Ensure the parent directory of src_memory exists
+mkdir -p "$(dirname "$src_memory")"
+
+if ln -s "$dst_memory" "$src_memory"; then
+    if [[ -L "$src_memory" ]] && [[ "$(readlink "$src_memory")" == "$dst_memory" ]]; then
+        echo "✓ Reversed softlink: $src_memory → $dst_memory"
+        echo "  Files live in repo; 'git add .claude/memory' works normally."
         exit 0
     fi
 fi
