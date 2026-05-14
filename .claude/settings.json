@@ -94,6 +94,7 @@
       "Bash(poetry install:*)",
       "Bash(yarn install:*)",
       "Bash(uv sync:*)",
+      "Bash(uv lock *)",
       "Bash(npx vue-tsc:*)",
       "Bash(npx vitest:*)",
       "Bash(uv run ruff check:*)",
@@ -142,6 +143,9 @@
       "Bash(git rebase --continue)",
       "Bash(pkill -f \"vite\")",
       "Bash(tree)",
+      "Skill(rebase-ai-prompt-commits)",
+      "Skill(/rebase-ai-prompt-commits)",
+      "Skill(committing-with-lplp-style)",
       "Skill(/committing-with-lplp-style)",
       "Bash(echo \"---\")"
     ],
