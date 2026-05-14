@@ -484,3 +484,67 @@ From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 
 ❯ No, it shall not amend the commit, but versionate the file. If the title change it shall be renamed - but the number NNN shall stay. You can add meta information about the original filename to track it, too.
 
+❯ /plan example plan with 3 edit steps and a few questions
+
+> Should thing A come before thing B, or the other way around?
+> - A then B
+> - B then A
+> → Uhh, is this a real question or an example question?
+> ```json
+> {
+>   "questions": [
+>     {
+>       "question": "Should thing A come before thing B, or the other way around?",
+>       "header": "Order",
+>       "options": [
+>         {
+>           "label": "A then B",
+>           "description": "Do A first, then B"
+>         },
+>         {
+>           "label": "B then A",
+>           "description": "Do B first, then A"
+>         }
+>       ],
+>       "multiSelect": false
+>     }
+>   ],
+>   "answers": {
+>     "Should thing A come before thing B, or the other way around?": "Uhh, is this a real question or an example question?"
+>   }
+> }
+> ```
+> 
+
+> Should thing C also be included?
+> - Yes, add C
+> - No, skip C
+> → Yeah, C, but like _fancy_!
+> ```json
+> {
+>   "questions": [
+>     {
+>       "question": "Should thing C also be included?",
+>       "header": "Scope",
+>       "options": [
+>         {
+>           "label": "Yes, add C",
+>           "description": "Include thing C in the plan"
+>         },
+>         {
+>           "label": "No, skip C",
+>           "description": "Keep it to A and B only"
+>         }
+>       ],
+>       "multiSelect": false
+>     }
+>   ],
+>   "answers": {
+>     "Should thing C also be included?": "Yeah, C, but like _fancy_!"
+>   }
+> }
+> ```
+> 
+
+❯ /plan another fun test run
+
