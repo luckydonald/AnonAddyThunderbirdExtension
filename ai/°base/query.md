@@ -470,3 +470,11 @@ yes, draft that.
 ❯ /plan (test run 5)
 ❯ I've added a commit, please take that into account.
 
+❯ /plan apparently theres a tool to edit plan files, can we hook into it?
+Example:
+
+⏺ Updated plan
+  ⎿  Wrote 302 lines to /Users/user/.claude/plans/federated-swinging-sphinx.md
+
+From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
+
