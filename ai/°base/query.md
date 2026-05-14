@@ -482,3 +482,5 @@ From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 
 ❯ but, this creates 2 files instead editing the previous one.
 
+❯ No, it shall not ammend the commit, but versionate the file. If the title change it shall be renamed - but the number NNN shall stay. You can add meta information about the original filename to track it, too.
+
