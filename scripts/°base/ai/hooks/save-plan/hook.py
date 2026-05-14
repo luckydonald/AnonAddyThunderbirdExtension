@@ -59,8 +59,15 @@ def _plan_from_response(tool_response) -> str:
     return ""
 
 
+def _debug_dump(payload: dict) -> None:
+    import tempfile
+    dbg = Path(tempfile.gettempdir()) / "save-plan-debug.json"
+    dbg.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
 def main() -> int:
     payload = read_payload()
+    _debug_dump(payload)
     tool_input = payload.get("tool_input") or {}
     plan = (tool_input.get("plan") or "").strip()
     if not plan:
