@@ -147,6 +147,7 @@
       "Skill(/rebase-ai-prompt-commits)",
       "Skill(committing-with-lplp-style)",
       "Skill(/committing-with-lplp-style)",
+      "Bash(GIT_SEQUENCE_EDITOR=/tmp/git-rebase-todo.sh git *)",
       "Bash(echo \"---\")"
     ],
     "deny": [
