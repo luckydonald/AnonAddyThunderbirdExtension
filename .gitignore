@@ -861,6 +861,9 @@ coverage/
 # idea
 .run/*local*.run.xml
 
+# python
+**/__pycache__
+
 ######################################
 ##### END OF base's `.gitignore` #####
 ######################################
