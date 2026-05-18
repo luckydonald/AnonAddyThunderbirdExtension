@@ -197,8 +197,8 @@ git remote add base https://luckydonald@github.com/luckydonald/base.git
 git fetch empty init
 git fetch base base
 git lfs install
-git merge --allow-unrelated-histories empty/init
-git merge --no-ff base/base
+git merge --allow-unrelated-histories --no-verify empty/init
+git merge --no-ff --no-verify base/base
 pre-commit install
 ```
 ## After Adopting The Base
