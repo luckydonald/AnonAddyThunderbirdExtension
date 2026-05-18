@@ -91,7 +91,7 @@
       "Bash(uv --version)",
       "Bash(uv python list)",
       "Bash(uv pip index versions:*)",
-      "Bash(nvm use:*:*)",
+      "Bash(nvm use:*)",
       "Bash(poetry install:*)",
       "Bash(yarn install:*)",
       "Bash(uv sync:*)",
