@@ -138,6 +138,7 @@
       "Bash(git check-ignore:*)",
       "Bash(git fetch:*)",
       "Bash(git stash:*)",
+      "Bash(git commit -F ai/git/pending-commit.md)",
       "Bash(make commit:*)",
       "Bash(rm ai/git/pending-commit.md || echo 'was gone')",
       "Bash(rm ai/git/pending-commit.md)",
