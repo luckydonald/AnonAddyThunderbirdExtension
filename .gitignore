@@ -861,6 +861,7 @@ install-state.gz
 # AI folder
 ai/git/pending-commit.md
 ai/git/rebase-msg-*.md
+ai/git/rebase-msg.md
 
 # AI docs: api/webpage downloads
 ai/apis/
