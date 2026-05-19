@@ -63,6 +63,11 @@ trim_trailing_whitespace = false
 [ai/**/*.md]
 trim_trailing_whitespace = true
 
+# Markdown error files in ai folder need no whitespace ending - let's save a single token.
+[ai/**/errors/*.md]
+insert_final_newline = false
+
+
 # JetBrains run configuration
 [*.run.xml]
 trim_trailing_whitespace = false
