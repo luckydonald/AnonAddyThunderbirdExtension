@@ -514,7 +514,7 @@ From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 >   }
 > }
 > ```
-> 
+>
 
 > Should thing C also be included?
 > - Yes, add C
@@ -544,7 +544,90 @@ From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 >   }
 > }
 > ```
-> 
+>
 
 ❯ /plan another fun test run
 
+› /plan
+› Check out the settings of claude in this project. I want codex to follow that too, but I would like to _not_ maintain two separate versions of it, where possible.
+> ```text
+> Question 1/2 (2 unanswered)
+> Which parts of the Claude setup should Codex inherit?
+>
+>   1. › Full parity (Recommended)  Mirror hooks, command policy, prompt/decision/plan/memory logging, and
+>                                 the two command docs for Codex.
+>   2. Safety only                Mirror command/secret policy and commit guardrails, but do not add
+>                                 auto-logging or auto-commit hooks for Codex.
+>   3. Logging only               Mirror prompt/decision/plan/memory capture, but keep Codex command
+>                                 approvals separate.
+>   4. None of the above          Optionally, add details in notes (tab).
+>
+> › However, that prompt logging should already be present (?) (the `›` mentioned)
+> ```
+> ```text
+>   Question 2/2 (1 unanswered)
+> How should we avoid maintaining two hand-edited configs?
+>
+>   1. › Shared generator (Recommended)  Keep a small shared source and generate Claude/Codex adapter files
+>                                      from it during setup/checks.
+>   2. Claude canonical                Keep `.claude/settings.json` hand-edited and generate Codex files
+>                                      from it as a derived mirror.
+>   3. Documented copy                 Add Codex files now and document that changes must be kept in
+>                                      sync manually.
+>   4. None of the above               Optionally, add details in notes (tab).
+>
+> › tries to be as tool-agnostic as possible - also in sync in both directions for easy user input.
+>   Note this is both for `.claude/settings.json` and the (currently not existing) `.claude/
+>   settings.local.json` (which is usually not git tracked).
+> ```
+> ```text
+> • Questions 2/2 answered
+>   • Which parts of the Claude setup should Codex inherit?
+>     answer: Full parity (Recommended)
+>     note: However, thaa promt logging should already be present (?) (the `›` mentioned)
+>   • How should we avoid maintaining two hand-edited configs?
+>     answer: Shared generator (Recommended)
+>     note: It rather shall be a sync tool. Either codex or claude may add rules to their own files, and in
+>           that case those shall be replicated for the other as well. You should take into account how those
+>           rules must be defined - which might have different syntax per ai tool - also create one base file
+>           which tries to be as tool-agnostic as possible - also in sync in both directions for easy user
+>           input.
+>           Note this is both for `.claude/settings.json` and the (currently not existing) `.claude/
+>           settings.local.json` (which is usually not git tracked).
+> ```
+> ```text
+> • There are two remaining design choices that materially affect safety: when the sync runs, and how it treats conflicting/deleted rules. The rest can be specified from the repo and Codex’s local hook/config surface.
+> ```
+> ```text
+> Question 1/2 (2 unanswered)
+> When should the cross-tool settings sync run?
+>
+>   1. Session + manual (Recommended)  Run on Claude/Codex session start and provide a manual script for
+>                                      explicit sync or repair.
+>   2. Manual only                     No automatic config rewrites; user runs the sync command after
+>                                      editing either side.
+> › 3. Pre-commit too                  Run in session start, manual command, and a pre-commit/check hook
+>                                      to catch unsynced settings.
+>   4. None of the above               Optionally, add details in notes (tab).
+>
+> tab to add notes | enter to submit answer | ←/→ to navigate questions | esc to interrupt
+> ```
+> ```text
+> Question 2/2 (1 unanswered)
+> How should the sync handle conflicts and deletions?
+>
+>   1. Union + report (Recommended)  Add new rules both ways, never delete implicitly, and stop with a clear report on irreconcilable conflicts.
+> › 2. Last writer wins              Use file mtimes to decide which side overwrites the other when values disagree.
+>   3. Strict canonical              Only the neutral base files are authoritative; native edits are rejected unless imported manually.
+>   4. None of the above             Optionally, add details in notes (tab).
+>
+> › Actually the git diff might allow for a line-based "what is newer" - if available (the `*.local.json` variants may or may not be not git-tracked).
+> ```
+> ```text
+> • Questions 2/2 answered
+>   • When should the cross-tool settings sync run?
+>     answer: Pre-commit too
+>   • How should the sync handle conflicts and deletions?
+>     answer: Last writer wins
+>     note: Actually the git diff might allow for a line-based "what is newer" - if available (the `*.local.json` variants may or may not be not git-tracked).
+> ```

@@ -76,6 +76,17 @@ def _plan_from_write(tool_input: dict) -> str:
     return (tool_input.get("content") or "").strip()
 
 
+def _plan_from_codex_stop(payload: dict) -> str:
+    """Extract the final proposed plan from a Codex Stop hook payload."""
+    if payload.get("hook_event_name") not in {"Stop", "stop"}:
+        return ""
+    text = payload.get("last_assistant_message") or ""
+    m = re.search(r"<proposed_plan>\s*(.*?)\s*</proposed_plan>", text, re.S)
+    if not m:
+        return ""
+    return m.group(1).strip()
+
+
 # ---------------------------------------------------------------------------
 # Prefix helpers
 # ---------------------------------------------------------------------------
@@ -115,7 +126,9 @@ def main() -> int:
     tool_name = payload.get("tool_name", "")
     tool_input = payload.get("tool_input") or {}
 
-    if tool_name == "Write":
+    if payload.get("hook_event_name") in {"Stop", "stop"}:
+        plan = _plan_from_codex_stop(payload)
+    elif tool_name == "Write":
         plan = _plan_from_write(tool_input)
     else:
         plan = (tool_input.get("plan") or "").strip()
