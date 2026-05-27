@@ -656,6 +656,94 @@ Also check if this message starting of the plan gets autocommited at least.
 
 › Also, line-based git diffs can be used.
 
+› Okay, working on the hooks still. I want to check that it is working, and fix bugs afterwards. Please enter planning mode, ask me all the fun question formats and then write the plan file multiple times. In the end @ai/°base/plans/ and @ai/°base/query.md shall be updated and reflect each of those actions (questions, messages, plan updates). If not we need to fix it.
+
+› Hook verification message: exercise Codex prompt logging before structured question and repeated plan snapshots.
+
+> Which question format should this hook test emphasize?
+> - Structured (Recommended)
+> - Plain text
+> - Both
+>
+> How many plan snapshot writes should I trigger?
+> - Three writes (Recommended)
+> - Two writes
+> - Four writes
+>
+> After the hook check, how should I handle failures?
+> - Fix failures (Recommended)
+> - Report only
+> - Add tests first
+> → Both
+>   Three writes (Recommended)
+>   Fix failures (Recommended)
+> ```json
+> {
+>   "questions": [
+>     {
+>       "header": "Question UI",
+>       "id": "question_ui",
+>       "question": "Which question format should this hook test emphasize?",
+>       "options": [
+>         {
+>           "label": "Structured (Recommended)",
+>           "description": "Use the native multi-choice shape."
+>         },
+>         {
+>           "label": "Plain text",
+>           "description": "Use regular prompt logging."
+>         },
+>         {
+>           "label": "Both",
+>           "description": "Exercise both capture paths."
+>         }
+>       ]
+>     },
+>     {
+>       "header": "Plan Writes",
+>       "id": "plan_writes",
+>       "question": "How many plan snapshot writes should I trigger?",
+>       "options": [
+>         {
+>           "label": "Three writes (Recommended)",
+>           "description": "Initial plan, renamed update, same-file update."
+>         },
+>         {
+>           "label": "Two writes",
+>           "description": "Shorter update test."
+>         },
+>         {
+>           "label": "Four writes",
+>           "description": "Extra stress write."
+>         }
+>       ]
+>     },
+>     {
+>       "header": "Bug Fixing",
+>       "id": "bug_fixing",
+>       "question": "After the hook check, how should I handle failures?",
+>       "options": [
+>         {
+>           "label": "Fix failures (Recommended)",
+>           "description": "Patch hook bugs immediately."
+>         },
+>         {
+>           "label": "Report only",
+>           "description": "Only summarize broken behavior."
+>         },
+>         {
+>           "label": "Add tests first",
+>           "description": "Write failing tests first."
+>         }
+>       ]
+>     }
+>   ]
+> }
+> ```
+>
+
+› fix d1b384ae896fcf347b6280b5f3a6c5730813f42a not syncing files but just deleting local ones.
+
 › Alright, the skills are next. Claude has for some reason created them as commands, however creating a proper skill should work, too. Try to not have the full file duplicated for both AIs. What can we do there? Give some options.
 > ```text
 > • Questions 1/1 answered
