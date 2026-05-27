@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from _lib import read_payload, resolve_log_path, slugify  # noqa: E402
+from _lib import base_ai_commit_subject, read_payload, resolve_log_path, slugify  # noqa: E402
 
 _STATE_FILE = Path(tempfile.gettempdir()) / "save-plan-state.json"
 
@@ -109,6 +109,7 @@ def _commit(paths: list[str], msg: str) -> None:
         if Path(p).exists():
             subprocess.run(["git", "add", "--", p], capture_output=True)
         # Deleted paths are already staged by _git_rm; no add needed.
+    msg = base_ai_commit_subject(msg)
     subprocess.run(["git", "commit", "--only", *paths, "-m", msg], capture_output=True)
 
 

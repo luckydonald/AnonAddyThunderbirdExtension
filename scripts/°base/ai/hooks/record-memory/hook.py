@@ -28,6 +28,7 @@ from _lib import (  # noqa: E402
     _chdir_to_git_root,
     _is_inside_base_repo,
     _subproject_root,
+    base_ai_commit_subject,
     read_payload,
 )
 
@@ -112,6 +113,7 @@ def _commit(dst_dir_rel: str, names: list[str]) -> None:
         head = ", ".join(Path(n).stem for n in names[:3])
         extra = f" (+{len(names) - 3} more)" if len(names) > 3 else ""
         msg = f"ai: record memories {head}{extra}"
+    msg = base_ai_commit_subject(msg)
     subprocess.run(["git", "commit", "--only", dst_dir_rel, "-m", msg], capture_output=True)
 
 

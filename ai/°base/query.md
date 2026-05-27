@@ -635,4 +635,7 @@ From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 › ⚠ skipping async hook in /home/user/git/luckydonald/base/.codex/hooks.json: async hooks are not supported yet
 › ⚠ `[features].codex_hooks` is deprecated. Use `[features].hooks` instead.
 Enable it with `--enable hooks` or `[features].hooks` in config.toml. See https://developers.openai.com/codex/config-basic#feature-flags for details.
+› Instead, have a python part in the sync script check for that - and fix it after a y/n/exit. Exit shows the path exactly for convenience.
 
+› Fix the `°base` folder selection for automatic `ai: updated prompt` commits broken with either b142385153f6b44d208532036b95a1cb4dd9c9b2 - or they were never working for `codex` before (only `claude`). While at it, make sure those automated commits - including plans and such will prefix commit with `[base] ` like usual for this repository.
+› A previous agent produced the plan below to accomplish the user's task. Implement the plan in a fresh context. Treat the plan as the source of user intent, re-read files as needed, and carry the work through implementation and verification.

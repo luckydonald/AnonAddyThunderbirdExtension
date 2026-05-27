@@ -26,9 +26,3 @@
 
 #### Previous user prompts:
 
-
-› ⚠ `[features].codex_hooks` is deprecated. Use `[features].hooks` instead.
-Enable it with `--enable hooks` or `[features].hooks` in config.toml. See https://developers.openai.com/codex/config-basic#feature-flags for details.
-
-› Instead, have a python part in the sync script check for that - and fix it after a y/n/exit. Exit shows the path exactly for convinience.
-
