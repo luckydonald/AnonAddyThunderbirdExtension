@@ -83,6 +83,29 @@ def _subsumes(a: dict[str, Any], b: dict[str, Any]) -> bool:
     return _matcher_tokens(a).issuperset(_matcher_tokens(b)) and _entry_commands(a).issuperset(_entry_commands(b))
 
 
+def _overlay_entry(existing: dict[str, Any], incoming: dict[str, Any]) -> dict[str, Any]:
+    merged = deepcopy(existing)
+    for key, value in incoming.items():
+        if key != "hooks":
+            merged[key] = deepcopy(value)
+
+    existing_hooks = merged.get("hooks") if isinstance(merged.get("hooks"), list) else []
+    incoming_hooks = incoming.get("hooks") if isinstance(incoming.get("hooks"), list) else []
+    hooks = []
+    for index, hook in enumerate(incoming_hooks):
+        if not isinstance(hook, dict):
+            continue
+        if index < len(existing_hooks) and isinstance(existing_hooks[index], dict):
+            merged_hook = deepcopy(existing_hooks[index])
+            merged_hook.update(deepcopy(hook))
+            hooks.append(merged_hook)
+        else:
+            hooks.append(deepcopy(hook))
+    if hooks:
+        merged["hooks"] = hooks
+    return merged
+
+
 def _unique(values: list[Any]) -> list[Any]:
     seen: set[str] = set()
     out: list[Any] = []
@@ -126,7 +149,14 @@ def _merge(base: dict[str, Any], incoming: dict[str, Any]) -> dict[str, Any]:
             if not isinstance(entry, dict):
                 continue
             entry_id = _hook_id(event, entry)
-            current = [existing for existing in current if _hook_id(event, existing) != entry_id]
+            replaced = False
+            for index, existing in enumerate(current):
+                if _hook_id(event, existing) == entry_id:
+                    current[index] = _overlay_entry(existing, entry)
+                    replaced = True
+                    break
+            if replaced:
+                continue
             if any(_subsumes(existing, entry) for existing in current):
                 continue
             current = [existing for existing in current if not _subsumes(entry, existing)]
@@ -184,6 +214,8 @@ def _render_hooks(shared: dict[str, Any], tool: str) -> dict[str, Any]:
                 command = str(new_hook.get("command") or "")
                 command = _normalize_command_path(_replace_tool_arg(command, tool))
                 new_hook["command"] = command
+                if tool == "codex":
+                    new_hook.pop("async", None)
                 hooks.append(new_hook)
             new_entry["hooks"] = hooks
             rendered_entries.append(new_entry)

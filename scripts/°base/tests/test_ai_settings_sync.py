@@ -37,6 +37,28 @@ class AiSettingsSyncTests(unittest.TestCase):
         self.assertIn("'codex'", command)
         self.assertNotIn("'claude'", command)
 
+    def test_render_codex_strips_async(self):
+        shared = {
+            "hooks": {
+                "SessionStart": [
+                    {
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "python3 hook.py",
+                                "async": True,
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+        rendered = MODULE.render_codex_hooks(shared)
+        hook = rendered["hooks"]["SessionStart"][0]["hooks"][0]
+
+        self.assertNotIn("async", hook)
+
     def test_render_claude_keeps_permissions(self):
         shared = {
             "hooks": {},
@@ -76,6 +98,26 @@ class AiSettingsSyncTests(unittest.TestCase):
         merged = MODULE._merge(base, incoming)
 
         self.assertEqual(merged["hooks"]["SessionStart"][0]["extra"], "new")
+
+    def test_merge_preserves_missing_hook_fields_for_same_identity(self):
+        base = {
+            "hooks": {
+                "SessionStart": [
+                    {"hooks": [{"command": "cmd", "async": True}], "matcher": ""}
+                ]
+            }
+        }
+        incoming = {
+            "hooks": {
+                "SessionStart": [
+                    {"hooks": [{"command": "cmd"}], "matcher": ""}
+                ]
+            }
+        }
+
+        merged = MODULE._merge(base, incoming)
+
+        self.assertTrue(merged["hooks"]["SessionStart"][0]["hooks"][0]["async"])
 
 
 if __name__ == "__main__":

@@ -631,3 +631,5 @@ From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 >     answer: Last writer wins
 >     note: Actually the git diff might allow for a line-based "what is newer" - if available (the `*.local.json` variants may or may not be not git-tracked).
 > ```
+
+› ⚠ skipping async hook in /home/user/git/luckydonald/base/.codex/hooks.json: async hooks are not supported yet
