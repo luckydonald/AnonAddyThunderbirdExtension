@@ -290,9 +290,15 @@ def _merge(base: dict[str, Any], incoming: dict[str, Any]) -> dict[str, Any]:
 
 
 def _replace_tool_arg(command: str, tool: str) -> str:
-    if "save-prompt/hook.py" in command or "save-decision/hook.py" in command:
+    if (
+        "save-prompt/hook.py" in command
+        or "save-decision/hook.py" in command
+        or "save-plan/hook.py" in command
+    ):
         command = command.replace("'claude'", f"'{tool}'")
         command = command.replace('"claude"', f'"{tool}"')
+        if "save-plan/hook.py" in command and not re.search(r"['\"](?:claude|codex)['\"]", command):
+            command = f"{command} '{tool}'"
     return command
 
 
@@ -303,9 +309,15 @@ def _normalize_command_path(command: str) -> str:
 
 def _neutralize_command(command: str) -> str:
     command = _normalize_command_path(command)
-    if "save-prompt/hook.py" in command or "save-decision/hook.py" in command:
+    if (
+        "save-prompt/hook.py" in command
+        or "save-decision/hook.py" in command
+        or "save-plan/hook.py" in command
+    ):
         command = command.replace("'codex'", "'claude'")
         command = command.replace('"codex"', '"claude"')
+        if "save-plan/hook.py" in command and not re.search(r"['\"](?:claude|codex)['\"]", command):
+            command = f"{command} 'claude'"
     return command
 
 

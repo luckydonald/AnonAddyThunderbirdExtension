@@ -100,6 +100,7 @@ class AiHooksBaseRoutingTests(unittest.TestCase):
                         "</proposed_plan>"
                     ),
                 },
+                "codex",
             )
 
             plan_path = repo / "ai" / "°base" / "plans" / "001_base-route-plan.md"
@@ -109,6 +110,124 @@ class AiHooksBaseRoutingTests(unittest.TestCase):
             )
             self.assertFalse((repo / "ai" / "plans").exists())
             self.assertEqual(last_subject(repo), "[base] ai: save plan 001_base-route-plan")
+
+    def test_codex_plan_ignores_post_tool_use_stdout_response(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "base"
+            init_repo(repo, "https://luckydonald@github.com/luckydonald/base.git")
+
+            run_hook(
+                repo,
+                PLAN_HOOK,
+                {
+                    "hook_event_name": "PostToolUse",
+                    "session_id": f"test-{uuid.uuid4()}",
+                    "tool_name": "ExitPlanMode",
+                    "tool_response": "Exit code: 0\nstdout from some command\n",
+                },
+                "codex",
+            )
+
+            self.assertFalse((repo / "ai" / "°base" / "plans").exists())
+            self.assertEqual(last_subject(repo), "init")
+
+    def test_codex_plan_uses_session_transcript_plan_item(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "base"
+            home = Path(tmp) / "home"
+            session_id = f"test-{uuid.uuid4()}"
+            init_repo(repo, "https://luckydonald@github.com/luckydonald/base.git")
+            session_dir = home / ".codex" / "sessions" / "2026" / "05" / "27"
+            session_dir.mkdir(parents=True)
+            session_file = session_dir / f"rollout-2026-05-27T14-20-27-{session_id}.jsonl"
+            session_file.write_text(
+                json.dumps(
+                    {
+                        "type": "event_msg",
+                        "payload": {
+                            "type": "item_completed",
+                            "item": {
+                                "type": "Plan",
+                                "text": "# Transcript Plan\n\nUse the Codex plan event.\n",
+                            },
+                        },
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            run_hook(
+                repo,
+                PLAN_HOOK,
+                {"hook_event_name": "Stop", "session_id": session_id},
+                "codex",
+                extra_env={"HOME": str(home)},
+            )
+
+            plan_path = repo / "ai" / "°base" / "plans" / "001_transcript-plan.md"
+            self.assertEqual(
+                plan_path.read_text(encoding="utf-8"),
+                "# Transcript Plan\n\nUse the Codex plan event.\n",
+            )
+            self.assertEqual(last_subject(repo), "[base] ai: save plan 001_transcript-plan")
+
+    def test_codex_plan_falls_back_to_forwarded_plan_query_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "base"
+            init_repo(repo, "https://luckydonald@github.com/luckydonald/base.git")
+            query_path = repo / "ai" / "°base" / "query.md"
+            query_path.parent.mkdir(parents=True)
+            query_path.write_text(
+                "› A previous agent produced the plan below to accomplish the user's task.\n"
+                "Implement the plan in a fresh context.\n\n"
+                "# Forwarded Plan\n\n"
+                "Save this markdown plan.\n\n",
+                encoding="utf-8",
+            )
+
+            run_hook(
+                repo,
+                PLAN_HOOK,
+                {"hook_event_name": "Stop", "session_id": f"test-{uuid.uuid4()}"},
+                "codex",
+            )
+
+            plan_path = repo / "ai" / "°base" / "plans" / "001_forwarded-plan.md"
+            self.assertEqual(
+                plan_path.read_text(encoding="utf-8"),
+                "# Forwarded Plan\n\nSave this markdown plan.\n",
+            )
+            self.assertEqual(last_subject(repo), "[base] ai: save plan 001_forwarded-plan")
+
+    def test_claude_write_plan_still_captures_claude_plan_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "base"
+            home = Path(tmp) / "home"
+            init_repo(repo, "https://luckydonald@github.com/luckydonald/base.git")
+            plan_file = home / ".claude" / "plans" / "test-plan.md"
+
+            run_hook(
+                repo,
+                PLAN_HOOK,
+                {
+                    "hook_event_name": "PostToolUse",
+                    "session_id": f"test-{uuid.uuid4()}",
+                    "tool_name": "Write",
+                    "tool_input": {
+                        "file_path": str(plan_file),
+                        "content": "# Claude Write Plan\n\nKeep Claude behavior.\n",
+                    },
+                },
+                "claude",
+            )
+
+            plan_path = repo / "ai" / "°base" / "plans" / "001_claude-write-plan.md"
+            self.assertEqual(
+                plan_path.read_text(encoding="utf-8"),
+                "# Claude Write Plan\n\nKeep Claude behavior.\n",
+            )
+            self.assertEqual(last_subject(repo), "[base] ai: save plan 001_claude-write-plan")
 
     def test_memory_in_base_repo_routes_and_prefixes(self):
         with tempfile.TemporaryDirectory() as tmp:

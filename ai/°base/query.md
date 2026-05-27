@@ -639,3 +639,16 @@ Enable it with `--enable hooks` or `[features].hooks` in config.toml. See https:
 
 › Fix the `°base` folder selection for automatic `ai: updated prompt` commits broken with either b142385153f6b44d208532036b95a1cb4dd9c9b2 - or they were never working for `codex` before (only `claude`). While at it, make sure those automated commits - including plans and such will prefix commit with `[base] ` like usual for this repository.
 › A previous agent produced the plan below to accomplish the user's task. Implement the plan in a fresh context. Treat the plan as the source of user intent, re-read files as needed, and carry the work through implementation and verification.
+
+› the codex plan hook is not writing a correct file to the system:
+See commit dbe390bf1766c8227fc3d9c37315a00e7629d8a9 first writing the plan to the query file,
+and then immediatly after writing garbage (stdout apparently) to a new plan file in 8f9f93cf2fa3eec36bc3cc69c5f16faac49e584c.
+Instead it should write what was in the query file to the plan file.
+Make sure to not corrupt the code for claude, the fix only applies to codex.
+Also check if this message starting of the plan gets autocommited at least.
+
+› Note that the files mentioned in the commits where fixed manually later by me.
+
+› Migrate claude hook setup to also have a claude param to the script - the commit one already does it like that.
+
+› A previous agent produced the plan below to accomplish the user's task. Implement the plan in a fresh context. Treat the plan as the source of user intent, re-read files as needed, and carry the work through implementation and verification.
