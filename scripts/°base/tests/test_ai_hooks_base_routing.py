@@ -253,6 +253,64 @@ class AiHooksBaseRoutingTests(unittest.TestCase):
             self.assertFalse((repo / "ai" / "memory").exists())
             self.assertEqual(last_subject(repo), "[base] ai: record memory note")
 
+    def test_memory_session_start_restores_missing_claude_source_from_repo(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "base"
+            home = Path(tmp) / "home"
+            init_repo(repo, "https://luckydonald@github.com/luckydonald/base.git")
+            memory_file = repo / "ai" / "°base" / "memory" / "note.md"
+            memory_file.parent.mkdir(parents=True)
+            memory_file.write_text("repo is durable\n", encoding="utf-8")
+            run_git(repo, "add", str(memory_file.relative_to(repo)))
+            run_git(repo, "commit", "-m", "seed memory")
+
+            run_hook(
+                repo,
+                MEMORY_HOOK,
+                {"hook_event_name": "SessionStart"},
+                extra_env={"HOME": str(home)},
+            )
+
+            encoded = str(repo).replace("/", "-")
+            src_file = home / ".claude" / "projects" / encoded / "memory" / "note.md"
+            self.assertEqual(src_file.read_text(encoding="utf-8"), "repo is durable\n")
+            self.assertEqual(last_subject(repo), "seed memory")
+
+    def test_memory_session_start_does_not_resurrect_marked_deleted_memory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "base"
+            home = Path(tmp) / "home"
+            init_repo(repo, "https://luckydonald@github.com/luckydonald/base.git")
+            memory_file = repo / "ai" / "°base" / "memory" / "old.md"
+            memory_file.parent.mkdir(parents=True)
+            memory_file.write_text("old memory\n", encoding="utf-8")
+            run_git(repo, "add", str(memory_file.relative_to(repo)))
+            run_git(repo, "commit", "-m", "seed old memory")
+            run_git(repo, "rm", str(memory_file.relative_to(repo)))
+            run_git(
+                repo,
+                "commit",
+                "-m",
+                "ai: delete memory old",
+                "-m",
+                "Deleted Memory: old.md",
+            )
+            encoded = str(repo).replace("/", "-")
+            src_file = home / ".claude" / "projects" / encoded / "memory" / "old.md"
+            src_file.parent.mkdir(parents=True)
+            src_file.write_text("stale local memory\n", encoding="utf-8")
+
+            run_hook(
+                repo,
+                MEMORY_HOOK,
+                {"hook_event_name": "SessionStart"},
+                extra_env={"HOME": str(home)},
+            )
+
+            self.assertFalse(memory_file.exists())
+            self.assertFalse(src_file.exists())
+            self.assertEqual(last_subject(repo), "ai: delete memory old")
+
     def test_prompt_in_repo_named_base_with_different_origin_is_unprefixed(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp) / "base"
