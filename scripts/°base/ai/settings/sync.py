@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -25,8 +26,13 @@ CLAUDE_SETTINGS = Path(".claude/settings.json")
 CLAUDE_LOCAL = Path(".claude/settings.local.json")
 CODEX_HOOKS = Path(".codex/hooks.json")
 CODEX_LOCAL_HOOKS = Path(".codex/hooks.local.json")
+CODEX_CONFIG = Path.home() / ".codex" / "config.toml"
 CLAUDE_COMMANDS = Path(".claude/commands")
 CODEX_COMMANDS = Path(".codex/commands")
+
+_FEATURE_ASSIGNMENT = re.compile(
+    r"^(\s*)(codex_hooks|hooks)\s*=\s*([^\n#]*?)(\s*(?:#.*)?)(\r?\n)?$"
+)
 
 
 def _git_root() -> Path:
@@ -54,6 +60,113 @@ def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
     path.write_text(text, encoding="utf-8")
+
+
+def _features_bounds(lines: list[str]) -> tuple[int, int] | None:
+    start = None
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped.startswith("[") or not stripped.endswith("]"):
+            continue
+        if stripped == "[features]":
+            start = index + 1
+            continue
+        if start is not None:
+            return start, index
+    if start is None:
+        return None
+    return start, len(lines)
+
+
+def _rewrite_codex_feature_flag(text: str) -> tuple[str, bool]:
+    lines = text.splitlines(keepends=True)
+    bounds = _features_bounds(lines)
+    if bounds is None:
+        return text, False
+
+    start, end = bounds
+    hooks_present = False
+    deprecated_indexes: list[int] = []
+    replacement = None
+
+    for index in range(start, end):
+        match = _FEATURE_ASSIGNMENT.match(lines[index])
+        if not match:
+            continue
+        indent, name, value, comment, newline = match.groups()
+        if name == "hooks":
+            hooks_present = True
+        elif name == "codex_hooks":
+            deprecated_indexes.append(index)
+            if replacement is None:
+                replacement = f"{indent}hooks = {value.strip()}{comment}{newline or ''}"
+
+    if not deprecated_indexes:
+        return text, False
+
+    rewritten = []
+    for index, line in enumerate(lines):
+        if index not in deprecated_indexes:
+            rewritten.append(line)
+            continue
+        if hooks_present or index != deprecated_indexes[0]:
+            continue
+        rewritten.append(replacement or "hooks = true\n")
+    return "".join(rewritten), True
+
+
+def _ask_codex_config_migration(path: Path) -> str:
+    while True:
+        answer = input(
+            "Codex config uses deprecated [features].codex_hooks. "
+            "Migrate it to [features].hooks? [y/n/exit] "
+        ).strip().lower()
+        if answer in {"y", "yes"}:
+            return "yes"
+        if answer in {"n", "no"}:
+            return "no"
+        if answer in {"e", "exit", "x"}:
+            print(path)
+            return "exit"
+        print("Please answer y, n, or exit.")
+
+
+def _migrate_codex_feature_flag(path: Path, apply: bool, interactive: bool) -> int:
+    if not path.is_file():
+        return 0
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"Could not read Codex config {path}: {exc}", file=sys.stderr)
+        return 1
+
+    rewritten, changed = _rewrite_codex_feature_flag(text)
+    if not changed:
+        return 0
+    if not apply:
+        print(f"Codex config uses deprecated [features].codex_hooks: {path}")
+        return 0
+    if not interactive:
+        print(
+            f"Codex config uses deprecated [features].codex_hooks; "
+            f"run this script interactively to migrate it: {path}",
+            file=sys.stderr,
+        )
+        return 0
+
+    answer = _ask_codex_config_migration(path)
+    if answer == "no":
+        return 0
+    if answer == "exit":
+        return 1
+
+    try:
+        path.write_text(rewritten, encoding="utf-8")
+    except OSError as exc:
+        print(f"Could not write Codex config {path}: {exc}", file=sys.stderr)
+        return 1
+    print(f"Migrated Codex config feature flag: {path}")
+    return 0
 
 
 def _hook_id(event: str, entry: dict[str, Any]) -> str:
@@ -301,6 +414,9 @@ def main(argv: list[str] | None = None) -> int:
 
     os.chdir(_git_root())
     apply = args.apply and not args.check
+    config_status = 0
+    if apply or args.check:
+        config_status = _migrate_codex_feature_flag(CODEX_CONFIG, apply, sys.stdin.isatty())
 
     changed = []
     changed.extend(_apply_or_check(TRACKED_SHARED, CLAUDE_SETTINGS, CODEX_HOOKS, apply))
@@ -314,6 +430,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {path}")
     if args.check and changed:
         return 1
+    if config_status:
+        return config_status
     return 0
 
 

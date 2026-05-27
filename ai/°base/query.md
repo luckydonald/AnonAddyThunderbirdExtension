@@ -633,3 +633,6 @@ From claude session 5693b7f1-e540-44aa-94d7-4a01d9a535ff.
 > ```
 
 › ⚠ skipping async hook in /home/user/git/luckydonald/base/.codex/hooks.json: async hooks are not supported yet
+› ⚠ `[features].codex_hooks` is deprecated. Use `[features].hooks` instead.
+Enable it with `--enable hooks` or `[features].hooks` in config.toml. See https://developers.openai.com/codex/config-basic#feature-flags for details.
+

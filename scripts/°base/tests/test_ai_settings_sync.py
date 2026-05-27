@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import importlib.util
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -118,6 +121,65 @@ class AiSettingsSyncTests(unittest.TestCase):
         merged = MODULE._merge(base, incoming)
 
         self.assertTrue(merged["hooks"]["SessionStart"][0]["hooks"][0]["async"])
+
+    def test_rewrite_codex_feature_flag(self):
+        text = "model = \"gpt-5\"\n[features]\ncodex_hooks = true\n\n[projects]\n"
+
+        rewritten, changed = MODULE._rewrite_codex_feature_flag(text)
+
+        self.assertTrue(changed)
+        self.assertEqual(
+            rewritten,
+            "model = \"gpt-5\"\n[features]\nhooks = true\n\n[projects]\n",
+        )
+
+    def test_rewrite_codex_feature_flag_removes_deprecated_when_hooks_exists(self):
+        text = "[features]\nhooks = true\ncodex_hooks = true\n"
+
+        rewritten, changed = MODULE._rewrite_codex_feature_flag(text)
+
+        self.assertTrue(changed)
+        self.assertEqual(rewritten, "[features]\nhooks = true\n")
+
+    def test_migrate_codex_feature_flag_yes_writes_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.toml"
+            path.write_text("[features]\ncodex_hooks = true\n", encoding="utf-8")
+            previous_input = getattr(MODULE, "input", None)
+            MODULE.input = lambda _prompt: "y"
+            out = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(out):
+                    status = MODULE._migrate_codex_feature_flag(path, True, True)
+            finally:
+                if previous_input is None:
+                    delattr(MODULE, "input")
+                else:
+                    MODULE.input = previous_input
+
+            self.assertEqual(status, 0)
+            self.assertEqual(path.read_text(encoding="utf-8"), "[features]\nhooks = true\n")
+
+    def test_migrate_codex_feature_flag_exit_prints_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.toml"
+            original = "[features]\ncodex_hooks = true\n"
+            path.write_text(original, encoding="utf-8")
+            previous_input = getattr(MODULE, "input", None)
+            MODULE.input = lambda _prompt: "exit"
+            out = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(out):
+                    status = MODULE._migrate_codex_feature_flag(path, True, True)
+            finally:
+                if previous_input is None:
+                    delattr(MODULE, "input")
+                else:
+                    MODULE.input = previous_input
+
+            self.assertEqual(status, 1)
+            self.assertIn(str(path), out.getvalue())
+            self.assertEqual(path.read_text(encoding="utf-8"), original)
 
 
 if __name__ == "__main__":
