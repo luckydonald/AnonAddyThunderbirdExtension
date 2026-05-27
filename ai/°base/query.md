@@ -753,3 +753,7 @@ Also check if this message starting of the plan gets autocommited at least.
 > ```
 › The marker shall be a line of the commit, favoribly the last one preceeded by a single empty line. Above the usual commit message stuff including optional `[base] ` prefix shall happen - create a script to delete a memory with creating a wellformatted delete commit, too.
 
+› git lfs activation causes now on push:
+Push failed: Authentication error: Authentication required: You must have push access to verify locks failed to push some refs to 'https://github.com/luckydonald/base.git'
+› alright, ran the push. Worked. But I don't want to repeat that for every Repo which includes this base. Maybe the fix git script can be extended?
+

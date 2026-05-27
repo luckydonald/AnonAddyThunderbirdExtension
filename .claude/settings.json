@@ -168,6 +168,7 @@
       "Skill(/rebase-ai-prompt-commits)",
       "Skill(committing-with-lplp-style)",
       "Skill(/committing-with-lplp-style)",
+      "Bash(uv run --project scripts/°base python -m unittest ai.scripts.tests.test_git_remote_fix ai.scripts.tests.test_git_remote_fix_tui_tdd ai.scripts.tests.test_git_remote_fix_tui_terminal -v)",
       "Bash(GIT_SEQUENCE_EDITOR=/tmp/git-rebase-todo.sh git *)",
       "Bash(echo \"---\")"
     ],
