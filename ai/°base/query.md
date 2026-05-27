@@ -759,3 +759,5 @@ Push failed: Authentication error: Authentication required: You must have push a
 
 › Fix _Full test discovery still has the pre-existing ai.scripts import issue in the TUI tests_
 
+› Add `uv run --project scripts/°base python -m unittest discover -s scripts/°base/tests -v` to the allowed commands, pretty far down with the other `°base` stuff.
+
