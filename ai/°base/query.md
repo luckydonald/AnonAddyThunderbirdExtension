@@ -757,3 +757,5 @@ Also check if this message starting of the plan gets autocommited at least.
 Push failed: Authentication error: Authentication required: You must have push access to verify locks failed to push some refs to 'https://github.com/luckydonald/base.git'
 › alright, ran the push. Worked. But I don't want to repeat that for every Repo which includes this base. Maybe the fix git script can be extended?
 
+› Fix _Full test discovery still has the pre-existing ai.scripts import issue in the TUI tests_
+
