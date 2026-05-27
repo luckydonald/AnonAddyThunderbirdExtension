@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import importlib.util
+import os
 import sys
 import tempfile
 import unittest
@@ -18,6 +19,27 @@ SPEC.loader.exec_module(MODULE)
 
 
 class AiSettingsSyncTests(unittest.TestCase):
+    @contextlib.contextmanager
+    def patched_skill_paths(self, root: Path):
+        names = [
+            "SHARED_SKILLS",
+            "AGENTS_SKILLS",
+            "CLAUDE_SKILLS",
+            "CLAUDE_COMMANDS",
+            "CODEX_COMMANDS",
+        ]
+        previous = {name: getattr(MODULE, name) for name in names}
+        MODULE.SHARED_SKILLS = root / "ai" / "skills"
+        MODULE.AGENTS_SKILLS = root / ".agents" / "skills"
+        MODULE.CLAUDE_SKILLS = root / ".claude" / "skills"
+        MODULE.CLAUDE_COMMANDS = root / ".claude" / "commands"
+        MODULE.CODEX_COMMANDS = root / ".codex" / "commands"
+        try:
+            yield
+        finally:
+            for name, value in previous.items():
+                setattr(MODULE, name, value)
+
     def test_render_codex_rewrites_prompt_tool_arg(self):
         shared = {
             "hooks": {
@@ -227,6 +249,79 @@ class AiSettingsSyncTests(unittest.TestCase):
             self.assertEqual(status, 1)
             self.assertIn(str(path), out.getvalue())
             self.assertEqual(path.read_text(encoding="utf-8"), original)
+
+    def test_sync_skills_imports_claude_command_and_renders_wrappers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            command = root / ".claude" / "commands" / "demo.md"
+            command.parent.mkdir(parents=True)
+            command.write_text(
+                "---\n"
+                "name: demo\n"
+                "description: Use demo: carefully.\n"
+                "---\n\n"
+                "# Demo\n\n"
+                "Full command body.\n",
+                encoding="utf-8",
+            )
+
+            with self.patched_skill_paths(root):
+                changed = MODULE._sync_skills(True)
+
+            shared = root / "ai" / "skills" / "demo" / "SKILL.md"
+            codex_skill = root / ".agents" / "skills" / "demo" / "SKILL.md"
+            wrapper = root / ".claude" / "skills" / "demo" / "SKILL.md"
+            self.assertIn(str(shared), changed)
+            self.assertTrue(shared.is_file())
+            self.assertIn('description: "Use demo: carefully."', shared.read_text(encoding="utf-8"))
+            self.assertIn("Full command body.", shared.read_text(encoding="utf-8"))
+            self.assertIn(MODULE.GENERATED_MARKER, codex_skill.read_text(encoding="utf-8"))
+            self.assertIn(MODULE.GENERATED_MARKER, wrapper.read_text(encoding="utf-8"))
+            self.assertIn(MODULE.GENERATED_MARKER, command.read_text(encoding="utf-8"))
+            self.assertNotIn("Full command body.", codex_skill.read_text(encoding="utf-8"))
+            self.assertNotIn("Full command body.", wrapper.read_text(encoding="utf-8"))
+            self.assertNotIn("Full command body.", command.read_text(encoding="utf-8"))
+
+    def test_sync_skills_imports_new_claude_skill_over_generated_wrapper(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shared = root / "ai" / "skills" / "demo" / "SKILL.md"
+            shared.parent.mkdir(parents=True)
+            shared.write_text(
+                "---\n"
+                "name: demo\n"
+                "description: Old shared source.\n"
+                "---\n\n"
+                "Old body.\n",
+                encoding="utf-8",
+            )
+
+            generated = root / ".claude" / "commands" / "demo.md"
+            generated.parent.mkdir(parents=True)
+            generated.write_text(
+                MODULE._render_claude_command_shim("demo", "Old shared source.", shared),
+                encoding="utf-8",
+            )
+
+            claude_skill = root / ".claude" / "skills" / "demo" / "SKILL.md"
+            claude_skill.parent.mkdir(parents=True)
+            claude_skill.write_text(
+                "---\n"
+                "name: demo\n"
+                "description: New Claude skill.\n"
+                "---\n\n"
+                "New body.\n",
+                encoding="utf-8",
+            )
+            os.utime(claude_skill, (shared.stat().st_mtime + 10, shared.stat().st_mtime + 10))
+
+            with self.patched_skill_paths(root):
+                MODULE._sync_skills(True)
+
+            shared_text = shared.read_text(encoding="utf-8")
+            self.assertIn("New Claude skill.", shared_text)
+            self.assertIn("New body.", shared_text)
+            self.assertIn(MODULE.GENERATED_MARKER, claude_skill.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

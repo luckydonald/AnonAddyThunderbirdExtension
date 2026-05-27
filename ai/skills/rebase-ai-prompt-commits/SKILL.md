@@ -1,6 +1,6 @@
 ---
-name: rebase-ai-prompt-commits
-description: Rebases the current branch to group stray `ai:` auto-commits — `ai: updated prompt` and `ai: save decision …` (both `ai/query.md`-only) and `ai: save plan …` (`ai/plans/<NNN>_*.md`-only) — into their neighboring code commits using non-interactive rebase. Fixes mislabeled commits. Optionally rewrites HEAD as a branch summary. Invoke on demand before merging or reviewing a branch.
+name: "rebase-ai-prompt-commits"
+description: "Rebases the current branch to group stray `ai:` auto-commits — `ai: updated prompt` and `ai: save decision …` (both `ai/query.md`-only) and `ai: save plan …` (`ai/plans/<NNN>_*.md`-only) — into their neighboring code commits using non-interactive rebase. Fixes mislabeled commits. Optionally rewrites HEAD as a branch summary. Invoke on demand before merging or reviewing a branch."
 ---
 
 # Rebase: Group stray `ai:` auto-commits

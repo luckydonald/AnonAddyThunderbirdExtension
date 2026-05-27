@@ -652,3 +652,14 @@ Also check if this message starting of the plan gets autocommited at least.
 › Migrate claude hook setup to also have a claude param to the script - the commit one already does it like that.
 
 › A previous agent produced the plan below to accomplish the user's task. Implement the plan in a fresh context. Treat the plan as the source of user intent, re-read files as needed, and carry the work through implementation and verification.
+› If claude generates new skills or commands, the script shall sync/convert those as well. I.e. it should be able to handle claude adding new ones it it's own format.
+
+› Also, line-based git diffs can be used.
+
+› Alright, the skills are next. Claude has for some reason created them as commands, however creating a proper skill should work, too. Try to not have the full file duplicated for both AIs. What can we do there? Give some options.
+> ```text
+> • Questions 1/1 answered
+>   • Which direction should the implementation plan target?
+>     answer: Generated Skills (Recommended)
+>     note: + the wrapper commands for keeping the commands around in claude - it should still be migrated to proper claude skills though.
+> ```
