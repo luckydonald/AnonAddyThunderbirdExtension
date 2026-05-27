@@ -1,43 +1,51 @@
 # Prevent Accidental Memory Deletion
 
 ## Summary
-Fix the memory sync behavior so `SessionStart` never deletes repo memory files just because the Claude memory source is missing or empty. Treat repo memory as the durable copy, and allow memory deletions only when explicitly marked in git history.
+Make repo memory authoritative during sync, and require explicit commit-message markers for intentional memory deletions. Add a helper script that performs a correctly formatted memory deletion commit.
 
 ## Key Changes
 - Update `scripts/°base/ai/hooks/record-memory/hook.py`:
-  - Stop using missing source files as delete signals.
-  - On `SessionStart`, if a repo memory exists but the Claude source file is missing, recreate the Claude source file as a hardlink/symlink to the repo file.
-  - Keep `PostToolUse` behavior source-to-repo for newly written Claude memory files.
-  - If a source file exists but the repo file was intentionally deleted, suppress resurrection only when the latest git deletion for that memory has an explicit marker.
+  - Never delete repo memory files because the Claude source directory/file is missing.
+  - On `SessionStart`, recreate missing Claude source memory files from repo memory files using the existing hardlink/symlink strategy.
+  - Keep `PostToolUse` source-to-repo sync for new or edited Claude memory files.
+  - Treat a memory as intentionally deleted only when git history contains a deletion commit for that filename with a standalone marker line.
 
-- Add commit-message enforcement for memory deletions:
-  - New commit-msg hook requiring one exact line per deleted memory:
+- Add commit-message enforcement:
+  - New commit-msg hook under `scripts/°base/git/hooks/commit/`.
+  - For staged deletions under `ai/memory/` or `ai/°base/memory/`, require one standalone marker line per deleted file:
     `Deleted Memory: <filename>.md`
-  - Hook checks staged deletions under `ai/memory/` and `ai/°base/memory/`.
-  - Deleting memory files without matching markers fails the commit.
   - Register the hook in `.pre-commit-config.yaml` and `.pre-commit-hooks.yaml`.
+  - The hook should accept the marker as a standalone line anywhere in the commit message, but error text should recommend placing it as the final line after one empty line.
 
-- Do not restore the files deleted by `d1b384a`; user will handle that manually. This plan only prevents the same failure from recurring.
+- Add a delete helper script:
+  - Create `scripts/°base/ai/memory/delete.py`.
+  - Usage: `python3 scripts/°base/ai/memory/delete.py <filename-or-path>`.
+  - Resolve the current subproject the same way existing AI hooks do, including `ai/°base/memory` routing in the base repo.
+  - Delete both the repo memory file and matching Claude source memory file when present.
+  - Stage only the affected repo memory path and commit with:
+    - Subject: `ai: delete memory <stem>`, passed through `base_ai_commit_subject()` so `[base] ` is added when appropriate.
+    - Body: exactly one blank line, then final marker line `Deleted Memory: <filename>.md`.
+  - Do not delete `MEMORY.md` automatically unless it is the explicit target.
 
 ## Tests
 - Add memory sync tests proving:
   - Empty/missing Claude source does not delete tracked repo memories.
   - Repo memory files recreate missing Claude source files.
   - Fresh Claude memory files still sync into the repo and auto-commit.
-  - A memory whose latest git path event is a marked deletion is not resurrected from stale local source.
+  - A memory with a latest marked deletion in git history is not resurrected from stale local source.
 
-- Add commit-msg tests proving:
+- Add commit-msg/helper tests proving:
   - Memory deletion without `Deleted Memory: <filename>.md` fails.
-  - Memory deletion with the marker passes.
+  - Memory deletion with a standalone marker passes.
   - Multiple memory deletions require one marker per filename.
-  - Non-memory deletions are unaffected.
+  - The delete helper creates the expected subject, blank line, final marker line, and deletes only the targeted memory.
 
 - Run:
   - `python3 -m unittest scripts/°base/tests/test_ai_hooks_base_routing.py`
-  - the new commit-msg hook test module
-  - `python3 -m py_compile scripts/°base/ai/hooks/record-memory/hook.py`
+  - the new commit hook/helper test module
+  - `python3 -m py_compile scripts/°base/ai/hooks/record-memory/hook.py scripts/°base/ai/memory/delete.py`
 
 ## Assumptions
-- Repo memory is authoritative when source and repo disagree due only to missing local Claude files.
-- Intentional memory deletion is represented by a git deletion plus `Deleted Memory: <filename>.md` in the commit message.
-- The bad `d1b384a` deletion is repaired separately, not by this implementation.
+- The bad `d1b384a` deletion is repaired separately by the user.
+- The marker format is exactly `Deleted Memory: <filename>.md`.
+- Helper-created deletion commits use the normal AI commit subject behavior, including optional `[base] ` prefix.

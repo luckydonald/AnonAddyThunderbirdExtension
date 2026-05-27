@@ -751,3 +751,5 @@ Also check if this message starting of the plan gets autocommited at least.
 >     answer: Generated Skills (Recommended)
 >     note: + the wrapper commands for keeping the commands around in claude - it should still be migrated to proper claude skills though.
 > ```
+› The marker shall be a line of the commit, favoribly the last one preceeded by a single empty line. Above the usual commit message stuff including optional `[base] ` prefix shall happen - create a script to delete a memory with creating a wellformatted delete commit, too.
+
