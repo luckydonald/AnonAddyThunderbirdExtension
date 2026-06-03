@@ -172,6 +172,7 @@
       "Bash(python3 -m pytest scripts/°base/tests/test_permission_check.py:*)",
       "Bash(python3 -m pytest scripts/°base/init/checkout.sh)",
       "Bash(GIT_SEQUENCE_EDITOR=/tmp/git-rebase-todo.sh git *)",
+      "Bash(uv run fastapi --help)",
       "Bash(echo \"---\")"
     ],
     "deny": [
