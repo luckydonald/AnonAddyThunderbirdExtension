@@ -22,12 +22,23 @@ Adopt these rules for every commit made this session:
 
 4. **Message format:**
    ```md
-   [scope] category: ai: Run: <short one-line summary>
+   [where] component-or-topic: <short one-line summary><sentence-separator>
 
    <multiline body: what changed, why, key decisions>
    ```
-   Scope examples: `[.idea]`, `[git]` (gitignore etc.), `[github]` (workflows, issue templates, …), `[frontend]`, `[db]`, [stdb]` (spacetimedb), `[api]`, `[backend]`, `[docker]`, `[coolify]`, `[infra]`, … 
-   Both summary and body may contain pure-markdown for formatting. 
+   Where examples: `[.idea]`, `[git]` (gitignore etc.), `[github]` (workflows, issue templates, …), `[frontend]`, `[db]`, `[stdb]` (spacetimedb), `[api]`, `[backend]`, `[docker]`, `[coolify]`, `[infra]`, …
+   The word or phrase after `[where]` is a component, feature, subsystem, or topic, not a Conventional Commit type. Do not use `feat`, `fix`, `chore`, `docs`, `test`, or `refactor` there unless that word is literally the component or topic being changed.
+   Good examples:
+   - `[frontend] admin: Implemented user deletion UI.`
+   - `[backend] models: Added models for cool feature.`
+   - `[backend] cool feature: Added the models.`
+   - `[git] ignore rules: Ignored generated cache files.`
+   Bad examples:
+   - `[frontend] fix: ai: Run: Implement user deletion UI`
+   - `[backend] feat: Added cool feature models`
+   End every commit summary with a sentence separator: `.`, `:`, `,`, `!`, or `?`.
+   Usually use `.` when the summary stands on its own and the body only adds context. Use `:` when the subject needs the body/details that follow to complete the thought.
+   Both summary and body may contain pure-markdown for formatting.
 
 5. **Stage only files changed by the current task.** Never stage `ai/git/pending-commit.md` (it is gitignored) or unrelated files.
 
