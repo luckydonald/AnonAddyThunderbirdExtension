@@ -13,6 +13,7 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 HOOKS_DIR="$REPO_ROOT/.git/hooks"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.pyenv/shims:/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 # ─── 1. Remove stale yorkie hooks ───────────────────────────────────────────
 # Yorkie is no longer installed. Its hooks reference node_modules/yorkie which

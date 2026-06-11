@@ -774,3 +774,6 @@ Push failed: Authentication error: Authentication required: You must have push a
 
 ❯ Fix the write query/decision/plan hooks in @scripts/°base/ai/hooks/ to honor `ai/.by-issue` which would contain something like `PROJ-1234` or similar (possibly tailing empty line), which would - if set - instruct all of those functions to write to `ai/by-issue/PROJ-1234/…`, so adding the directory `by-issue/${.by-issue}/` after `ai/` to all pathes. Note, for the base repo, it would be `ai/°base/.by-issue`. Unify that in a shared helper resolving the actual path.
 
+› ai/°base/errors/3.md
+› Fix `uv` to work there.
+
