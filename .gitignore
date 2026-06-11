@@ -809,15 +809,17 @@ dist-ssr
 
 # JetBrains (PyCharm, IntelliJ, etc.)
 #.idea
+# # this was ignored before, so I rather keep it ignored for now.
+.idea/**/vcs.xml
+.idea/**/jsLibraryMappings.xml
+# ACTUALLY I DON'T LIKE THIS, IT'S SCARY!
+.idea
+# # Do not ignore the list with default words.
+!.idea/dictionaries/project.xml
 # # allow run configurations in the standard directory
 !/.idea/runConfigurations
 # # but not local ones.
 /.idea/runConfigurations/*local*.run.xml
-# # this was ignored before, so I rather keep it ignored for now.
-.idea/**/vcs.xml
-.idea/**/jsLibraryMappings.xml
-# # Do not ignore the list with default words.
-.idea/dictionaries/project.xml
 
 # Cypress
 /cypress/videos/
