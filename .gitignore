@@ -316,18 +316,18 @@ $RECYCLE.BIN/
 .idea/**/gradle.xml
 .idea/**/libraries
 
-# # Gradle and Maven with auto-import
-# # When using Gradle or Maven with auto-import, you should exclude module files,
-# # since they will be recreated, and may cause churn.  Uncomment if using
-# # auto-import.
-# .idea/artifacts
-# .idea/compiler.xml
-# .idea/jarRepositories.xml
-# .idea/modules.xml
-# .idea/*.iml
-# .idea/modules
-# *.iml
-# *.ipr
+# Gradle and Maven with auto-import
+# When using Gradle or Maven with auto-import, you should exclude module files,
+# since they will be recreated, and may cause churn.  Uncomment if using
+# auto-import.
+.idea/artifacts
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/modules.xml
+.idea/*.iml
+.idea/modules
+*.iml
+*.ipr
 
 # CMake
 cmake-build-*/
@@ -410,7 +410,7 @@ hugo.linux
 ### Example user template
 
 # IntelliJ project files
-.idea
+#.idea
 *.iml
 out
 gen
@@ -656,7 +656,7 @@ dmypy.json
 cython_debug/
 
 # IntelliJ project files
-.idea
+#.idea
 *.iml
 out
 gen
@@ -719,7 +719,9 @@ secring.*
 **/*.bak
 **/*.bak.*
 
-# idea
+# JetBrains non-`.idea` run configurations
+# # disallow custom but not local ones.
+!.run/*.run.xml
 .run/*local*.run.xml
 
 # temporary files
@@ -795,7 +797,6 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
 *.suo
 *.ntvs*
 *.njsproj
@@ -805,6 +806,16 @@ dist-ssr
 *.tsbuildinfo
 
 .eslintcache
+
+# JetBrains (PyCharm, IntelliJ, etc.)
+#.idea
+# # allow run configurations in the standard directory
+!/.idea/runConfigurations
+# # but not local ones.
+/.idea/runConfigurations/*local*.run.xml
+# # this was ignored before, so I rather keep it ignored for now.
+.idea/**/vcs.xml
+.idea/**/jsLibraryMappings.xml
 
 # Cypress
 /cypress/videos/
@@ -823,6 +834,7 @@ playwright-report/
 **/.spacetimedb.master-key.*.txt
 !**/.spacetimedb.master-key.example.txt
 **/spacetime.local.json
+
 
 # Yarn 4
 # Yarn PnP
@@ -849,10 +861,9 @@ playwright-report/
 !.yarn/versions
 !**/.yarn/versions
 
-# inside .yarn, so should already be ignored, but make sure to not accidentally add big ass zip of node modules.
+# # inside .yarn, so should already be ignored, but make sure to not accidentally add big ass zip of node modules.
 install-state.gz
 **/install-state.gz
-
 
 
 # generic foo.local.bar files
@@ -895,9 +906,6 @@ ai/apis/
 
 # coverage output
 coverage/
-
-# idea
-.run/*local*.run.xml
 
 # python
 **/__pycache__
