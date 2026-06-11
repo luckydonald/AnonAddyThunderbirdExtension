@@ -816,6 +816,8 @@ dist-ssr
 # # this was ignored before, so I rather keep it ignored for now.
 .idea/**/vcs.xml
 .idea/**/jsLibraryMappings.xml
+# # Do not ignore the list with default words.
+.idea/dictionaries/project.xml
 
 # Cypress
 /cypress/videos/
