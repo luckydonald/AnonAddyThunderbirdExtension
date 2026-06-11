@@ -769,3 +769,5 @@ Push failed: Authentication error: Authentication required: You must have push a
 › Wait is the script file now optional - or the command in the script? Depending if I can it with xcode git or normal git it is available or not.
 
 › Hmm. That one is weird. PYcharm uses that xcode specific git, and now I got @ai/errors/2.md
+
+› Can't you fix it instead to work with uv and `git lfs` instead?
