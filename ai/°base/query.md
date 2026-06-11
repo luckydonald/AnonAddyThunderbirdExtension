@@ -765,3 +765,6 @@ Push failed: Authentication error: Authentication required: You must have push a
 
 › it's missing `ai: Run:` now.
 
+› @ai/°base/errors/1.md
+› Wait is the script file now optional - or the command in the script? Depending if I can it with xcode git or normal git it is available or not.
+
