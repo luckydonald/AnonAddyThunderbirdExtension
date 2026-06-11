@@ -768,3 +768,4 @@ Push failed: Authentication error: Authentication required: You must have push a
 › @ai/°base/errors/1.md
 › Wait is the script file now optional - or the command in the script? Depending if I can it with xcode git or normal git it is available or not.
 
+› Hmm. That one is weird. PYcharm uses that xcode specific git, and now I got @ai/errors/2.md
