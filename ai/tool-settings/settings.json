@@ -175,7 +175,9 @@
       "Bash(python3 -m pytest scripts/°base/init/checkout.sh)",
       "Bash(GIT_SEQUENCE_EDITOR=/tmp/git-rebase-todo.sh git *)",
       "Bash(uv run fastapi --help)",
-      "Bash(echo \"---\")"
+      "Bash(echo \"---\")",
+      "Bash(echo ---)",
+      "Bash(echo '---'),"
     ],
     "deny": [
       "Read(**/.env*)",
