@@ -771,3 +771,6 @@ Push failed: Authentication error: Authentication required: You must have push a
 › Hmm. That one is weird. PYcharm uses that xcode specific git, and now I got @ai/errors/2.md
 
 › Can't you fix it instead to work with uv and `git lfs` instead?
+
+❯ Fix the write query/decision/plan hooks in @scripts/°base/ai/hooks/ to honor `ai/.by-issue` which would contain something like `PROJ-1234` or similar (possibly tailing empty line), which would - if set - instruct all of those functions to write to `ai/by-issue/PROJ-1234/…`, so adding the directory `by-issue/${.by-issue}/` after `ai/` to all pathes. Note, for the base repo, it would be `ai/°base/.by-issue`. Unify that in a shared helper resolving the actual path.
+
