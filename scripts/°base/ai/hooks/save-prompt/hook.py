@@ -21,9 +21,11 @@ SKIP_PROMPTS = {
     "/commit-with-lplp-style",
     "$commit-with-lplp-style",
     "/rename",
-    "commit", "Commit",
-    "yes commit", "commit please", "commit pls", "commit plz",
+    "commit", "Commit", "yes commit",
+    "commit please", "commit pls", "commit plz",
+    "please commit", "pls commit", "plz commit",
     "keep committing", "always commit",
+    "continue", "go on",
 }
 
 
