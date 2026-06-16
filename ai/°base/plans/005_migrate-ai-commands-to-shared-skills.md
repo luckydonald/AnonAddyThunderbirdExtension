@@ -7,7 +7,7 @@
 
 ## Key Changes
 - Create canonical skills:
-  - `.agents/skills/committing-with-lplp-style/SKILL.md`
+  - `.agents/skills/commit-with-lplp-style/SKILL.md`
 - Migrate the current full command bodies into the canonical commit-style skill.
 - Replace `.claude/commands/*.md` with small compatibility shims that tell Claude to use the matching skill.
 - Add `.claude/skills/<name>/SKILL.md` wrappers with the same `name` and `description`, a generated-file marker, and a short instruction to read the canonical `.agents/skills/<name>/SKILL.md`.

@@ -1,5 +1,5 @@
 ---
-name: "committing-with-lplp-style"
+name: "commit-with-lplp-style"
 description: "Activates the lplp-pipbuck commit style for the current session. Commits after every completed task, amends nearby `ai:` prompt/decision auto-commits into the work commit, preserves plan commits as separate history, writes messages via ai/git/pending-commit.md, and never commits unrelated files. Use when the user opts in to this style at session start, or explicitly asks to enable it."
 ---
 
@@ -41,10 +41,14 @@ Adopt these rules for every commit made this session:
    Usually use `.` when the summary stands on its own and the body only adds context. Use `:` when the subject needs the body/details that follow to complete the thought.
    Both summary and body may contain pure-markdown for formatting.
 
+   For normal use, multiple `[where]` parts can be written as one bracket with pipes, e.g. `[backend|frontend]`.
+
+   For the base repo itself, use `[base] [optional source repo] topic: ai: …`. Recent examples include `[base] git hooks: ai: …`, `[base] ai/hooks: ai: …`, `[base] [AllMyStorage] skills: ai: …`, and `[base] [userscripts] gitignore: …`.
+
 5. **Stage only files changed by the current task.** Never stage `ai/git/pending-commit.md` (it is gitignored) or unrelated files.
 
 6. Once this skill is activated, keep commiting after every completed task automatically without asking again.
-   If the user responds with a simple `commit` or similar (`commit plz`, `keep commiting`, etc.), this means they want to remind you, to follow the "keep automatically commiting" instruction, which you should already anyway.
+   If the user responds with a simple `commit` or similar (`commit plz`, `keep commiting`, etc.), this means they want to remind you, to follow the "keep automatically committing" instruction, which you should already anyway.
 
 ## Cleaning up stray `ai:` auto-commits
 

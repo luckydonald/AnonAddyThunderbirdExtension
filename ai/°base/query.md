@@ -84,7 +84,7 @@ So check that:
 ❯ That readme change for git lfs install is not very thorough. It shall be part of the installation section properly, and definitly also in the quick copy-past command block.
 ❯ Also add the command for pre-commit, too.
 
-❯ Edit @scripts/°base/ai/hooks/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`.
+❯ Edit @scripts/°base/ai/hooks/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/commit-with-lplp-style`.
 
 ❯ Earlier you managed to commit with `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic>` again. Analyze why this managed to get past the `PermissionRequest` check.
 The commit which I since rebased and fixed was `base 5338ebc` with the title `ai: skip logging for internal tooling prompt command`, so you can match it in the earlier log.
@@ -759,7 +759,7 @@ Push failed: Authentication error: Authentication required: You must have push a
 
 › Add `uv run --project scripts/°base python -m unittest discover -s scripts/°base/tests -v` to the allowed commands, pretty far down with the other `°base` stuff.
 
-› The $committing-with-lplp-style skill is not good in selecting the word after the `[where]`. Currently it often writes stuff like `[fronend] fix: ai: Run: …`, but it shouldn't be this feat/fix/… commit style (forgot the name), but the component or topic of the change. I.e. `[frontend] admin: Implemented user deletion UI.` or `[backend] models: Added models for cool feature.`. If we're rather on a feature branch or doing a lot of work on the same feature `[backend] cool feature: Added the models.` or similar is possible too. Also notice that every commit shall be ended with a sentence separator, e.g. `.:,!?`. It doesn't need to be a full sentence for that, and the choice is rather based on the rest of the message; Like if you need the information in the detailed rest of the commit message, then it would indicate that with an `:`, otherwise, if it can stand on it's own, and the body is only enhancing it, it would be `.` Usually `.` is the right choice.
+› The $commit-with-lplp-style skill is not good in selecting the word after the `[where]`. Currently it often writes stuff like `[fronend] fix: ai: Run: …`, but it shouldn't be this feat/fix/… commit style (forgot the name), but the component or topic of the change. I.e. `[frontend] admin: Implemented user deletion UI.` or `[backend] models: Added models for cool feature.`. If we're rather on a feature branch or doing a lot of work on the same feature `[backend] cool feature: Added the models.` or similar is possible too. Also notice that every commit shall be ended with a sentence separator, e.g. `.:,!?`. It doesn't need to be a full sentence for that, and the choice is rather based on the rest of the message; Like if you need the information in the detailed rest of the commit message, then it would indicate that with an `:`, otherwise, if it can stand on it's own, and the body is only enhancing it, it would be `.` Usually `.` is the right choice.
 
 › it's missing `ai: Run:` now.
 
@@ -777,6 +777,9 @@ Push failed: Authentication error: Authentication required: You must have push a
 
 › Fix loading the path of UV and git-lfs in @ai/°base/errors/3.md
 
-› you can use $committing-with-lplp-style, then test again.
+› you can use $commit-with-lplp-style, then test again.
 
-› Merge the @ai/skills/rebase-ai-prompt-commits/SKILL.md and /Users/user/git/luckydonald/AllMyStorage/ai/memory/feedback_lplp_plan_commits.md into @ai/skills/committing-with-lplp-style/SKILL.md ; and cleanup any old `rebase-ai-prompt-commits` mention.
+› Merge the @ai/skills/rebase-ai-prompt-commits/SKILL.md and /Users/user/git/luckydonald/AllMyStorage/ai/memory/feedback_lplp_plan_commits.md into @ai/skills/commit-with-lplp-style/SKILL.md ; and cleanup any old `rebase-ai-prompt-commits` mention.
+› Rename the lplp commit skill to `commit-with-lplp-style` for grammar reasons.
+Also include a very short section about the base itself using `[base] [optional source repo] something: ai: …` (see latest 20 commits to refine that).
+› Add: For normal use, multiple `[where]` parts can be written as `[backend|frontend]`.
