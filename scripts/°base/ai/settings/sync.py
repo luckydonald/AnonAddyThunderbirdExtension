@@ -595,7 +595,7 @@ def _apply_or_check(shared_path: Path, claude_path: Path, codex_path: Path, appl
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Synchronize Claude and Codex AI tool settings.")
     parser.add_argument("--dry-run", action="store_true", help="show what would change without writing files")
-    parser.add_argument("--check", action="store_true", help="like --dry-run but exit 1 if files are out of sync (used by pre-commit)")
+    parser.add_argument("--check", action="store_true", help="like --dry-run but exit 1 if any file is out of sync")
     args = parser.parse_args(argv)
 
     os.chdir(_git_root())
