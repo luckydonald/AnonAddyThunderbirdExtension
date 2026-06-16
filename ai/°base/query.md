@@ -815,3 +815,5 @@ Also include a very short section about the base itself using `[base] [optional 
 
 ❯ Improve @scripts/°base/ai/settings/sync.py to list the changes it is doing directly/verbosely, and reduce the flags to just sync on default and have a `--dry-run` to not actually sync it.
 
+❯ update the `--apply` reference in `.claude/settings.json` too, and when mentioning it in the commit hook errors and skill templates.
+
