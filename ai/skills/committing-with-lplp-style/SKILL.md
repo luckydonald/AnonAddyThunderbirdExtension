@@ -1,6 +1,6 @@
 ---
 name: "committing-with-lplp-style"
-description: "Activates the lplp-pipbuck commit style for the current session. Commits after every completed task, amends the last commit if its message is an `ai:` auto-commit (`ai: updated prompt`, `ai: save decision …`, or `ai: save plan …`), writes messages via ai/git/pending-commit.md, never commits unrelated files. Use when the user opts in to this style at session start, or explicitly asks to enable it."
+description: "Activates the lplp-pipbuck commit style for the current session. Commits after every completed task, amends nearby `ai:` prompt/decision auto-commits into the work commit, preserves plan commits as separate history, writes messages via ai/git/pending-commit.md, and never commits unrelated files. Use when the user opts in to this style at session start, or explicitly asks to enable it."
 ---
 
 # lplp Commit Style
@@ -10,10 +10,11 @@ Adopt these rules for every commit made this session:
 1. **Commit after every completed task.** Never leave work uncommitted.
 
 2. **Check the last 2 commits before committing:**
-   - Last message matches one of the `ai:` auto-commit patterns — `ai: updated prompt`, `ai: save decision <slug>`, or `ai: save plan <NNN>_<slug>` → **amend** it.
+   - Last message matches one of the prompt/decision auto-commit patterns — `ai: updated prompt` or `ai: save decision <slug>` → **amend** it.
    - Otherwise → create a new commit.
-   - If more than one chained past commits are `ai:` auto-commits (`ai: updated prompt`, `ai: save decision …`, and/or `ai: save plan …`) they probably should be included, too.
-     - In that case the `/rebase-ai-prompt-commits` command/skill describes how to rebase & include them.
+   - If more than one chained past commit is a prompt/decision auto-commit (`ai: updated prompt` and/or `ai: save decision …`), include those too.
+   - Do **not** squash or amend `ai: Plan …`, `ai: Plan Update …`, or `ai: save plan <NNN>_<slug>` commits into implementation commits. Plan commits are meaningful revision history for plan files and must remain separate commits.
+   - If a `git reset --soft HEAD~N` already included plan commits by mistake, restore them with `git reset --soft <original-hash>` before committing the implementation.
 
 3. **Always write the message to `ai/git/pending-commit.md` first** like this:
    1. run exactly the whitelisted command `rm ai/git/pending-commit.md || echo 'was gone'`, which makes sure it's not gonna cause "stale unread file" issues.
@@ -44,3 +45,77 @@ Adopt these rules for every commit made this session:
 
 6. Once this skill is activated, keep commiting after every completed task automatically without asking again.
    If the user responds with a simple `commit` or similar (`commit plz`, `keep commiting`, etc.), this means they want to remind you, to follow the "keep automatically commiting" instruction, which you should already anyway.
+
+## Cleaning up stray `ai:` auto-commits
+
+Use this procedure before merging or review when the branch has stray prompt/decision commits mixed into the history.
+
+Handles these hook-created commits:
+
+- **`ai: updated prompt`** — one per user prompt; touches only `ai/query.md` or `ai/°base/query.md`.
+- **`ai: save decision <slug>`** — one per resolved `AskUserQuestion`; touches only `ai/query.md` or `ai/°base/query.md`. The slug is derived from the first question's text.
+- **Plan commits** — `ai: Plan …`, `ai: Plan Update …`, or `ai: save plan <NNN>_<slug>`; touches only `ai/plans/<NNN>_*.md` or `ai/°base/plans/<NNN>_*.md`. Keep these as normal commits.
+
+### Procedure
+
+**1. Audit the branch**
+
+```bash
+git log --oneline origin/<upstream>..HEAD
+for sha in <shas>; do
+  echo "$sha $(git log -1 --format='%s' $sha): $(git show --name-only --format='' $sha | tr '\n' ' ')"
+done
+```
+
+**2. Plan groups**
+
+- **`ai: updated prompt`** and **`ai: save decision <slug>`** commits that only touch `ai/query.md` or `ai/°base/query.md` → fix up under the **preceding** code commit. The prompt or decision arrived during or after that work, so it folds backward.
+- **Plan commits** → leave as normal `pick` commits. Do not drop, squash, fix up, amend into implementation, or reorder them solely to merge them into code commits.
+- **Mislabeled commits** → flag commits whose message does not match the files they actually changed. Rename them as part of the rebase instead of silently folding them the wrong way.
+
+**3. Write renamed commit messages** to `ai/git/rebase-msg-<sha>.md` for any commits needing a label fix.
+
+**4. Write the rebase todo script**
+
+```bash
+cat > /tmp/git-rebase-todo.sh << 'SCRIPT'
+cat > "$1" << 'REBASE'
+pick <code-commit>
+fixup <prompt-commit>          # ai: updated prompt; backward-fold
+fixup <decision-commit>        # ai: save decision <slug>; backward-fold
+exec git commit --amend -F ai/git/rebase-msg-<sha>.md
+pick <plan-commit>             # plan history stays separate
+pick <next-code-commit>
+fixup <prompt-commit>
+...
+REBASE
+SCRIPT
+chmod +x /tmp/git-rebase-todo.sh
+```
+
+Put `exec git commit --amend -F ...` after all fixups for that group to rename the squashed result.
+
+**5. Run**
+
+```bash
+GIT_SEQUENCE_EDITOR=/tmp/git-rebase-todo.sh git rebase -i origin/<upstream>
+```
+
+**6. Optional — rewrite HEAD as branch summary**
+
+Write to `ai/git/pending-commit.md`:
+
+```md
+[scope] category: ai: Run: <summary>
+
+Branch `<name>` based on `origin/<upstream>` @ <sha>.
+
+- bullet: key decisions
+- bullet: what changed and why
+```
+
+Then:
+
+```bash
+git commit --amend -F ai/git/pending-commit.md
+```

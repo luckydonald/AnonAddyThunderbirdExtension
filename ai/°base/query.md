@@ -69,8 +69,6 @@ as well.
 
 ❯ Commit.
 
-❯ /rebase-ai-prompt-commits
-
 ❯ /btw, is there a character suited for folder/file prefixes to imply "this is not very useful folder, don't look inside" like the dot would - and not taking up much space (dot is just a small symbol at the bottom of the "character field"), but which will in a typical folder/file sort appear _after_ all others - i.e. after `Z`?
 ❯ I've used `ai/°base` now, as that one is still easy enough to type on pretty much every system.
 
@@ -86,7 +84,7 @@ So check that:
 ❯ That readme change for git lfs install is not very thorough. It shall be part of the installation section properly, and definitly also in the quick copy-past command block.
 ❯ Also add the command for pre-commit, too.
 
-❯ Edit @scripts/°base/ai/hooks/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`, `/rebase-ai-prompt-commits`.
+❯ Edit @scripts/°base/ai/hooks/save-prompt/hook.sh to ignore if the message is just a single command of the following list: `/committing-with-lplp-style`.
 
 ❯ Earlier you managed to commit with `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic>` again. Analyze why this managed to get past the `PermissionRequest` check.
 The commit which I since rebased and fixed was `base 5338ebc` with the title `ai: skip logging for internal tooling prompt command`, so you can match it in the earlier log.
@@ -781,3 +779,4 @@ Push failed: Authentication error: Authentication required: You must have push a
 
 › you can use $committing-with-lplp-style, then test again.
 
+› Merge the @ai/skills/rebase-ai-prompt-commits/SKILL.md and /Users/user/git/luckydonald/AllMyStorage/ai/memory/feedback_lplp_plan_commits.md into @ai/skills/committing-with-lplp-style/SKILL.md ; and cleanup any old `rebase-ai-prompt-commits` mention.

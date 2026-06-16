@@ -20,8 +20,6 @@ DEFAULT_PREFIX = "⩼"
 SKIP_PROMPTS = {
     "/committing-with-lplp-style",
     "$committing-with-lplp-style",
-    "/rebase-ai-prompt-commits",
-    "$rebase-ai-prompt-commits",
     "/rename",
     "commit", "Commit",
     "yes commit", "commit please", "commit pls", "commit plz",
