@@ -813,3 +813,5 @@ Also include a very short section about the base itself using `[base] [optional 
 3. Under the task add: > - Tool `$tool-use-id`
 4. Add last row: > - `6` tools, `67643` tokens, `1.16395 s`
 
+❯ Improve @scripts/°base/ai/settings/sync.py to list the changes it is doing directly/verbosely, and reduce the flags to just sync on default and have a `--dry-run` to not actually sync it.
+
