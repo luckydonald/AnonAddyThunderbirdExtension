@@ -25,6 +25,8 @@ interface ParsedAddress {
 
 interface RecipientState {
   parsed: ParsedAddress;
+  /** Address currently in the compose field (may be a forwarding address if pre-aliased). */
+  composeAddress: string;
   existingAliases: Alias[];
   selectedAlias: string | null;
   createdAlias: { id: string; email: string; active: boolean } | null;
@@ -93,6 +95,24 @@ function matchingAliases(aliases: Alias[], domain: string): Alias[] {
   return matched.slice(0, 10);
 }
 
+/** Parse a forwarding address `aliasLocal+recipLocal=recipDomain@aliasDomain`. */
+function parseForwardingAddress(
+  email: string,
+  addyDomainSet: Set<string>,
+): { originalEmail: string; aliasEmail: string } | null {
+  const dm = email.match(/^(.+)@(.+)$/);
+  if (!dm) return null;
+  const [, localPart, domain] = dm;
+  if (!addyDomainSet.has(domain.toLowerCase())) return null;
+  const fw = localPart.match(/^(.+)\+(.+)=(.+)$/);
+  if (!fw) return null;
+  const [, aliasLocal, recipLocal, recipDomain] = fw;
+  return {
+    originalEmail: `${recipLocal}@${recipDomain}`,
+    aliasEmail: `${aliasLocal}@${domain}`,
+  };
+}
+
 // ─── Initialization ───────────────────────────────────────────────────────────
 
 async function initTabId(): Promise<void> {
@@ -154,8 +174,35 @@ async function buildRecipients(cachedAliases: Alias[]): Promise<void> {
   for (const raw of allRecipients) {
     const parsed = await parseAddress(raw);
     if (!parsed) continue;
+
+    if (addyDomainSet.has(parsed.domain)) {
+      // Could be a forwarding address from a previous Apply — detect and recover.
+      const fwd = parseForwardingAddress(parsed.address, addyDomainSet);
+      if (fwd && !seen.has(fwd.originalEmail)) {
+        seen.add(fwd.originalEmail);
+        const om = fwd.originalEmail.match(/^(.+)@(.+)$/);
+        if (om) {
+          const origDomain = om[2].toLowerCase();
+          const existing = matchingAliases(cachedAliases, origDomain);
+          recipientStates.push({
+            parsed: {
+              original: raw,
+              address: fwd.originalEmail,
+              localPart: om[1],
+              domain: origDomain,
+              name: parsed.name,
+            },
+            composeAddress: parsed.address,
+            existingAliases: existing,
+            selectedAlias: fwd.aliasEmail,
+            createdAlias: null,
+          });
+        }
+      }
+      continue;
+    }
+
     if (seen.has(parsed.address)) continue;
-    if (addyDomainSet.has(parsed.domain)) continue;
     seen.add(parsed.address);
 
     const existing = matchingAliases(cachedAliases, parsed.domain);
@@ -163,6 +210,7 @@ async function buildRecipients(cachedAliases: Alias[]): Promise<void> {
 
     recipientStates.push({
       parsed,
+      composeAddress: parsed.address,
       existingAliases: existing,
       selectedAlias: autoSelect,
       createdAlias: null,
@@ -230,6 +278,7 @@ async function handleAddressUpdate(
   r.parsed.localPart = m[1];
   r.parsed.domain = m[2].toLowerCase();
   r.parsed.original = newAddress;
+  r.composeAddress = newAddress;
   r.existingAliases = matchingAliases(allAliases.value, r.parsed.domain);
 }
 
@@ -344,30 +393,49 @@ async function applyAndClose(): Promise<void> {
 
   const details = await messenger.compose.getComposeDetails(tabId.value);
 
-  const aliasMap = new Map<string, string>();
+  // Map keyed by what is currently in the compose field (composeAddress).
+  // Includes pre-aliased recipients even when aliasEmail is null (= revert).
+  interface ApplyEntry {
+    aliasEmail: string | null;
+    originalEmail: string;
+    originalName: string;
+  }
+  const applyMap = new Map<string, ApplyEntry>();
   for (const r of popupState.value.recipients) {
     const selected = r.createdAlias?.active
       ? r.createdAlias.email
-      : (r.selectedAlias ?? null);
-    if (selected) aliasMap.set(r.parsed.address, selected);
+      : r.selectedAlias;
+    const isPreAliased = r.composeAddress !== r.parsed.address;
+    if (selected || isPreAliased) {
+      applyMap.set(r.composeAddress, {
+        aliasEmail: selected ?? null,
+        originalEmail: r.parsed.address,
+        originalName: r.parsed.name,
+      });
+    }
   }
 
   async function rewrite(recipients: string[]): Promise<string[]> {
     const result: string[] = [];
     for (const raw of recipients) {
       const parsed = await parseAddress(raw);
-      if (!parsed || !aliasMap.has(parsed.address)) {
-        result.push(raw);
+      if (!parsed) { result.push(raw); continue; }
+      const entry = applyMap.get(parsed.address);
+      if (!entry) { result.push(raw); continue; }
+
+      const displayName = parsed.name || entry.originalName;
+      if (!entry.aliasEmail) {
+        // Revert pre-aliased address back to original recipient email.
+        result.push(displayName
+          ? `${displayName} <${entry.originalEmail}>`
+          : entry.originalEmail);
         continue;
       }
-      const addy = aliasMap.get(parsed.address)!;
-      const m = addy.match(/^(.+)@(.+)$/);
-      if (!m) {
-        result.push(raw);
-        continue;
-      }
-      const forwarding = `${m[1]}+${parsed.localPart}=${parsed.domain}@${m[2]}`;
-      result.push(parsed.name ? `${parsed.name} <${forwarding}>` : forwarding);
+      const am = entry.aliasEmail.match(/^(.+)@(.+)$/);
+      const om = entry.originalEmail.match(/^(.+)@(.+)$/);
+      if (!am || !om) { result.push(raw); continue; }
+      const forwarding = `${am[1]}+${om[1]}=${om[2]}@${am[2]}`;
+      result.push(displayName ? `${displayName} <${forwarding}>` : forwarding);
     }
     return result;
   }
