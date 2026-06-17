@@ -7,10 +7,13 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  height: 100%;
+}
+
 body,
 #app {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -19,7 +22,6 @@ body {
   color: $color-text;
   margin: 0;
   padding: $spacing-lg $spacing-xl $spacing-xl;
-  min-width: $window-min-width;
 }
 
 button {

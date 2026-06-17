@@ -172,6 +172,7 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   border-radius: 4px;
   padding: $spacing-md;
   margin-bottom: $spacing-md;
+  min-width: 0;
 
   &__header {
     margin: 0 0 $spacing-md;
