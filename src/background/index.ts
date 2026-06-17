@@ -43,3 +43,14 @@ messenger.runtime.onInstalled.addListener(async ({ reason: _reason }) => {
   if (!opts.apiKey) messenger.runtime.openOptionsPage();
   await refreshCache();
 });
+
+// Open the compose popup when the user right-clicks an address chip and
+// selects "Replace with Addy alias…". The compose popup handles alias
+// selection and address rewriting for all recipients in that window.
+messenger.AddressChipMenu.onChipMenuClicked.addListener(async (_info) => {
+  try {
+    await messenger.composeAction.openPopup();
+  } catch (e) {
+    console.error("AnonAddyTB: could not open popup from chip menu", e);
+  }
+});
