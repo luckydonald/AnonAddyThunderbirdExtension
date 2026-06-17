@@ -102,7 +102,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       const email = pill.getAttribute("emailAddress") || "";
       const displayName = pill.getAttribute("displayName") || "";
       const addressRow = pill.closest(".address-row");
-      const fieldType = addressRow?.dataset?.recipienttype || "to";
+      const fieldType = (addressRow?.dataset?.recipienttype || "to").toLowerCase();
 
       const availableDomains = _cacheData.domainOptions?.data || [];
       const defaultDomain =
@@ -111,31 +111,34 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         "";
       const existingAliases = matchingAliasesForEmail(email);
 
-      // Top-level menu entry
+      // Top-level menu entry — direct click opens popup, hover/arrow unfolds submenu.
       const menu = doc.createXULElement("menu");
       menu.setAttribute("label", "Use Addy alias for sending");
       const menuPopup = doc.createXULElement("menupopup");
 
-      // "Open alias picker…" opens the full popup window
-      const pickerItem = doc.createXULElement("menuitem");
-      pickerItem.setAttribute("label", "Open alias picker…");
-      pickerItem.addEventListener("command", () => {
-        chipMenuFire &&
-          chipMenuFire.async({
-            email,
-            displayName,
-            fieldType,
-            action: "open_popup",
-          });
+      // Direct click on the <menu> element itself (not on a submenu item) opens popup.
+      menu.addEventListener("click", (e) => {
+        if (e.target === menu) {
+          chipMenuFire &&
+            chipMenuFire.async({ email, displayName, fieldType, action: "open_popup" });
+          e.preventDefault();
+        }
       });
-      menuPopup.appendChild(pickerItem);
-
-      menuPopup.appendChild(doc.createXULElement("menuseparator"));
 
       // ── Existing… ▶ ──────────────────────────────────────────────────────────
       const existingMenu = doc.createXULElement("menu");
       existingMenu.setAttribute("label", "Existing…");
       const existingPopup = doc.createXULElement("menupopup");
+
+      // "Open alias picker…" is first in Existing; provides easy access to full GUI.
+      const pickerItem = doc.createXULElement("menuitem");
+      pickerItem.setAttribute("label", "Open alias picker…");
+      pickerItem.addEventListener("command", () => {
+        chipMenuFire &&
+          chipMenuFire.async({ email, displayName, fieldType, action: "open_popup" });
+      });
+      existingPopup.appendChild(pickerItem);
+      existingPopup.appendChild(doc.createXULElement("menuseparator"));
 
       if (existingAliases.length === 0) {
         const noItem = doc.createXULElement("menuitem");
@@ -258,8 +261,18 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       let pendingReset = null;
 
       function onContextMenu(e) {
-        const pill = e.target.closest("mail-address-pill");
+        // composedPath() crosses shadow-DOM boundaries; closest() does not.
+        const pill = e.composedPath().find(
+          (el) => el.tagName && el.tagName.toLowerCase() === "mail-address-pill",
+        ) ?? null;
         if (!pill) {
+          pendingPill = null;
+          return;
+        }
+        // Skip Reply-To pills — Addy alias sending doesn't apply there.
+        const addressRow = pill.closest(".address-row");
+        const fieldType = (addressRow?.dataset?.recipienttype || "").toLowerCase();
+        if (fieldType === "reply-to" || fieldType === "replyto") {
           pendingPill = null;
           return;
         }
