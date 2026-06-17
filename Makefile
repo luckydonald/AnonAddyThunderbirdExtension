@@ -1,10 +1,10 @@
 target = AnonAddyTB.xpi
-static_files = background.js api.js composePopup.js composePopup.html icon.svg manifest.json LICENSE.txt
+static_files = icon.svg manifest.json LICENSE.txt
 
 $(target): dist/
 	cd dist && zip -r ../$(target) .
 
-dist/: src/ options.html $(static_files)
+dist/: src/ options.html composePopup.html $(static_files)
 	npm run build
 	cp $(static_files) dist/
 

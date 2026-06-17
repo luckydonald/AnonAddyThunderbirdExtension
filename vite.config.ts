@@ -10,6 +10,15 @@ export default defineConfig({
     rollupOptions: {
       input: {
         options: resolve(__dirname, "options.html"),
+        composePopup: resolve(__dirname, "composePopup.html"),
+        background: resolve(__dirname, "src/background/index.ts"),
+      },
+      output: {
+        // Keep background.js name predictable — manifest.json references it directly.
+        entryFileNames: (chunk) =>
+          chunk.name === "background" ? "[name].js" : "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
     outDir: "dist",
