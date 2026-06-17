@@ -251,6 +251,14 @@ async function refreshAliasesInBackground(): Promise<void> {
     await messenger.storage.local.set({ aliasCache: cache });
     allAliases.value = cache.aliases;
 
+    // If domain options are empty (first install / background hasn't run yet),
+    // fetch them now so the domain combobox in CreateAliasForm isn't blank.
+    if (domainOptions.value.data.length === 0) {
+      const fresh = await addyApiRequest<DomainOptions>("GET", "domain-options");
+      domainOptions.value = fresh;
+      await messenger.storage.local.set({ domainOptions: fresh });
+    }
+
     if (popupState.value.kind !== "ready") return;
     for (const r of popupState.value.recipients) {
       r.existingAliases = matchingAliases(cache.aliases, r.parsed.domain);
