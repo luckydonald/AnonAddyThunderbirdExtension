@@ -855,3 +855,5 @@ onStartup() {
 
 ❯ @ai/errors/5.txt
 
+❯ instead of only trying the permission tool, also try the actual api request there, in case of that triggering the permission prompt.
+
