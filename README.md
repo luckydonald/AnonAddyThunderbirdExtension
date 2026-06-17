@@ -39,6 +39,10 @@ addresses. As a result, the message you are sending is routed through
 the Addy server, and the recipient sees your Addy alias as your return
 address instead of your real address.
 
+You can also right-click any address pill in the To, Cc, or Bcc field
+and choose "Replace with Addy alias…" to open the same pop-up window
+directly from the address you want to replace.
+
 For this to work, you need to include in the "description" field of
 your Addy aliases the target email addresses and/or domains they're
 intended to be used for. For example, if you create an alias for
