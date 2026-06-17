@@ -5,6 +5,10 @@
 var { ExtensionCommon } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionCommon.sys.mjs",
 );
+// setTimeout/clearTimeout are not in scope in privileged extension JS.
+var { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
 
 // Alias and domain-option data pushed from the background after each cache refresh.
 let _cacheData = {

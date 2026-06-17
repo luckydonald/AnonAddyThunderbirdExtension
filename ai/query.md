@@ -904,3 +904,10 @@ onStartup() {
 > - [Answer (`12141` chars, 12 KB)](agents/001.a6f364ce63ffebb84/result.md)
 > - [Raw log (`162 KB`)](/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/4929024e-1c42-470e-bf1f-fe96c635f6d1/tasks/a6f364ce63ffebb84.output)
 
+❯ /plan 
+17. _Sends via_ e.g. `custom-prefix+main=example.com@addy.mail.me` is correct, while _Sends as_ should be the outside facing url, e.g. `custom-prefix@addy.mail.me`.
+18. For `xn--…` domains (dropdown), add both writings - punicode and raw.
+19. If something is selected in _Search all aliases_, it (and the _Don't replace_)  must stay even without matching filter.
+20. The format chips **still** don't wrap to the next line if too long.
+21. The logged stuff: @ai/errors/9.log
+

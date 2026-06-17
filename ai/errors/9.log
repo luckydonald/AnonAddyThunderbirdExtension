@@ -1,0 +1,534 @@
+00:09:53.067 1781734193067	addons.xpi	WARN	Checking /app/lib64/thunderbird/distribution/extensions for addons
+00:09:55.502 Das Attribut Window.fullScreen sollte nicht mehr verwendet werden und wird in Zukunft entfernt werden. messenger.js:915:9
+00:09:58.374 WebExtensions: quickFilters exp API: Utilities.getAPI() called implementation.js:18
+00:09:58.375 can't access property "Util", win.quickFilters is undefined implementation.js:31:11
+00:09:58.376 Uncaught (in promise) Error: An unexpected error occurred undefined
+00:09:58.392 Manually calling notifyTools.enable() is no longer needed. notifyTools.js:145:13
+00:09:58.396 Missing resource in locale de: branding/brand.ftl
+00:09:58.422 Missing resource in locale en-CA: branding/brand.ftl
+00:09:58.425 Missing resource in locale en-GB: branding/brand.ftl
+00:09:58.809 WebExtensions: qFi-3pane.js - onLoad() qFi-3pane.js:103
+00:09:59.632 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.632 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.632 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.633 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.634 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.634 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.634 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.639 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.640 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.640 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.640 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.640 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.640 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:09:59.648 calendar: Error: Property X-APPLE-STRUCTURED-LOCATION not set
+    setPropertyParameter resource:///modules/CalItemBase.sys.mjs:559
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:598
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:10:00.363 calendar: Error: Could not extract integer from ":4"
+    strictParseInt resource:///modules/calendar/Ical.sys.mjs:3489
+    fromDateTimeString resource:///modules/calendar/Ical.sys.mjs:1006
+    fromString resource:///modules/calendar/Ical.sys.mjs:1030
+    set icalString resource:///modules/CalDateTime.sys.mjs:192
+    createDateTime resource:///modules/calendar/calUtils.sys.mjs:25
+    set icalComponent resource:///modules/CalAlarm.sys.mjs:568
+    set icalString resource:///modules/CalAlarm.sys.mjs:370
+    CalAlarm resource:///modules/CalAlarm.sys.mjs:42
+    getAdditionalDataForItem resource:///modules/calendar/CalStorageItemModel.sys.mjs:984
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+    handleResult resource:///modules/calendar/CalStorageDatabase.sys.mjs:230
+CalStorageDatabase.sys.mjs:250:20
+00:10:03.752 calendar: Error: Could not extract integer from ":3"
+    strictParseInt resource:///modules/calendar/Ical.sys.mjs:3489
+    fromDateTimeString resource:///modules/calendar/Ical.sys.mjs:1006
+    fromString resource:///modules/calendar/Ical.sys.mjs:1030
+    set icalString resource:///modules/CalDateTime.sys.mjs:192
+    createDateTime resource:///modules/calendar/calUtils.sys.mjs:25
+    set icalComponent resource:///modules/CalAlarm.sys.mjs:568
+    set icalString resource:///modules/CalAlarm.sys.mjs:370
+    CalAlarm resource:///modules/CalAlarm.sys.mjs:42
+    getAdditionalDataForItemMap resource:///modules/calendar/CalStorageItemModel.sys.mjs:662
+    handleResultInner resource:///modules/calendar/CalStorageDatabase.sys.mjs:236
+CalStorageDatabase.sys.mjs:250:20
+00:10:14.562 Tastenereignis ist in manchen Tastaturlayouts nicht verfügbar: Taste="r" Modifikatoren="accel,alt" ID="" messenger.xhtml
+00:10:33.295 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" emailAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" fullAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="isla.oconnell444+uqkozmb…ht in Ihrem Adressbuch." aria-label="isla.oconnell444+uqkozmb…en-Taste zum Entfernen.">
+implementation.js:272
+00:10:33.295 ReferenceError: clearTimeout is not defined implementation.js:289:9
+00:10:33.296 WebExtensions: AnonAddyTB popupshowing tag: menupopup triggerNode:
+<mail-address-pill class="address-pill" label="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" emailAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" fullAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="isla.oconnell444+uqkozmb…ht in Ihrem Adressbuch." aria-label="isla.oconnell444+uqkozmb…en-Taste zum Entfernen.">
+implementation.js:298
+00:10:33.296 ReferenceError: clearTimeout is not defined implementation.js:316:9
+00:10:36.624 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" emailAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" fullAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="isla.oconnell444+uqkozmb…ht in Ihrem Adressbuch." aria-label="isla.oconnell444+uqkozmb…en-Taste zum Entfernen.">
+implementation.js:272
+00:10:36.624 ReferenceError: clearTimeout is not defined implementation.js:289:9
+00:10:36.625 WebExtensions: AnonAddyTB popupshowing tag: menupopup triggerNode:
+<mail-address-pill class="address-pill" label="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" emailAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" fullAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="isla.oconnell444+uqkozmb…ht in Ihrem Adressbuch." aria-label="isla.oconnell444+uqkozmb…en-Taste zum Entfernen.">
+implementation.js:298
+00:10:36.625 ReferenceError: clearTimeout is not defined implementation.js:316:9
+00:10:38.741 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill editing" label="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" emailAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" fullAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" displayName context="emailAddressPillPopup" allowevents="true" aria-label="autotechnik-schapen+info…en-Taste zum Entfernen." style="max-width: 380px; min-width: 380px;">
+implementation.js:272
+00:10:38.742 WebExtensions: AnonAddyTB popupshowing tag: menupopup triggerNode:
+<mail-address-pill class="address-pill editing" label="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" emailAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" fullAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" displayName context="emailAddressPillPopup" allowevents="true" aria-label="autotechnik-schapen+info…en-Taste zum Entfernen." style="max-width: 380px; min-width: 380px;">
+implementation.js:298
+00:10:38.742 ReferenceError: clearTimeout is not defined implementation.js:289:9
+00:10:38.742 ReferenceError: clearTimeout is not defined implementation.js:316:9
+00:11:40.541 clearTimeout is not defined implementation.js:340:9
+00:11:40.542 sendRemoveListener on closed conduit AnonAddyTB@luckydonald.de.137438953555 ConduitsChild.sys.mjs:122:13
+00:11:40.553 AbortError: Actor 'Conduits' destroyed before query 'RunListener' was resolved
+00:17:39.425 Missing resource in locale de: devtools/client/toolbox.ftl
+00:17:39.472 Missing resource in locale en-CA: devtools/client/toolbox.ftl
+00:17:39.477 Missing resource in locale en-GB: devtools/client/toolbox.ftl
+00:17:39.500 Missing resource in locale de: devtools/startup/key-shortcuts.ftl 2
+00:17:41.690 Missing resource in locale de: devtools/shared/debugger-paused-reasons.ftl
+00:17:41.691 Missing resource in locale en-CA: devtools/shared/debugger-paused-reasons.ftl
+00:17:41.691 Missing resource in locale en-GB: devtools/shared/debugger-paused-reasons.ftl
+00:18:22.109 1781734702109	addons.xpi	WARN	Addon with ID AnonAddyTB@luckydonald.de already installed, older version will be disabled
+00:18:22.222 AnonAddyTB: permissions.getAll() on load: {
+  "origins": [
+    "*://app.addy.io/*"
+  ],
+  "permissions": [
+    "alarms",
+    "compose",
+    "storage"
+  ]
+} options-Bv-lHgi-.js:1:3138
+00:18:30.227 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="ingo@atsgmbh.de" emailAddress="ingo@atsgmbh.de" fullAddress="ingo@atsgmbh.de" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="ingo@atsgmbh.de ist nicht in Ihrem Adressbuch." aria-label="ingo@atsgmbh.de, 1 von 4…en-Taste zum Entfernen.">
+implementation.js:272
+00:18:30.227 WebExtensions: AnonAddyTB popupshowing tag: menupopup triggerNode:
+<mail-address-pill class="address-pill" label="ingo@atsgmbh.de" emailAddress="ingo@atsgmbh.de" fullAddress="ingo@atsgmbh.de" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="ingo@atsgmbh.de ist nicht in Ihrem Adressbuch." aria-label="ingo@atsgmbh.de, 1 von 4…en-Taste zum Entfernen.">
+implementation.js:298
+00:18:30.227 ReferenceError: clearTimeout is not defined implementation.js:289:9
+00:18:30.227 ReferenceError: clearTimeout is not defined implementation.js:316:9
+00:18:32.800 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill editing" label="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" emailAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" fullAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" displayName context="emailAddressPillPopup" allowevents="true" aria-label="autotechnik-schapen+info…en-Taste zum Entfernen." style="max-width: 380px; min-width: 380px;">
+implementation.js:272
+00:18:32.800 ReferenceError: clearTimeout is not defined implementation.js:289:9
+00:18:32.801 WebExtensions: AnonAddyTB popupshowing tag: menupopup triggerNode:
+<mail-address-pill class="address-pill editing" label="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" emailAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" fullAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" displayName context="emailAddressPillPopup" allowevents="true" aria-label="autotechnik-schapen+info…en-Taste zum Entfernen." style="max-width: 380px; min-width: 380px;">
+implementation.js:298
+00:18:32.801 ReferenceError: clearTimeout is not defined implementation.js:316:9
+00:18:37.238 Missing resource in locale de: devtools/client/compatibility.ftl
+00:18:37.239 Missing resource in locale en-CA: devtools/client/compatibility.ftl
+00:18:37.239 Missing resource in locale en-GB: devtools/client/compatibility.ftl
+00:18:42.754 NotFoundError: No such JSProcessActor 'DevToolsProcess' 7
+00:18:43.371 Tastenereignis ist in manchen Tastaturlayouts nicht verfügbar: Taste="r" Modifikatoren="accel,alt" ID="" messengercompose.xhtml
+00:19:08.048 Leerer String an getElementById() übergeben. 3pane
+00:19:22.473 clearTimeout is not defined implementation.js:340:9
+00:19:22.475 sendRemoveListener on closed conduit AnonAddyTB@luckydonald.de.137438953609 ConduitsChild.sys.mjs:122:13
+00:19:22.481 AbortError: Actor 'Conduits' destroyed before query 'RunListener' was resolved
