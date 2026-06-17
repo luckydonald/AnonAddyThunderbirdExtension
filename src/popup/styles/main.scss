@@ -1,0 +1,60 @@
+@use "sass:color";
+@use "variables" as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  font-size: $font-size-base;
+  color: $color-text;
+  margin: 0;
+  padding: $spacing-md $spacing-lg;
+  width: $popup-width;
+  min-width: $popup-width;
+}
+
+button {
+  cursor: pointer;
+  font-size: $font-size-base;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  background: #f8f8f8;
+
+  &:hover:not(:disabled) {
+    background: #e8e8e8;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &.primary {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: color.adjust($color-primary, $lightness: -8%);
+    }
+  }
+
+  &.danger {
+    color: $color-danger;
+    border-color: $color-danger;
+    background: $color-danger-bg;
+  }
+}
+
+input[type="text"],
+select {
+  font-size: $font-size-base;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  padding: $spacing-sm $spacing-md;
+}

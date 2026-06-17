@@ -14,7 +14,7 @@ make              # npm run build → dist/ → AnonAddyTB.xpi
 make clean        # remove built artifact and dist/
 ```
 
-The build uses Vite (for the Vue+TS options page) and then copies static JS/HTML files alongside it before zipping into the XPI.
+All source is now TypeScript + Vue 3. Vite builds all entry points; the Makefile copies only non-built static assets (icon, manifest, license) then zips `dist/`.
 
 ## Formatting
 
@@ -37,39 +37,41 @@ These use `uv` / Python scripts under `scripts/°base/`.
 
 ## Architecture
 
-The extension source has two layers:
+All source lives under `src/`. Vite builds three entry points into `dist/`.
 
-**Static plain-JS files** (copied directly to `dist/` by the Makefile):
+| Entry HTML / TS                    | Output                   | Role                                                                |
+| ---------------------------------- | ------------------------ | ------------------------------------------------------------------- |
+| `options.html` → `src/options/`    | `dist/options.html`      | Options page Vue app (host URL, API key, permission request)        |
+| `composePopup.html` → `src/popup/` | `dist/composePopup.html` | Compose popup Vue app (alias selection, creation, disable/delete)   |
+| `src/background/index.ts`          | `dist/background.js`     | Service worker: hourly cache refresh (domain-options + all aliases) |
 
-| File              | Role                                                                                                                                                                                                                                               |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `background.js`   | Service worker: fetches `domain-options` from the Addy API on an hourly alarm and re-fetches when options change; opens options page on first install if no API key                                                                                |
-| `api.js`          | Single exported function `addyApiRequest(method, endpoint, params, body)` — reads `hostUrl`/`apiKey` from `messenger.storage.local`, calls the Addy REST API via XHR, returns parsed JSON                                                          |
-| `composePopup.js` | Main popup logic: reads compose recipients, queries the Addy API for matching aliases per domain, renders dynamic HTML with checkboxes, then rewrites recipients using the AnonAddy forwarding address format (`local+original=domain@addydomain`) |
+**Key source directories:**
 
-**Vue 3 + TypeScript app** (built by Vite into `dist/`):
-
-| File/Dir                   | Role                                                                  |
-| -------------------------- | --------------------------------------------------------------------- |
-| `options.html`             | Vite entry point for the options page                                 |
-| `src/options/App.vue`      | Root component: state, save/reset logic, permission-request flow      |
-| `src/options/components/`  | `OptionsForm.vue` (form inputs) + `StatusBanner.vue` (feedback)       |
-| `src/options/styles/`      | SCSS variables and global styles                                      |
-| `src/types/messenger.d.ts` | Ambient type declaration for the `messenger` global (Thunderbird API) |
+| Path                       | Contents                                                                  |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `src/api/index.ts`         | `addyApiRequest()` — XHR-based, reads `hostUrl`/`apiKey` from storage     |
+| `src/api/types.ts`         | Addy API types (`Alias`, `DomainOptions`, `AliasFormat`, …)               |
+| `src/background/index.ts`  | Alarm setup, domain-options + full alias list caching                     |
+| `src/options/App.vue`      | Options: form state, permission-request flow, status banners              |
+| `src/popup/App.vue`        | Popup: load → spinner → per-recipient cards → apply/close                 |
+| `src/popup/components/`    | `RecipientCard`, `CreateAliasForm`, `LoadingSpinner`, `FooterBar`, …      |
+| `src/types/messenger.d.ts` | Ambient `messenger` global (storage, compose, alarms, messengerUtilities) |
 
 **Data flow:**
 
-1. `background.js` pre-fetches and caches Addy domain options in `messenger.storage.local` (key: `domainOptions`).
-2. `composePopup.js` reads cached domain options to filter out Addy-owned domains from recipients, then queries `GET /api/v1/aliases?filter[search]=<domain>` for each remaining domain.
-3. User selects aliases; `fixRecipients()` transforms addresses to `local+original=domain@addydomain` forwarding format.
-4. `messenger.compose.setComposeDetails()` applies the changes.
+1. `background.js` on install, hourly alarm, or options change: fetches `GET /api/v1/domain-options` and paginates through `GET /api/v1/aliases`, storing both in `messenger.storage.local` (`domainOptions`, `aliasCache`).
+2. Popup opens → reads cached data immediately (shows spinner during first-load), then re-fetches aliases for relevant domains from the API.
+3. User selects or creates an alias per recipient. `applyAndClose()` transforms addresses to the `local+original=domain@addydomain` forwarding format and calls `messenger.compose.setComposeDetails()`.
+4. Created aliases can be disabled (`PATCH /api/v1/aliases/{id}`) or deleted (`DELETE /api/v1/aliases/{id}`) from the popup.
 
-**Popup resize workaround:** `composePopup.js` uses a `messenger.alarms` loop to repeatedly nudge a hidden `#spacer` element for ~1 second after content renders. This forces Thunderbird to recalculate and correct the popup window size, working around a race condition in Thunderbird.
+**Popup resize workaround:** `App.vue` uses a `setTimeout` loop to nudge a hidden `#spacer` element for ~1 second after mount. This forces Thunderbird to recalculate popup window size (same race-condition fix as the original plain-JS popup).
 
 ## Settings storage
 
-All user settings live in `messenger.storage.local` under the key `options`:
+All user settings live in `messenger.storage.local`:
 
-- `options.apiKey` — Addy API token
-- `options.hostUrl` — base URL for self-hosted servers (defaults to `https://app.addy.io`)
-- `domainOptions` — cached response from `GET /api/v1/domain-options`
+| Key             | Contents                                                            |
+| --------------- | ------------------------------------------------------------------- |
+| `options`       | `{ hostUrl, apiKey }` — set by options page                         |
+| `domainOptions` | Cached `GET /api/v1/domain-options` response                        |
+| `aliasCache`    | `{ aliases: Alias[], fetchedAt: number }` — all user aliases, paged |
