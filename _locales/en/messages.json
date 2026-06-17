@@ -46,6 +46,7 @@
   "replaceWithPrefix": { "message": "Replace" },
   "replaceWithSuffix": { "message": "with:" },
   "inactive": { "message": "inactive" },
+  "newTag": { "message": "new" },
   "disable": {
     "message": "Disable on Addy",
     "description": "Disables the alias on the Addy server so it stops forwarding."
