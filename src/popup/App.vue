@@ -392,6 +392,8 @@ function openSettings() {
         @delete="() => handleDelete(idx)"
       />
 
+      <div class="flex-spacer" />
+
       <FooterBar
         :host-url="hostUrl"
         :has-selections="hasSelections"
@@ -409,6 +411,13 @@ function openSettings() {
 
 .popup {
   min-width: $window-min-width;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-spacer {
+  flex: 1;
 }
 
 .no-settings {
