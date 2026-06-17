@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import CreateAliasForm from "./CreateAliasForm.vue";
 import { useI18n } from "../../composables/useI18n.js";
 import type { Alias, AliasFormat } from "../../api/types.js";
@@ -60,6 +60,12 @@ function handleCreate(payload: {
   emit("create", payload);
 }
 
+// Exclude the created alias from the regular list to avoid it appearing twice.
+const displayAliases = computed(() => {
+  if (!props.createdAlias) return props.existingAliases;
+  return props.existingAliases.filter((a) => a.email !== props.createdAlias!.email);
+});
+
 defineExpose({ resetCreating: () => (creating.value = false) });
 </script>
 
@@ -78,89 +84,107 @@ defineExpose({ resetCreating: () => (creating.value = false) });
       {{ t("replaceWithSuffix") }}
     </p>
 
-    <!-- Created alias: show manage actions -->
-    <div v-if="createdAlias" class="created-alias">
-      <div class="created-alias__row">
-        <kbd
-          class="created-alias__email"
-          :class="{ 'created-alias__email--inactive': !createdAlias.active }"
-        >
-          {{ createdAlias.email }}
-        </kbd>
-        <span v-if="!createdAlias.active" class="tag tag--inactive">{{
-          t("inactive")
-        }}</span>
-      </div>
-      <div class="created-alias__actions">
-        <button
-          v-if="createdAlias.active"
-          class="danger"
-          :title="t('disableHint')"
-          @click="$emit('disable')"
-        >
-          {{ t("disable") }}
-        </button>
-        <button v-else :title="t('disableHint')" @click="$emit('restore')">{{ t("reenable") }}</button>
-        <button class="danger" :title="t('deleteHint')" @click="$emit('delete')">
-          {{ t("deleteAlias") }}
-        </button>
-      </div>
-    </div>
+    <!-- Existing aliases section (always visible) -->
+    <p class="section-heading">{{ t("existingAliasesSection") }}</p>
 
-    <!-- No created alias: show existing list + create form -->
-    <div v-else>
-      <!-- Existing aliases section -->
-      <p class="section-heading">{{ t("existingAliasesSection") }}</p>
+    <div class="alias-list">
+      <!-- Created alias pinned at top with inline manage controls -->
+      <div
+        v-if="createdAlias"
+        class="alias-option alias-option--created"
+        :class="{ selected: selectedAlias === createdAlias.email }"
+        @click="!createdAlias.active || selectAlias(createdAlias.email)"
+      >
+        <input
+          type="radio"
+          :name="`alias-${address}`"
+          :value="createdAlias.email"
+          :checked="selectedAlias === createdAlias.email"
+          :disabled="!createdAlias.active"
+          @change="selectAlias(createdAlias.email)"
+        />
+        <div class="alias-option__body">
+          <div class="alias-option__row">
+            <kbd
+              class="alias-option__email"
+              :class="{ 'alias-option__email--inactive': !createdAlias.active }"
+            >{{ createdAlias.email }}</kbd>
+            <span class="tag tag--new">{{ t("newTag") }}</span>
+            <span v-if="!createdAlias.active" class="tag tag--inactive">{{ t("inactive") }}</span>
+          </div>
+          <div class="alias-option__actions" @click.stop>
+            <button
+              v-if="createdAlias.active"
+              class="small danger"
+              :title="t('disableHint')"
+              @click="$emit('disable')"
+            >{{ t("disable") }}</button>
+            <button
+              v-else
+              class="small"
+              :title="t('disableHint')"
+              @click="$emit('restore')"
+            >{{ t("reenable") }}</button>
+            <button
+              class="small danger"
+              :title="t('deleteHint')"
+              @click="$emit('delete')"
+            >{{ t("deleteAlias") }}</button>
+          </div>
+        </div>
+      </div>
 
-      <div v-if="existingAliases.length === 0" class="no-aliases">
+      <!-- Regular existing aliases -->
+      <label
+        v-for="alias in displayAliases"
+        :key="alias.id"
+        class="alias-option"
+        :class="{ selected: selectedAlias === alias.email }"
+      >
+        <input
+          type="radio"
+          :name="`alias-${address}`"
+          :value="alias.email"
+          :checked="selectedAlias === alias.email"
+          @change="selectAlias(alias.email)"
+        />
+        <kbd class="alias-option__email">{{ alias.email }}</kbd>
+        <span v-if="alias.description" class="alias-option__desc">
+          {{ alias.description }}
+        </span>
+      </label>
+
+      <!-- Empty state -->
+      <div v-if="!createdAlias && displayAliases.length === 0" class="no-aliases">
         <em>{{ t("noExistingAliases") }}</em>
       </div>
 
-      <div v-else class="alias-list">
-        <label
-          v-for="alias in existingAliases"
-          :key="alias.id"
-          class="alias-option"
-          :class="{ selected: selectedAlias === alias.email }"
-        >
-          <input
-            type="radio"
-            :name="`alias-${address}`"
-            :value="alias.email"
-            :checked="selectedAlias === alias.email"
-            @change="selectAlias(alias.email)"
-          />
-          <kbd class="alias-option__email">{{ alias.email }}</kbd>
-          <span v-if="alias.description" class="alias-option__desc">
-            {{ alias.description }}
-          </span>
-        </label>
-
-        <label
-          class="alias-option alias-option--none"
-          :class="{ selected: selectedAlias === null }"
-        >
-          <input
-            type="radio"
-            :name="`alias-${address}`"
-            :checked="selectedAlias === null"
-            @change="$emit('update:selectedAlias', null)"
-          />
-          <span>{{ t("dontReplace") }}</span>
-        </label>
-      </div>
-
-      <!-- Create new alias section (always visible) -->
-      <CreateAliasForm
-        :available-domains="availableDomains"
-        :default-domain="defaultDomain"
-        :default-format="defaultFormat"
-        :loading="creating"
-        :target-email="editableAddress"
-        :target-name="name"
-        @create="handleCreate"
-      />
+      <!-- Don't replace option -->
+      <label
+        v-if="createdAlias || displayAliases.length > 0"
+        class="alias-option alias-option--none"
+        :class="{ selected: selectedAlias === null }"
+      >
+        <input
+          type="radio"
+          :name="`alias-${address}`"
+          :checked="selectedAlias === null"
+          @change="$emit('update:selectedAlias', null)"
+        />
+        <span>{{ t("dontReplace") }}</span>
+      </label>
     </div>
+
+    <!-- Create new alias section (always visible) -->
+    <CreateAliasForm
+      :available-domains="availableDomains"
+      :default-domain="defaultDomain"
+      :default-format="defaultFormat"
+      :loading="creating"
+      :target-email="editableAddress"
+      :target-name="name"
+      @create="handleCreate"
+    />
   </div>
 </template>
 
@@ -240,6 +264,21 @@ defineExpose({ resetCreating: () => (creating.value = false) });
     flex-shrink: 0;
   }
 
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+  }
+
   &__email {
     font-family: monospace;
     font-size: $font-size-sm;
@@ -248,12 +287,31 @@ defineExpose({ resetCreating: () => (creating.value = false) });
     border-radius: 3px;
     padding: 1px 5px;
     word-break: break-all;
+
+    &--inactive {
+      color: $color-muted;
+      text-decoration: line-through;
+    }
   }
 
   &__desc {
     color: $color-muted;
     font-size: $font-size-sm;
-    margin-left: $spacing-xs;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+  }
+
+  &--created {
+    border: 1px solid $color-primary;
+    background: #f0f5ff;
+
+    &.selected {
+      background: #dbeafe;
+    }
   }
 
   &--none {
@@ -268,43 +326,26 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   margin-bottom: $spacing-sm;
 }
 
-.created-alias {
-  &__row {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    margin-bottom: $spacing-sm;
-  }
-
-  &__email {
-    font-family: monospace;
-    font-size: $font-size-sm;
-    background: #f5f5f5;
-    border: 1px solid $color-border;
-    border-radius: 3px;
-    padding: 2px 6px;
-    word-break: break-all;
-
-    &--inactive {
-      color: $color-muted;
-      text-decoration: line-through;
-    }
-  }
-
-  &__actions {
-    display: flex;
-    gap: $spacing-sm;
-  }
-}
-
 .tag {
   font-size: $font-size-sm;
   padding: 1px 6px;
   border-radius: 10px;
+  white-space: nowrap;
 
   &--inactive {
     background: #eee;
     color: $color-muted;
   }
+
+  &--new {
+    background: #dbeafe;
+    color: $color-primary;
+    font-weight: 600;
+  }
+}
+
+button.small {
+  font-size: $font-size-sm;
+  padding: 1px $spacing-sm;
 }
 </style>
