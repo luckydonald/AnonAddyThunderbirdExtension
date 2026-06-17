@@ -1,12 +1,13 @@
-excluded=$(wildcard .??*) $(wildcard *~) $(wildcard *xpi) Makefile README.md \
-  SECURITY.md node_modules package-lock.json package.json
-included=LICENSE.txt $(wildcard *.js) $(wildcard *.html) manifest.json icon.svg
-extra=$(filter-out $(excluded) $(included),$(shell ls))
-target=AnonAddyTB.xpi
+target = AnonAddyTB.xpi
+static_files = background.js api.js composePopup.js composePopup.html icon.svg manifest.json LICENSE.txt
 
-$(target): $(included)
-	@if [ -n "$(extra)" ]; then \
-	    echo "Extra files in directory: $(extra)" 1>&2; exit 1; fi
-	zip -r $@ $(included)
+$(target): dist/
+	cd dist && zip -r ../$(target) .
 
-clean: ; -rm -f $(target) *~
+dist/: src/ options.html $(static_files)
+	npm run build
+	cp $(static_files) dist/
+
+clean:
+	-rm -f $(target)
+	-rm -rf dist/
