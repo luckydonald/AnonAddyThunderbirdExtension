@@ -1,0 +1,9 @@
+Error while loading 'jar:file:///home/user/.thunderbird/0xlvvmir.default-esr/extensions/AnonAddyTB@luckydonald.de.xpi!/manifest.json' (NS_ERROR_FAILURE) Extension.sys.mjs:1133:20
+    readJSON resource://gre/modules/Extension.sys.mjs:1133
+    onStopRequest resource://gre/modules/NetUtil.sys.mjs:122
+1781711456104	addons.xpi	WARN	Exception running bootstrap method startup on AnonAddyTB@luckydonald.de: Error: Error while loading 'jar:file:///home/user/.thunderbird/0xlvvmir.default-esr/extensions/AnonAddyTB@luckydonald.de.xpi!/manifest.json' (NS_ERROR_FAILURE)(resource://gre/modules/Extension.sys.mjs:1133:20) JS Stack trace: readJSON/</<@Extension.sys.mjs:1133:20
+onStopRequest@NetUtil.sys.mjs:122:18
+Uncaught (in promise) Error: Error while loading 'jar:file:///home/user/.thunderbird/0xlvvmir.default-esr/extensions/AnonAddyTB@luckydonald.de.xpi!/manifest.json' (NS_ERROR_FAILURE)
+    readJSON resource://gre/modules/Extension.sys.mjs:1133
+    onStopRequest resource://gre/modules/NetUtil.sys.mjs:122
+2 Extension.sys.mjs:1133:20
