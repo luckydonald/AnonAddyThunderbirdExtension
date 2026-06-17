@@ -26,3 +26,7 @@
 
 #### Previous user prompts:
 
+❯ /init
+
+❯ /init
+
