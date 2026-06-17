@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useI18n } from "../../composables/useI18n.js";
 import type { SaveStatus } from "../App.vue";
 
 defineProps<{ status: SaveStatus }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -15,18 +18,21 @@ defineProps<{ status: SaveStatus }>();
       'banner--warning': status.kind === 'permission_denied',
     }"
   >
-    <template v-if="status.kind === 'success'">Settings saved.</template>
+    <template v-if="status.kind === 'success'">{{
+      t("settingsSaved")
+    }}</template>
     <template v-else-if="status.kind === 'error'">{{
       status.message
     }}</template>
     <template v-else-if="status.kind === 'permission_denied'">
-      Permission to access <strong>{{ status.hostUrl }}</strong> was denied.
-      Settings were not saved. Grant the host permission to use a custom server
-      URL.
+      {{ t("permissionDeniedPrefix") }}
+      <strong>{{ status.hostUrl }}</strong>
+      {{ t("permissionDeniedSuffix") }}
     </template>
     <template v-else-if="status.kind === 'permission_granted'">
-      Host permission for <strong>{{ status.hostUrl }}</strong> granted.
-      Settings saved.
+      {{ t("permissionGrantedPrefix") }}
+      <strong>{{ status.hostUrl }}</strong>
+      {{ t("permissionGrantedSuffix") }}
     </template>
   </div>
 </template>

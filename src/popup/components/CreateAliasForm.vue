@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useI18n } from "../../composables/useI18n.js";
 import type { AliasFormat } from "../../api/types.js";
 
 const props = defineProps<{
@@ -15,6 +16,8 @@ const emit = defineEmits<{
   ];
 }>();
 
+const { t } = useI18n();
+
 const domain = ref(props.defaultDomain);
 const format = ref<AliasFormat>(props.defaultFormat);
 const customPrefix = ref("");
@@ -27,14 +30,14 @@ const filteredDomains = computed(() => {
     : props.availableDomains;
 });
 
-const formats: { value: AliasFormat; label: string }[] = [
-  { value: "random_characters", label: "Characters" },
-  { value: "random_words", label: "Words" },
-  { value: "random_male_name", label: "Male name" },
-  { value: "random_female_name", label: "Female name" },
-  { value: "random_noun", label: "Noun" },
-  { value: "custom", label: "Custom…" },
-];
+const formats = computed((): { value: AliasFormat; label: string }[] => [
+  { value: "random_characters", label: t("formatCharacters") },
+  { value: "random_words", label: t("formatWords") },
+  { value: "random_male_name", label: t("formatMaleName") },
+  { value: "random_female_name", label: t("formatFemaleName") },
+  { value: "random_noun", label: t("formatNoun") },
+  { value: "custom", label: t("formatCustom") },
+]);
 
 function submit() {
   emit("create", {
@@ -48,12 +51,12 @@ function submit() {
 <template>
   <div class="create-form">
     <div class="field">
-      <label>Domain</label>
+      <label>{{ t("domain") }}</label>
       <div class="domain-picker">
         <input
           v-model="domainSearch"
           type="text"
-          placeholder="Filter domains…"
+          :placeholder="t('filterDomains')"
           class="domain-search"
         />
         <select v-model="domain" size="3" class="domain-select">
@@ -65,7 +68,7 @@ function submit() {
     </div>
 
     <div class="field">
-      <label>Format</label>
+      <label>{{ t("format") }}</label>
       <div class="format-pills">
         <label
           v-for="f in formats"
@@ -85,12 +88,12 @@ function submit() {
     </div>
 
     <div v-if="format === 'custom'" class="field">
-      <label>Prefix</label>
+      <label>{{ t("prefixLabel") }}</label>
       <div class="prefix-input">
         <input
           v-model="customPrefix"
           type="text"
-          placeholder="custom"
+          :placeholder="t('customPrefixPlaceholder')"
           class="prefix-text"
         />
         <span class="prefix-suffix">@{{ domain }}</span>
@@ -102,7 +105,7 @@ function submit() {
       :disabled="loading || (format === 'custom' && !customPrefix.trim())"
       @click="submit"
     >
-      {{ loading ? "Creating…" : "Create alias" }}
+      {{ loading ? t("creating") : t("createAlias") }}
     </button>
   </div>
 </template>

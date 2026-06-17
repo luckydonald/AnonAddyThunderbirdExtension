@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "addy.io / AnonAddy for Thunderbird",
-  "short_name": "AnonAddyTB",
-  "description": "Integrate Thunderbird with addy.io / AnonAddy",
+  "name": "__MSG_extensionName__",
+  "short_name": "__MSG_extensionShortName__",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "version": "0.0.4",
-  // "default_locale": "en",
   "browser_specific_settings": {
     "gecko": {
       "id": "AnonAddyTB@kamens.us",

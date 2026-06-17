@@ -1,11 +1,15 @@
 <script setup lang="ts">
+import { useI18n } from "../../composables/useI18n.js";
+
 defineEmits<{ close: [] }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
   <div class="no-recipients">
-    <p>Add at least one address to the To/CC/BCC field first.</p>
-    <button @click="$emit('close')">Close</button>
+    <p>{{ t("noRecipientsMessage") }}</p>
+    <button @click="$emit('close')">{{ t("close") }}</button>
   </div>
 </template>
 

@@ -1,6 +1,6 @@
 "use strict";
 
-/* global ChromeUtils, Services, Ci */
+/* global ChromeUtils, Services, Ci, browser */
 
 var { ExtensionCommon } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionCommon.sys.mjs",
@@ -42,7 +42,10 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
                 // Build a minimal XUL menupopup for our action
                 const popup = doc.createXULElement("menupopup");
                 const item = doc.createXULElement("menuitem");
-                item.setAttribute("label", "Replace with Addy alias…");
+                item.setAttribute(
+                  "label",
+                  browser.i18n.getMessage("replaceWithAddyAlias"),
+                );
 
                 item.addEventListener(
                   "command",

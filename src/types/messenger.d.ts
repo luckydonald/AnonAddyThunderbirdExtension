@@ -49,7 +49,10 @@ declare const messenger: {
     ): Promise<Array<{ email: string; name: string }>>;
   };
   composeAction: {
-    openPopup(): Promise<void>;
+    openPopup(options?: { windowId?: number }): Promise<boolean>;
+  };
+  i18n: {
+    getMessage(messageName: string, substitutions?: string | string[]): string;
   };
   runtime: {
     openOptionsPage(): Promise<void>;
