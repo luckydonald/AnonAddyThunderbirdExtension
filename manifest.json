@@ -22,7 +22,7 @@
     }
   },
   "host_permissions": ["*://app.addy.io/"],
-  "optional_host_permissions": ["*://*/"],
+  "optional_host_permissions": ["*://*/*"],
   "permissions": ["alarms", "compose", "storage"],
   "compose_action": {
     "default_area": "maintoolbar",

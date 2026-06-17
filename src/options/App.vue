@@ -33,6 +33,16 @@ async function loadFromStorage() {
   apiKey.value = opts.apiKey ?? "";
   savedHostUrl.value = hostUrl.value;
   savedApiKey.value = apiKey.value;
+
+  const all = await messenger.permissions.getAll();
+  console.log("AnonAddyTB: permissions.getAll() on load:", JSON.stringify(all, null, 2));
+
+  messenger.permissions.onAdded.addListener((added) => {
+    console.log("AnonAddyTB: permissions.onAdded:", JSON.stringify(added));
+  });
+  messenger.permissions.onRemoved.addListener((removed) => {
+    console.log("AnonAddyTB: permissions.onRemoved:", JSON.stringify(removed));
+  });
 }
 
 async function save() {
@@ -50,9 +60,11 @@ async function save() {
   let permissionJustGranted = false;
   if (url) {
     const origin = `${url}/`;
+    console.log("AnonAddyTB: checking permission for origin:", origin);
     const alreadyGranted = await messenger.permissions.contains({
       origins: [origin],
     });
+    console.log("AnonAddyTB: permissions.contains():", alreadyGranted);
     if (!alreadyGranted) {
       let granted: boolean;
       try {
@@ -60,6 +72,9 @@ async function save() {
       } catch {
         granted = false;
       }
+      console.log("AnonAddyTB: permissions.request() result:", granted);
+      const allAfter = await messenger.permissions.getAll();
+      console.log("AnonAddyTB: permissions.getAll() after request:", JSON.stringify(allAfter, null, 2));
       if (!granted) {
         saveStatus.value = { kind: "permission_denied", hostUrl: url };
         return;

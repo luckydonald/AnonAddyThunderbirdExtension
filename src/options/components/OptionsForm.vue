@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useI18n } from "../../composables/useI18n.js";
 
 const props = defineProps<{
@@ -15,6 +16,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const showApiKey = ref(false);
 
 function isValid() {
   if (
@@ -49,15 +51,26 @@ function isValid() {
     </div>
     <div class="field">
       <label for="apiKey">{{ t("apiKey") }}</label>
-      <input
-        id="apiKey"
-        type="text"
-        :value="apiKey"
-        :placeholder="t('apiKeyPlaceholder')"
-        @input="
-          emit('update:apiKey', ($event.target as HTMLInputElement).value)
-        "
-      />
+      <div class="field__password-wrap">
+        <input
+          id="apiKey"
+          :type="showApiKey ? 'text' : 'password'"
+          :value="apiKey"
+          :placeholder="t('apiKeyPlaceholder')"
+          autocomplete="current-password"
+          @input="
+            emit('update:apiKey', ($event.target as HTMLInputElement).value)
+          "
+        />
+        <button
+          type="button"
+          class="field__eye-btn"
+          :aria-label="showApiKey ? t('hideApiKey') : t('showApiKey')"
+          @click="showApiKey = !showApiKey"
+        >
+          {{ showApiKey ? t("hideApiKey") : t("showApiKey") }}
+        </button>
+      </div>
     </div>
     <div class="actions">
       <button type="submit" :disabled="!isDirty || !isValid()">
@@ -94,6 +107,24 @@ function isValid() {
   &__hint {
     font-size: 0.85em;
     color: #666;
+  }
+
+  &__password-wrap {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    flex: 1;
+
+    input {
+      flex: 1;
+    }
+  }
+
+  &__eye-btn {
+    flex-shrink: 0;
+    padding: $spacing-xs $spacing-sm;
+    font-size: $font-size-sm;
+    min-width: 44px;
   }
 
   input {
