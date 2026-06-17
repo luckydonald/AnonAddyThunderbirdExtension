@@ -119,6 +119,11 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       const menu = doc.createXULElement("menu");
       menu.setAttribute("label", "Use Addy alias for sending");
       const menuPopup = doc.createXULElement("menupopup");
+      // Thunderbird's onpopupshowing runs on all menupopup events in the compose window
+      // and crashes when triggerNode is not a pill (pill is null → pill.hasAttribute fails).
+      // Stop all popupshowing events from menuPopup and its descendant popups from bubbling
+      // up to Thunderbird's handler. The outer pill context menu is unaffected.
+      menuPopup.addEventListener("popupshowing", (e) => e.stopPropagation());
 
       // Direct click on the <menu> element itself (not on a submenu item) opens popup.
       menu.addEventListener("click", (e) => {

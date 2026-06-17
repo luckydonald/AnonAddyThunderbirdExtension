@@ -915,3 +915,5 @@ onStartup() {
 21. Existing aliases are lacking the send-as information.
 22. After hovering over the cool new menu (IT FINALLY SHOWED UP!!!), it vanishes - see error @ai/errors/10.txt
 
+❯ 23. Can you check why context menu it is not even showing up on right-click in @ai/errors/11.txt
+
