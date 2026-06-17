@@ -81,6 +81,16 @@ const searchResults = computed(() => {
     .slice(0, 15);
 });
 
+// Pin the currently selected alias when it's not in the search results.
+const pinnedAlias = computed((): Alias | null => {
+  if (!props.selectedAlias || !aliasSearch.value.trim()) return null;
+  if (searchResults.value.some((a) => a.email === props.selectedAlias)) return null;
+  if (props.createdAlias?.email === props.selectedAlias) {
+    return { id: props.createdAlias.id, email: props.createdAlias.email, active: props.createdAlias.active } as Alias;
+  }
+  return props.allAliases.find((a) => a.email === props.selectedAlias) ?? null;
+});
+
 function selectFromSearch(email: string) {
   emit("update:selectedAlias", email === props.selectedAlias ? null : email);
   aliasSearch.value = "";
@@ -115,7 +125,27 @@ defineExpose({ resetCreating: () => (creating.value = false) });
     />
 
     <!-- Typeahead search results -->
-    <div v-if="searchResults.length > 0" class="alias-list alias-list--search">
+    <div v-if="searchResults.length > 0 || pinnedAlias" class="alias-list alias-list--search">
+      <!-- Pinned selected alias (when not already in search results) -->
+      <div
+        v-if="pinnedAlias"
+        class="alias-option selected alias-option--pinned"
+        @click="selectFromSearch(pinnedAlias.email)"
+      >
+        <input
+          type="radio"
+          :name="`alias-${address}`"
+          :value="pinnedAlias.email"
+          :checked="true"
+          @change="selectFromSearch(pinnedAlias.email)"
+        />
+        <div class="alias-option__body">
+          <div class="alias-option__row">
+            <kbd class="alias-option__email">{{ pinnedAlias.email }}</kbd>
+            <span class="tag tag--selected">selected</span>
+          </div>
+        </div>
+      </div>
       <div
         v-for="alias in searchResults"
         :key="alias.id"
@@ -241,22 +271,22 @@ defineExpose({ resetCreating: () => (creating.value = false) });
       <div v-if="!createdAlias && displayAliases.length === 0" class="no-aliases">
         <em>{{ t("noExistingAliases") }}</em>
       </div>
-
-      <!-- Don't replace option -->
-      <label
-        v-if="createdAlias || displayAliases.length > 0"
-        class="alias-option alias-option--none"
-        :class="{ selected: selectedAlias === null }"
-      >
-        <input
-          type="radio"
-          :name="`alias-${address}`"
-          :checked="selectedAlias === null"
-          @change="$emit('update:selectedAlias', null)"
-        />
-        <span>{{ t("dontReplace") }}</span>
-      </label>
     </div>
+
+    <!-- Don't replace — always visible when there are any aliases -->
+    <label
+      v-if="createdAlias || displayAliases.length > 0 || selectedAlias !== null"
+      class="alias-option alias-option--none"
+      :class="{ selected: selectedAlias === null }"
+    >
+      <input
+        type="radio"
+        :name="`alias-${address}`"
+        :checked="selectedAlias === null"
+        @change="$emit('update:selectedAlias', null)"
+      />
+      <span>{{ t("dontReplace") }}</span>
+    </label>
 
     <!-- Create new alias section (always visible) -->
     <CreateAliasForm
@@ -438,6 +468,12 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   }
 
   &--new {
+    background: #dbeafe;
+    color: $color-primary;
+    font-weight: 600;
+  }
+
+  &--selected {
     background: #dbeafe;
     color: $color-primary;
     font-weight: 600;
