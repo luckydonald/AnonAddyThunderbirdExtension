@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
+import { toUnicode } from "punycode/";
 import { useI18n } from "../../composables/useI18n.js";
 import type { AliasFormat } from "../../api/types.js";
 
@@ -110,6 +111,12 @@ function onComboboxKey(e: KeyboardEvent) {
 
 watch(domainSearch, () => { comboboxActiveIdx.value = 0; });
 
+function domainLabel(d: string): { ascii: string; unicode: string | null } {
+  if (!d.includes("xn--")) return { ascii: d, unicode: null };
+  const uni = toUnicode(d);
+  return { ascii: d, unicode: uni !== d ? uni : null };
+}
+
 function submit() {
   emit("create", {
     domain: domain.value,
@@ -131,7 +138,7 @@ function submit() {
           class="combobox__trigger"
           @click="openCombobox"
         >
-          <span>{{ domain }}</span>
+          <span>{{ domainLabel(domain).unicode ?? domain }}</span>
           <span class="combobox__arrow">▾</span>
         </button>
         <div v-if="comboboxOpen" class="combobox__dropdown">
@@ -151,7 +158,8 @@ function submit() {
               :class="{ selected: domain === d, active: i === comboboxActiveIdx }"
               @mousedown.prevent="selectDomain(d)"
             >
-              {{ d }}
+              <span>{{ domainLabel(d).unicode ?? d }}</span>
+              <span v-if="domainLabel(d).unicode" class="combobox__option-ascii">{{ d }}</span>
             </li>
           </ul>
         </div>
@@ -312,6 +320,9 @@ function submit() {
     padding: $spacing-sm $spacing-md;
     font-size: $font-size-sm;
     cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    gap: $spacing-xs;
 
     &:hover,
     &.active {
@@ -322,6 +333,12 @@ function submit() {
       font-weight: 600;
       color: $color-primary;
     }
+  }
+
+  &__option-ascii {
+    font-size: $font-size-sm;
+    color: $color-muted;
+    margin-left: $spacing-xs;
   }
 }
 
