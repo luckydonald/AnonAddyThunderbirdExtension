@@ -914,6 +914,15 @@ coverage/
 # python
 **/__pycache__
 
+# browser extensions (build/pack output, basically zip files of stuff already in this repo; should only be a release workflow)
+# # Thunderbird (and Firefox?)
+**/*.xpi
+# # Chrom(ium)(-like)
+**/*.crx
+# # Opera
+**/*.nex
+
+
 ######################################
 ##### END OF base's `.gitignore` #####
 ######################################
