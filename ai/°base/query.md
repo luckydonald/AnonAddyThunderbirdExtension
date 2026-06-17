@@ -785,4 +785,7 @@ Also include a very short section about the base itself using `[base] [optional 
 › Add: For normal use, multiple `[where]` parts can be written as `[backend|frontend]`.
 
 › I want a github workflow (or multiple) in which in an Issue I can write either `@claude` or `@codex` and the online integration of that service will work on that issue. Either in the issue body itself, or a separate message containing that. If that separate comment is just that (not a diff etc.), address the issue itself.
+› Document how to set up codex github issues in the `README.md`, and link to further documentation.
+› Does that also work with the openai subscription? Where do I get the `OPENAI_API_KEY`?
+› Is there an alternative with codex to use the normal chatgpt subscription?
 

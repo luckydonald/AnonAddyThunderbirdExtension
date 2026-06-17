@@ -25,6 +25,7 @@ This history is intentionally rooted at `empty/init` from `https://github.com/Em
     * [All code for c) as a single copy pastable one:](#all-code-for-c-as-a-single-copy-pastable-one)
   * [After Adopting The Base](#after-adopting-the-base)
     * [Git LFS](#git-lfs)
+    * [Codex GitHub issue agent](#codex-github-issue-agent)
     * [Monorepo subfolders: per-subfolder `.claude/`](#monorepo-subfolders-per-subfolder-claude)
 <!-- TOC -->
 
@@ -213,6 +214,25 @@ Once the base is present in your repo, the files provided by this repo live in y
 This base tracks binary image files (`.png`, `.jpg`, `.jpeg`) with [Git LFS](https://git-lfs.com). The `git lfs install` command in the setup steps above is a one-time setup per machine. The `.gitattributes` file already defines which file types are tracked, so no additional `git lfs track` calls are needed.
 
 After the base files are present in a repository, `scripts/°base/init/checkout.sh` also installs the local LFS hooks and disables GitHub LFS lock verification for discovered GitHub HTTPS remotes. This avoids push failures like `You must have push access to verify locks` in repos that use LFS files but do not use LFS locks.
+
+### Codex GitHub issue agent
+
+This base includes `.github/workflows/codex-issue-agent.yml`, which lets you ask Codex to work on a GitHub issue by mentioning `@codex` in the issue body or in a new issue comment.
+
+To enable it in a consuming repository:
+
+1. Enable GitHub Actions for the repository.
+2. Add an Actions secret named `OPENAI_API_KEY` with an OpenAI API key that is allowed to use Codex.
+3. Make sure the repository's Actions settings allow workflows to create pull requests. In GitHub, this is under repository **Settings** -> **Actions** -> **General** -> **Workflow permissions**.
+4. Create or edit an issue containing `@codex`, or add a new issue comment containing `@codex`.
+
+When the trigger is in the issue body, the workflow asks Codex to address that issue. When a separate issue comment contains only `@codex`, the workflow also uses the issue title and body as the task instead of treating the one-word comment as the full request. If the comment contains more text, Codex treats that comment as the specific request. When Codex changes files, the workflow commits those changes on a `codex/issue-...` branch, opens a pull request, and comments the result back on the issue.
+
+Further documentation:
+
+- [OpenAI Codex GitHub Action docs](https://developers.openai.com/codex/github-action) explain the `openai/codex-action@v1` inputs, sandbox settings, outputs, and security checklist.
+- [openai/codex-action on GitHub](https://github.com/openai/codex-action) contains the action source and examples.
+- [Codex code review in GitHub](https://developers.openai.com/codex/integrations/github) documents the separate hosted GitHub review integration for pull requests, including `@codex review`.
 
 ### Monorepo subfolders: per-subfolder `.claude/`
 
