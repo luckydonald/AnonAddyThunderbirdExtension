@@ -712,3 +712,46 @@ Rationale:
 <usage><subagent_tokens>32558</subagent_tokens><tool_uses>18</tool_uses><duration_ms>122180</duration_ms></usage>
 </task-notification>
 
+❯ <task-notification>
+<task-id>a615ac5db9ef350e4</task-id>
+<tool-use-id>toolu_01CtKu8B1TemvDHnyjTa3SJt</tool-use-id>
+<output-file>/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/c0b3109b-5908-4188-ac96-e7c24eaef219/tasks/a615ac5db9ef350e4.output</output-file>
+<status>completed</status>
+<summary>Agent "Research Thunderbird compose address-field dropdown feasibility" came to rest</summary>
+<note>A task-notification fires each time this agent comes to rest with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>**Findings on Thunderbird compose window address-field injection feasibility:**
+
+---
+
+**1. `messenger.menus` context types for compose**
+
+Four compose-related contexts exist:
+- `compose_action` — right-click on the composeAction button
+- `compose_action_menu` — composeAction button of type menu
+- `compose_attachments` — right-click on an attachment in compose
+- `compose_body` — right-click inside the compose editor (message body)
+
+**There is no `compose_address`, `compose_header`, or similar context for the To/CC/BCC address fields.** The `onClicked` event has a `fieldId` property (values: `composeTo`, `composeCc`, `composeBcc`, etc.) but this is for identifying which field triggered a context menu, not for injecting UI into address chips.
+
+**2. `scripting.compose` / compose scripts**
+
+The API injects scripts into "the message compose editor" — this means the **message body** area, not the address header. The compose window UI (header area with address pills) is rendered in Thunderbird's native XUL chrome, not in a web-content frame that content scripts can reach. The Bugzilla issue #1622502 confirms: **Thunderbird's main UI is never accessible via content scripts**; this restriction applies to compose window chrome as well.
+
+**3. `messenger.compose.*` API — no token-level access**
+
+`getComposeDetails()` / `setComposeDetails()` return recipients as an array of strings (RFC 2822 mailbox format) or addressBook contact node IDs. There is no API for individual address chip/pill state, selection, hover, or click events. You can read and rewrite the whole list, but cannot instrument individual tokens.
+
+**4. DOM injection into compose window address area**
+
+Not possible via standard WebExtension APIs. The address header is native XUL/HTML chrome, not a web-accessible document. WebExtension Experiments (a privileged API shim requiring the `experiment` manifest key and signing bypass) would be the only way to reach that DOM, and those are incompatible with ordinary signed AMO extensions.
+
+**5. Community reports**
+
+The AutoMention extension uses `scripting.compose` to show contact suggestions, but it does so by injecting into the **compose body** area (detecting the `@` trigger in the message text), not the address fields. No public examples of address-field pill injection via WebExtensions exist.
+
+---
+
+**Verdict:** Injecting a context menu or dropdown into individual address chips/pills is **not feasible** with current Thunderbird 115+ MV3 WebExtension APIs. The compose window's address header area is XUL chrome — inaccessible to content/compose scripts. The best available fallback is the existing popup approach: the `composeAction` button opens a popup that reads recipients via `getComposeDetails()` and rewrites them via `setComposeDetails()`, which is exactly what this extension already does.</result>
+<usage><subagent_tokens>63276</subagent_tokens><tool_uses>12</tool_uses><duration_ms>100084</duration_ms></usage>
+</task-notification>
+
