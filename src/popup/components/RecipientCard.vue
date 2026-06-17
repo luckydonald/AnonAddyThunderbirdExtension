@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import CreateAliasForm from "./CreateAliasForm.vue";
 import { useI18n } from "../../composables/useI18n.js";
 import type { Alias, AliasFormat } from "../../api/types.js";
@@ -23,6 +23,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   "update:selectedAlias": [value: string | null];
+  "update:address": [value: string];
   create: [
     payload: { domain: string; format: AliasFormat; customPrefix: string },
   ];
@@ -34,6 +35,17 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const creating = ref(false);
+const editableAddress = ref(props.address);
+
+watch(
+  () => props.address,
+  (v) => { editableAddress.value = v; },
+);
+
+function onAddressChange() {
+  const v = editableAddress.value.trim();
+  if (v && v !== props.address) emit("update:address", v);
+}
 
 function selectAlias(email: string) {
   emit("update:selectedAlias", email === props.selectedAlias ? null : email);
@@ -55,7 +67,14 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   <div class="card">
     <p class="card__header">
       {{ t("replaceWithPrefix") }}
-      <strong>{{ name ? `${name} <${address}>` : address }}</strong>
+      <span v-if="name" class="card__name">{{ name }}</span>
+      <input
+        v-model="editableAddress"
+        type="text"
+        class="card__address-input"
+        @blur="onAddressChange"
+        @keydown.enter.prevent="onAddressChange"
+      />
       {{ t("replaceWithSuffix") }}
     </p>
 
@@ -137,7 +156,8 @@ defineExpose({ resetCreating: () => (creating.value = false) });
         :default-domain="defaultDomain"
         :default-format="defaultFormat"
         :loading="creating"
-        :target-email="address"
+        :target-email="editableAddress"
+        :target-name="name"
         @create="handleCreate"
       />
     </div>
@@ -156,6 +176,32 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   &__header {
     margin: 0 0 $spacing-md;
     font-size: $font-size-sm;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: $spacing-xs;
+  }
+
+  &__name {
+    font-weight: 600;
+  }
+
+  &__address-input {
+    font-weight: 600;
+    font-size: inherit;
+    font-family: monospace;
+    border: none;
+    border-bottom: 1px dashed $color-border;
+    background: transparent;
+    padding: 0 2px;
+    min-width: 120px;
+    flex: 1;
+    color: inherit;
+
+    &:focus {
+      outline: none;
+      border-bottom-color: $color-primary;
+    }
   }
 }
 

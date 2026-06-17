@@ -71,6 +71,7 @@
   "existingAliasesSection": { "message": "Existing aliases" },
   "createAliasSection": { "message": "Create new alias" },
   "aliasPreviewLabel": { "message": "Sends via:" },
+  "aliasDisplayLabel": { "message": "Sends as:" },
 
   "domain": { "message": "Domain" },
   "format": { "message": "Format" },

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useI18n } from "../../composables/useI18n.js";
 import type { AliasFormat } from "../../api/types.js";
 
@@ -18,6 +18,7 @@ const props = defineProps<{
   defaultFormat: AliasFormat;
   loading: boolean;
   targetEmail: string;
+  targetName: string;
 }>();
 
 const emit = defineEmits<{
@@ -63,6 +64,50 @@ const forwardingPreview = computed(() => {
   return `${aliasLocalPreview.value}+${targetLocal}=${targetDomain}@${domain.value}`;
 });
 
+const sendsAsPreview = computed(() => {
+  if (!forwardingPreview.value) return null;
+  return props.targetName
+    ? `${props.targetName} <${forwardingPreview.value}>`
+    : forwardingPreview.value;
+});
+
+// ── Domain combobox ───────────────────────────────────────────────────────────
+const comboboxOpen = ref(false);
+const comboboxActiveIdx = ref(0);
+const searchInput = ref<HTMLInputElement | null>(null);
+
+function openCombobox() {
+  domainSearch.value = "";
+  comboboxActiveIdx.value = 0;
+  comboboxOpen.value = true;
+  nextTick(() => searchInput.value?.focus());
+}
+
+function selectDomain(d: string) {
+  domain.value = d;
+  comboboxOpen.value = false;
+  domainSearch.value = "";
+}
+
+function onComboboxKey(e: KeyboardEvent) {
+  const len = filteredDomains.value.length;
+  if (e.key === "ArrowDown") {
+    comboboxActiveIdx.value = Math.min(comboboxActiveIdx.value + 1, len - 1);
+    e.preventDefault();
+  } else if (e.key === "ArrowUp") {
+    comboboxActiveIdx.value = Math.max(comboboxActiveIdx.value - 1, 0);
+    e.preventDefault();
+  } else if (e.key === "Enter") {
+    const d = filteredDomains.value[comboboxActiveIdx.value];
+    if (d) selectDomain(d);
+    e.preventDefault();
+  } else if (e.key === "Escape") {
+    comboboxOpen.value = false;
+  }
+}
+
+watch(domainSearch, () => { comboboxActiveIdx.value = 0; });
+
 function submit() {
   emit("create", {
     domain: domain.value,
@@ -78,18 +123,36 @@ function submit() {
 
     <div class="field">
       <label>{{ t("domain") }}</label>
-      <div class="domain-picker">
-        <input
-          v-model="domainSearch"
-          type="text"
-          :placeholder="t('filterDomains')"
-          class="domain-search"
-        />
-        <select v-model="domain" size="3" class="domain-select">
-          <option v-for="d in filteredDomains" :key="d" :value="d">
-            {{ d }}
-          </option>
-        </select>
+      <div class="combobox" @keydown="onComboboxKey">
+        <button
+          type="button"
+          class="combobox__trigger"
+          @click="openCombobox"
+        >
+          <span>{{ domain }}</span>
+          <span class="combobox__arrow">▾</span>
+        </button>
+        <div v-if="comboboxOpen" class="combobox__dropdown">
+          <input
+            ref="searchInput"
+            v-model="domainSearch"
+            type="text"
+            :placeholder="t('filterDomains')"
+            class="combobox__search"
+            @blur.self="comboboxOpen = false"
+          />
+          <ul class="combobox__list">
+            <li
+              v-for="(d, i) in filteredDomains"
+              :key="d"
+              class="combobox__option"
+              :class="{ selected: domain === d, active: i === comboboxActiveIdx }"
+              @mousedown.prevent="selectDomain(d)"
+            >
+              {{ d }}
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -138,6 +201,10 @@ function submit() {
       <span class="preview-label">{{ t("aliasPreviewLabel") }}</span>
       <code class="preview-address">{{ forwardingPreview }}</code>
     </p>
+    <p v-if="sendsAsPreview && targetName" class="preview">
+      <span class="preview-label">{{ t("aliasDisplayLabel") }}</span>
+      <code class="preview-address">{{ sendsAsPreview }}</code>
+    </p>
   </div>
 </template>
 
@@ -176,21 +243,83 @@ function submit() {
   }
 }
 
-.domain-picker {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
+.combobox {
   flex: 1;
   min-width: 0;
-}
+  position: relative;
 
-.domain-search {
-  width: 100%;
-}
+  &__trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-sm $spacing-md;
+    border: 1px solid $color-border;
+    border-radius: 3px;
+    background: #fff;
+    cursor: pointer;
+    font-size: $font-size-sm;
+    text-align: left;
 
-.domain-select {
-  width: 100%;
-  min-height: 60px;
+    &:hover {
+      border-color: $color-primary;
+    }
+  }
+
+  &__arrow {
+    color: $color-muted;
+    margin-left: $spacing-sm;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border: 1px solid $color-border;
+    border-radius: 3px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    margin-top: 2px;
+  }
+
+  &__search {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid $color-border;
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-sm;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: $spacing-xs 0;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  &__option {
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-sm;
+    cursor: pointer;
+
+    &:hover,
+    &.active {
+      background: #f0f5ff;
+    }
+
+    &.selected {
+      font-weight: 600;
+      color: $color-primary;
+    }
+  }
 }
 
 .format-pills {
