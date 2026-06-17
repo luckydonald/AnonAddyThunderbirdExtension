@@ -53,15 +53,30 @@ def _parse_task_notification(prompt: str) -> dict | None:
 
     return {
         "task_id": _text("task-id"),
+        "tool_use_id": _text("tool-use-id"),
         "status": _text("status"),
         "summary": _text("summary"),
         "result": _text("result"),
         "output_file": _text("output-file"),
+        "subagent_tokens": _text("usage/subagent_tokens"),
+        "tool_uses": _text("usage/tool_uses"),
+        "duration_ms": _text("usage/duration_ms"),
     }
 
 
-def _extract_agent_prompt(output_file: str) -> str:
-    """Read the agent's JSONL output file and return the prompt string."""
+def _extract_agent_prompt(output_file: str, tool_use_id: str = "") -> str:
+    """Read the agent's JSONL output file and return the Agent prompt string."""
+
+    def _iter_dicts(value):
+        if isinstance(value, dict):
+            yield value
+            for child in value.values():
+                yield from _iter_dicts(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from _iter_dicts(child)
+
+    fallback = ""
     try:
         with open(output_file, encoding="utf-8") as f:
             for line in f:
@@ -69,14 +84,26 @@ def _extract_agent_prompt(output_file: str) -> str:
                     obj = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                msg = obj.get("message", {})
-                if msg.get("role") == "assistant":
-                    for item in msg.get("content", []):
-                        if item.get("type") == "tool_use" and item.get("name") == "Agent":
-                            return item.get("input", {}).get("prompt", "")
+                for item in _iter_dicts(obj):
+                    if item.get("type") != "tool_use" or item.get("name") != "Agent":
+                        continue
+                    prompt = item.get("input", {}).get("prompt", "")
+                    if not prompt:
+                        continue
+                    if tool_use_id and item.get("id") == tool_use_id:
+                        return prompt
+                    if not fallback:
+                        fallback = prompt
     except OSError:
         pass
-    return ""
+    return fallback
+
+
+def _char_count(path: str) -> int:
+    try:
+        return len(Path(path).read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return 0
 
 
 def _human_size(path: str) -> str:
@@ -90,6 +117,23 @@ def _human_size(path: str) -> str:
             return f"{size:.0f} {unit}" if unit == "B" else f"{size:.3g} {unit}"
         size /= 1024
     return "? B"  # unreachable
+
+
+def _markdown_file_link(label: str, chars: int, size: str, target: str) -> str:
+    return f"[{label} (`{chars}` chars, `{size}`)]({target})"
+
+
+def _usage_summary(info: dict) -> str:
+    tool_uses = info.get("tool_uses", "")
+    tokens = info.get("subagent_tokens", "")
+    duration_ms = info.get("duration_ms", "")
+    if not tool_uses or not tokens or not duration_ms:
+        return ""
+    try:
+        duration = f"{int(duration_ms) / 60000:g}"
+    except ValueError:
+        duration = duration_ms
+    return f"> - `{tool_uses}` tools, `{tokens}` tokens, `{duration} s`\n"
 
 
 def _next_agent_number(agents_dir: Path) -> int:
@@ -125,7 +169,7 @@ def _handle_task_notification(
     agent_dir = agents_dir / dir_name
     agent_dir.mkdir(parents=True, exist_ok=True)
 
-    agent_prompt = _extract_agent_prompt(info["output_file"])
+    agent_prompt = _extract_agent_prompt(info["output_file"], info["tool_use_id"])
     prompt_file = agent_dir / "prompt.md"
     result_file = agent_dir / "result.md"
     prompt_file.write_text(agent_prompt, encoding="utf-8")
@@ -145,15 +189,18 @@ def _handle_task_notification(
     rel_result = f"agents/{dir_name}/result.md"
     query_chars = len(agent_prompt)
     result_chars = len(info["result"])
+    log_chars = _char_count(info["output_file"])
     log_size = _human_size(info["output_file"])
 
     content = (
         f"{prefix} Task Notification:\n"
-        f"> - Task `{info['task_id']}`: <kbd>{info['status']}</kbd>\n"
+        f"> - Task `{info['task_id']}` <kbd>{info['status']}</kbd>\n"
+        f"> - Tool `{info['tool_use_id']}`\n"
         f"> - > {info['summary']}\n"
-        f"> - [Query (`{query_chars}` chars, {_human_size(str(prompt_file))})]({rel_prompt})\n"
-        f"> - [Answer (`{result_chars}` chars, {_human_size(str(result_file))})]({rel_result})\n"
-        f"> - [Raw log (`{log_size}`)]({info['output_file']})\n"
+        f"> - {_markdown_file_link('Query', query_chars, _human_size(str(prompt_file)), rel_prompt)}\n"
+        f"> - {_markdown_file_link('Answer', result_chars, _human_size(str(result_file)), rel_result)}\n"
+        f"> - {_markdown_file_link('Raw log', log_chars, log_size, info['output_file'])}\n"
+        f"{_usage_summary(info)}"
         "\n"
     )
     append_and_commit(
