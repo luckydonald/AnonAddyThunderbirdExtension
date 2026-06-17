@@ -839,3 +839,8 @@ onStartup() {
 
 ❯ @ai/errors/2.txt
 
+❯ - Instead of that popup, I want a separate page/window/popup, as it is currently to small (text size), and still already has scroll bars.
+- While the settings are not filled out and successful, the click on that menu shall immediatly bring you to the settings.
+- @ai/errors/3.txt
+- have a refresh button in the addon window/popup.
+

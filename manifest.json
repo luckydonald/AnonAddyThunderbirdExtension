@@ -27,8 +27,7 @@
   "compose_action": {
     "default_area": "maintoolbar",
     "default_title": "Addy",
-    "default_icon": "icon.svg",
-    "default_popup": "./composePopup.html"
+    "default_icon": "icon.svg"
   },
   "background": {
     "scripts": ["background.js"],

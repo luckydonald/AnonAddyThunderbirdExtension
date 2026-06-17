@@ -72,6 +72,12 @@
     "message": "Add at least one address to the To/CC/BCC field first."
   },
 
+  "refresh": { "message": "Refresh" },
+  "noApiKeyMessage": {
+    "message": "No API key is set. Opening settings…",
+    "description": "Shown briefly in the alias window when no API key is configured."
+  },
+
   "replaceWithAddyAlias": {
     "message": "Replace with Addy alias…",
     "description": "Context menu item shown when right-clicking an address chip in the compose window."

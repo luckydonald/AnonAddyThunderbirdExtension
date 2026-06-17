@@ -5,6 +5,7 @@ import NoRecipientsMessage from "./components/NoRecipientsMessage.vue";
 import RecipientCard from "./components/RecipientCard.vue";
 import FooterBar from "./components/FooterBar.vue";
 import { addyApiRequest } from "../api/index.js";
+import { useI18n } from "../composables/useI18n.js";
 import type {
   Alias,
   AliasFormat,
@@ -31,6 +32,7 @@ interface RecipientState {
 
 type PopupState =
   | { kind: "loading" }
+  | { kind: "no_settings" }
   | { kind: "no_recipients" }
   | { kind: "ready"; recipients: RecipientState[] };
 
@@ -49,6 +51,8 @@ const domainOptions = ref<DomainOptions>({
 });
 const hostUrl = ref("https://app.addy.io");
 const tabId = ref(0);
+
+const { t } = useI18n();
 
 const hasSelections = computed(() => {
   if (popupState.value.kind !== "ready") return false;
@@ -87,7 +91,24 @@ function matchingAliases(aliases: Alias[], domain: string): Alias[] {
 
 // ─── Initialization ───────────────────────────────────────────────────────────
 
-async function loadStoredOptions(): Promise<AliasCache> {
+async function initTabId(): Promise<void> {
+  const params = new URLSearchParams(window.location.search);
+  const param = params.get("tabId");
+  if (param) {
+    tabId.value = parseInt(param, 10);
+  } else {
+    // Fallback: window opened without URL param (shouldn't happen in normal flow)
+    const tab = await messenger.tabs.getCurrent();
+    tabId.value = tab.id;
+  }
+}
+
+interface LoadResult {
+  cache: AliasCache;
+  hasApiKey: boolean;
+}
+
+async function loadStoredOptions(): Promise<LoadResult> {
   const storage = await messenger.storage.local.get({
     options: {},
     domainOptions: {
@@ -98,20 +119,20 @@ async function loadStoredOptions(): Promise<AliasCache> {
     aliasCache: { aliases: [], fetchedAt: 0 },
   });
 
-  const opts = (storage.options ?? {}) as { hostUrl?: string | null };
+  const opts = (storage.options ?? {}) as {
+    hostUrl?: string | null;
+    apiKey?: string;
+  };
   hostUrl.value = opts.hostUrl || "https://app.addy.io";
 
   domainOptions.value = storage.domainOptions as DomainOptions;
 
   const cache = (storage.aliasCache ?? { aliases: [] }) as AliasCache;
-  return cache;
+  return { cache, hasApiKey: !!opts.apiKey };
 }
 
 async function buildRecipients(cachedAliases: Alias[]): Promise<void> {
-  const tab = await messenger.tabs.getCurrent();
-  tabId.value = tab.id;
-
-  const details = await messenger.compose.getComposeDetails(tab.id);
+  const details = await messenger.compose.getComposeDetails(tabId.value);
   const allRecipients = [...details.to, ...details.cc, ...details.bcc];
 
   if (allRecipients.length === 0) {
@@ -302,25 +323,26 @@ async function applyAndClose(): Promise<void> {
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 
-onMounted(async () => {
-  // Popup resize workaround: nudge #spacer so Thunderbird recalculates size
-  let count = 0;
-  const nudge = () => {
-    const spacer = document.getElementById("spacer");
-    if (spacer && count < 10) {
-      spacer.textContent = " ".repeat(count);
-      count++;
-      setTimeout(nudge, 100);
-    }
-  };
-  setTimeout(nudge, 50);
-
-  const cache = await loadStoredOptions();
+async function load(): Promise<void> {
+  popupState.value = { kind: "loading" };
+  const { cache, hasApiKey } = await loadStoredOptions();
+  if (!hasApiKey) {
+    popupState.value = { kind: "no_settings" };
+    void messenger.runtime.openOptionsPage();
+    return;
+  }
   await buildRecipients(cache.aliases);
-
-  // Refresh alias data from API in the background after initial render
   void refreshAliasesInBackground();
+}
+
+onMounted(async () => {
+  await initTabId();
+  await load();
 });
+
+async function refresh(): Promise<void> {
+  await load();
+}
 
 function close() {
   window.close();
@@ -334,6 +356,11 @@ function openSettings() {
 <template>
   <div class="popup">
     <LoadingSpinner v-if="popupState.kind === 'loading'" />
+
+    <div v-else-if="popupState.kind === 'no_settings'" class="no-settings">
+      <p>{{ t("noApiKeyMessage") }}</p>
+      <button @click="openSettings">{{ t("settingsLink") }}</button>
+    </div>
 
     <NoRecipientsMessage
       v-else-if="popupState.kind === 'no_recipients'"
@@ -363,6 +390,7 @@ function openSettings() {
         :host-url="hostUrl"
         :has-selections="hasSelections"
         @apply="applyAndClose"
+        @refresh="refresh"
         @close="close"
         @open-settings="openSettings"
       />
@@ -374,6 +402,15 @@ function openSettings() {
 @use "./styles/variables" as *;
 
 .popup {
-  width: $popup-width;
+  min-width: $window-min-width;
+}
+
+.no-settings {
+  padding: $spacing-lg;
+  color: $color-muted;
+
+  p {
+    margin: 0 0 $spacing-md;
+  }
 }
 </style>

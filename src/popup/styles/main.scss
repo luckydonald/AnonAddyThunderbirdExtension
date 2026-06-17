@@ -13,8 +13,7 @@ body {
   color: $color-text;
   margin: 0;
   padding: $spacing-md $spacing-lg;
-  width: $popup-width;
-  min-width: $popup-width;
+  min-width: $window-min-width;
 }
 
 button {

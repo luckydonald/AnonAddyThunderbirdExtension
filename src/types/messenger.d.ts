@@ -26,6 +26,22 @@ declare const messenger: {
   };
   tabs: {
     getCurrent(): Promise<{ id: number }>;
+    query(queryInfo: {
+      windowId?: number;
+      active?: boolean;
+      type?: string;
+    }): Promise<Array<{ id: number }>>;
+  };
+  windows: {
+    create(createData: {
+      url?: string;
+      type?: "normal" | "popup" | "panel" | "detached_panel";
+      width?: number;
+      height?: number;
+    }): Promise<{ id: number }>;
+    getLastFocused(options?: {
+      windowTypes?: string[];
+    }): Promise<{ id: number; focused: boolean }>;
   };
   compose: {
     getComposeDetails(tabId: number): Promise<ComposeDetails>;
@@ -50,14 +66,21 @@ declare const messenger: {
   };
   composeAction: {
     openPopup(options?: { windowId?: number }): Promise<boolean>;
+    onClicked: {
+      addListener(callback: (tab: { id: number }) => void): void;
+    };
   };
   i18n: {
     getMessage(messageName: string, substitutions?: string | string[]): string;
   };
   runtime: {
+    getURL(path: string): string;
     openOptionsPage(): Promise<void>;
     onInstalled: {
       addListener(callback: (details: { reason: string }) => void): void;
+    };
+    onStartup: {
+      addListener(callback: () => void): void;
     };
   };
   AddressChipMenu: {

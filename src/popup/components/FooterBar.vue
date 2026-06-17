@@ -9,6 +9,7 @@ const props = defineProps<{
 
 defineEmits<{
   apply: [];
+  refresh: [];
   close: [];
   openSettings: [];
 }>();
@@ -27,6 +28,9 @@ const hostname = computed(() => {
 <template>
   <div class="footer">
     <div class="footer__links">
+      <button class="link-btn" @click="$emit('refresh')">
+        {{ t("refresh") }}
+      </button>
       <button class="link-btn" @click="$emit('openSettings')">
         {{ t("settingsLink") }}
       </button>

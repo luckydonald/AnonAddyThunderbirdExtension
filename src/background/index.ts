@@ -31,6 +31,15 @@ async function refreshCache(): Promise<void> {
 // Without this the background only runs when an alarm or other event fires.
 messenger.runtime.onStartup.addListener(() => {});
 
+async function openAliasWindow(tabId: number): Promise<void> {
+  await messenger.windows.create({
+    url: messenger.runtime.getURL("composePopup.html") + `?tabId=${tabId}`,
+    type: "popup",
+    width: 640,
+    height: 600,
+  });
+}
+
 messenger.alarms.create("cache-refresh", { periodInMinutes: 60 });
 
 messenger.alarms.onAlarm.addListener(async (alarm) => {
@@ -48,13 +57,31 @@ messenger.runtime.onInstalled.addListener(async ({ reason: _reason }) => {
   await refreshCache();
 });
 
-// Open the compose popup when the user right-clicks an address chip and
-// selects "Replace with Addy alias…". The compose popup handles alias
-// selection and address rewriting for all recipients in that window.
+// Toolbar button click → open alias window for the current compose tab.
+messenger.composeAction.onClicked.addListener(async (tab) => {
+  try {
+    await openAliasWindow(tab.id);
+  } catch (e) {
+    console.error("AnonAddyTB: could not open alias window", e);
+  }
+});
+
+// Right-click context menu on address chip → open alias window.
+// The compose window is still focused when this fires, so getLastFocused()
+// reliably returns it.
 messenger.AddressChipMenu.onChipMenuClicked.addListener(async (_info) => {
   try {
-    await messenger.composeAction.openPopup();
+    const win = await messenger.windows.getLastFocused();
+    if (win.id !== undefined) {
+      const tabs = await messenger.tabs.query({ windowId: win.id });
+      const tab = tabs[0];
+      if (tab?.id !== undefined) {
+        await openAliasWindow(tab.id);
+        return;
+      }
+    }
+    console.error("AnonAddyTB: could not find compose tab for chip menu click");
   } catch (e) {
-    console.error("AnonAddyTB: could not open popup from chip menu", e);
+    console.error("AnonAddyTB: could not open alias window from chip menu", e);
   }
 });
