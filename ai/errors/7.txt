@@ -1,0 +1,18 @@
+20:03:38.888 ReferenceError: browser is not defined 3 implementation.js:47:19
+    onContextMenu jar:file:///run/user/1000/doc/feba03dc/AnonAddyTB.xpi!/experiment/implementation.js:47
+    (Async: EventListener.handleEvent)
+    attachToWindow jar:file:///run/user/1000/doc/feba03dc/AnonAddyTB.xpi!/experiment/implementation.js:69
+    register jar:file:///run/user/1000/doc/feba03dc/AnonAddyTB.xpi!/experiment/implementation.js:115
+    addListener resource://gre/modules/ExtensionCommon.sys.mjs:2903
+    addListener resource://gre/modules/ExtensionCommon.sys.mjs:2982
+    recvAddListener resource://gre/modules/ExtensionParent.sys.mjs:1328
+    AsyncFunctionNext self-hosted:780
+    (Async: async)
+    _recv resource://gre/modules/ConduitsChild.sys.mjs:90
+    receiveMessage resource://gre/modules/ConduitsParent.sys.mjs:478
+    (Async: JSActor query)
+    _doSend resource://gre/modules/ConduitsChild.sys.mjs:64
+    _send resource://gre/modules/ConduitsChild.sys.mjs:125
+    addListener resource://gre/modules/ExtensionChild.sys.mjs:692
+    addStub resource://gre/modules/Schemas.sys.mjs:3175
+    <anonym> moz-extension://2ae1428e-c405-4c43-9781-47c20d3e99d1/background.js:1
