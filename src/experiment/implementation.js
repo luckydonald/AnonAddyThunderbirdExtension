@@ -262,9 +262,18 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
 
       function onContextMenu(e) {
         // composedPath() crosses shadow-DOM boundaries; closest() does not.
-        const pill = e.composedPath().find(
+        let pill = e.composedPath().find(
           (el) => el.tagName && el.tagName.toLowerCase() === "mail-address-pill",
         ) ?? null;
+        // Fallback: in some chrome contexts composedPath may not surface the host.
+        if (!pill && e.target?.tagName?.toLowerCase() === "mail-address-pill") {
+          pill = e.target;
+        }
+        console.log(
+          "AnonAddyTB contextmenu path:",
+          e.composedPath().map((el) => el.tagName).filter(Boolean),
+          "pill:", pill,
+        );
         if (!pill) {
           pendingPill = null;
           return;
@@ -286,7 +295,21 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       function onPopupShowing(e) {
         if (!pendingPill) return;
         const popup = e.target;
+        console.log("AnonAddyTB popupshowing tag:", popup.tagName, "triggerNode:", popup.triggerNode);
         if (popup.tagName.toLowerCase() !== "menupopup") return;
+
+        // Guard against consuming pendingPill for unrelated menupopups (e.g.
+        // autocomplete dropdowns). For right-click context menus triggerNode is
+        // the element that was right-clicked; for other popups it is often null
+        // or a text input.  Only skip if triggerNode is set but NOT our pill.
+        const trigger = popup.triggerNode;
+        if (trigger) {
+          const inPill =
+            trigger === pendingPill ||
+            pendingPill.contains(trigger) ||
+            trigger.getRootNode?.()?.host === pendingPill;
+          if (!inPill) return; // not the pill's context menu — keep pendingPill
+        }
 
         const pill = pendingPill;
         pendingPill = null;
