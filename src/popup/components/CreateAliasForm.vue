@@ -64,11 +64,13 @@ const forwardingPreview = computed(() => {
   return `${aliasLocalPreview.value}+${targetLocal}=${targetDomain}@${domain.value}`;
 });
 
+const aliasEmail = computed(() => `${aliasLocalPreview.value}@${domain.value}`);
+
 const sendsAsPreview = computed(() => {
   if (!forwardingPreview.value) return null;
   return props.targetName
-    ? `${props.targetName} <${forwardingPreview.value}>`
-    : forwardingPreview.value;
+    ? `${props.targetName} <${aliasEmail.value}>`
+    : aliasEmail.value;
 });
 
 // ── Domain combobox ───────────────────────────────────────────────────────────
