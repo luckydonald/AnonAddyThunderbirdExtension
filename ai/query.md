@@ -889,7 +889,7 @@ onStartup() {
 8. **Reply-To** shall not have that context menu.
 9. If we have replaced all those emails in _From_/_CC_/_BCC_, the UI shows _Add at least one address to the To/CC/BCC field first._ again, instead of detecting that this are existing aliases, and allowing to revert them again by selecting _Don't replace_.
 10. Check that the sender email (-account) is using (one of) the set _Alias Recipients_ for that email alias - otherwise the Addy item in the toolbar shall have a red-off-on-off fade cycle, and displays the error once clicked in the GUI.
-❯ Uh...
+❯ /plan Uh...
 11. The _Sends as:_ works now, but instead the _Sends via:_ is gone. (See **2.**)
 12. The email-pill context menu still is not back (See **4.**)
 13. The _addy-disable/-delete_ buttons are missing from the list of aliases to choose from (See **7.**)
