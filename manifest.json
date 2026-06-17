@@ -27,7 +27,7 @@
   },
   "host_permissions": ["*://app.addy.io/"],
   "optional_host_permissions": ["*://*/"],
-  "permissions": ["activeTab", "alarms", "compose", "storage"],
+  "permissions": ["alarms", "compose", "storage"],
   "compose_action": {
     "default_area": "maintoolbar",
     "default_title": "Addy",
