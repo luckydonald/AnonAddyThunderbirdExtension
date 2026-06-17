@@ -197,11 +197,13 @@ function submit() {
       {{ loading ? t("creating") : t("createAlias") }}
     </button>
 
-    <p v-if="forwardingPreview" class="preview">
+    <!-- "Sends via:" only when name is present (forwarding addr buried in Sends as:) -->
+    <p v-if="forwardingPreview && targetName" class="preview">
       <span class="preview-label">{{ t("aliasPreviewLabel") }}</span>
       <code class="preview-address">{{ forwardingPreview }}</code>
     </p>
-    <p v-if="sendsAsPreview && targetName" class="preview">
+    <!-- "Sends as:" always when preview available -->
+    <p v-if="sendsAsPreview" class="preview">
       <span class="preview-label">{{ t("aliasDisplayLabel") }}</span>
       <code class="preview-address">{{ sendsAsPreview }}</code>
     </p>
