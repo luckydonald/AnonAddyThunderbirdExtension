@@ -848,3 +848,8 @@ onStartup() {
 
 ❯ @ai/errors/4.txt
 
+❯ - API key shall be a password field, i.e. not showing the key, unless an eye is toggled.
+- Use `*://*/*` as `optional_host_permissions`.
+- Use the permission api to check if that host is present - i.e. verbosly log `permissions.getAll()`, `browser.permissions.onAdded.addListener(listener)`, etc.
+- where do you do the web request(s)?
+

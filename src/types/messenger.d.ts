@@ -23,6 +23,23 @@ declare const messenger: {
   permissions: {
     contains(permissions: { origins?: string[] }): Promise<boolean>;
     request(permissions: { origins?: string[] }): Promise<boolean>;
+    getAll(): Promise<{ origins: string[]; permissions: string[] }>;
+    onAdded: {
+      addListener(
+        callback: (permissions: {
+          origins?: string[];
+          permissions?: string[];
+        }) => void,
+      ): void;
+    };
+    onRemoved: {
+      addListener(
+        callback: (permissions: {
+          origins?: string[];
+          permissions?: string[];
+        }) => void,
+      ): void;
+    };
   };
   tabs: {
     getCurrent(): Promise<{ id: number }>;

@@ -26,6 +26,8 @@
   "addyUrlHint": { "message": "(leave blank for addy.io)" },
   "apiKey": { "message": "API key" },
   "apiKeyPlaceholder": { "message": "addy_io_etc." },
+  "showApiKey": { "message": "Show" },
+  "hideApiKey": { "message": "Hide" },
   "save": { "message": "Save" },
   "reset": { "message": "Reset" },
 
