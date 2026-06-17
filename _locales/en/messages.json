@@ -1,14 +1,14 @@
 {
   "extensionName": {
-    "message": "addy.io / AnonAddy for Thunderbird",
+    "message": "Addy for Thunderbird",
     "description": "Extension name shown in the add-on manager."
   },
   "extensionShortName": {
-    "message": "AnonAddyTB",
+    "message": "Addy",
     "description": "Short name shown in compose toolbar."
   },
   "extensionDescription": {
-    "message": "Integrate Thunderbird with addy.io / AnonAddy",
+    "message": "Integrate Thunderbird with addy.io (aka. AnonAddy)",
     "description": "Extension description shown in the add-on manager."
   },
 
