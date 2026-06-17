@@ -853,3 +853,5 @@ onStartup() {
 - Use the permission api to check if that host is present - i.e. verbosly log `permissions.getAll()`, `browser.permissions.onAdded.addListener(listener)`, etc.
 - where do you do the web request(s)?
 
+❯ @ai/errors/5.txt
+

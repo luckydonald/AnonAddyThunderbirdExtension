@@ -331,7 +331,13 @@ async function load(): Promise<void> {
     void messenger.runtime.openOptionsPage();
     return;
   }
-  await buildRecipients(cache.aliases);
+  try {
+    await buildRecipients(cache.aliases);
+  } catch (e) {
+    console.error("AnonAddyTB: failed to read compose details", e);
+    popupState.value = { kind: "no_recipients" };
+    return;
+  }
   void refreshAliasesInBackground();
 }
 
