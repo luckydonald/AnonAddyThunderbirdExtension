@@ -569,6 +569,9 @@ function openSettings() {
 
 .popup {
   min-width: $window-min-width;
+  max-width: $window-min-width;
+  width: 100%;
+  box-sizing: border-box;
   min-height: 100%;
   display: flex;
   flex-direction: column;
