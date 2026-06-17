@@ -43,18 +43,34 @@ async function openAliasWindow(tabId: number): Promise<void> {
 messenger.alarms.create("cache-refresh", { periodInMinutes: 60 });
 
 messenger.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === "cache-refresh") await refreshCache();
+  if (alarm.name === "cache-refresh") {
+    try {
+      await refreshCache();
+    } catch (e) {
+      console.error("AnonAddyTB: cache refresh failed", e);
+    }
+  }
 });
 
 messenger.storage.onChanged.addListener(async (changes) => {
-  if (changes.options) await refreshCache();
+  if (changes.options) {
+    try {
+      await refreshCache();
+    } catch (e) {
+      console.error("AnonAddyTB: cache refresh on settings change failed", e);
+    }
+  }
 });
 
 messenger.runtime.onInstalled.addListener(async ({ reason: _reason }) => {
   const { options } = await messenger.storage.local.get({ options: {} });
   const opts = options as { apiKey?: string };
   if (!opts.apiKey) messenger.runtime.openOptionsPage();
-  await refreshCache();
+  try {
+    await refreshCache();
+  } catch (e) {
+    console.error("AnonAddyTB: initial cache refresh failed", e);
+  }
 });
 
 // Toolbar button click → open alias window for the current compose tab.
