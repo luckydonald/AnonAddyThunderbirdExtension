@@ -871,3 +871,9 @@ onStartup() {
 ❯ - The _Disable_ / _Delete_ buttons are for the alias on the addy instance. However, the meaning is not clear - _Disable_ could mean to not remove it from the list to replace right now - i.e. to not replace it right now. Resolve disambiguity.
 
 ❯ - The added domain alias is not merged into the list of existing/found aliases - hence it does not show it, but instead asks me to create any alias again. Entering the old values causes @ai/errors/8.txt
+❯ - After _Sends via:_ add _Sends as:_ showing the outgoing mail format.
+- Allow to still edit the email above (the _Replace {email} with:_ one).
+- The `Existing aliases` section seems to never update, even when smacking the _Refresh_ button.
+- Now the boring normal dropdown is back, our custom entry is gone again :(
+❯ - The domain list, which is currently a multi-select (just not multi), shall be a proper typeahead like dropdown thingo. Are there any GNOME/Mac/Win Desktop UI libs I can use here?
+- When opening the UI, can I query those needed existing aliases more efficiently (instead of reloading the complete list?)

@@ -51,6 +51,7 @@ const domainOptions = ref<DomainOptions>({
 });
 const hostUrl = ref("https://app.addy.io");
 const tabId = ref(0);
+const allAliases = ref<Alias[]>([]);
 
 const { t } = useI18n();
 
@@ -131,6 +132,7 @@ async function loadStoredOptions(): Promise<LoadResult> {
   domainOptions.value = storage.domainOptions as DomainOptions;
 
   const cache = (storage.aliasCache ?? { aliases: [] }) as AliasCache;
+  allAliases.value = cache.aliases;
   return { cache, hasApiKey: !!opts.apiKey };
 }
 
@@ -177,35 +179,59 @@ async function buildRecipients(cachedAliases: Alias[]): Promise<void> {
 
 async function refreshAliasesInBackground(): Promise<void> {
   try {
-    // Trigger background to refresh; listen for storage update
-    // Meanwhile fetch fresh aliases for current domains directly
     if (popupState.value.kind !== "ready") return;
     const domains = [
       ...new Set(popupState.value.recipients.map((r) => r.parsed.domain)),
     ];
+
+    // Read full cache once; merge fresh API results in by ID so
+    // description-matched aliases (e.g. created by this extension) survive.
+    const stored = await messenger.storage.local.get({
+      aliasCache: { aliases: [] as Alias[], fetchedAt: 0 },
+    });
+    const cache = stored.aliasCache as AliasCache;
+
     for (const domain of domains) {
       const response = await addyApiRequest<{ data: Alias[] }>(
         "GET",
         "aliases",
         { "filter[search]": domain, "filter[active]": "true" },
       );
-      updateAliasesForDomain(domain, response.data);
+      for (const fresh of response.data) {
+        const idx = cache.aliases.findIndex((a) => a.id === fresh.id);
+        if (idx >= 0) cache.aliases[idx] = fresh;
+        else cache.aliases.push(fresh);
+      }
+    }
+
+    await messenger.storage.local.set({ aliasCache: cache });
+    allAliases.value = cache.aliases;
+
+    if (popupState.value.kind !== "ready") return;
+    for (const r of popupState.value.recipients) {
+      r.existingAliases = matchingAliases(cache.aliases, r.parsed.domain);
     }
   } catch {
     // Non-fatal: we already have cached data
   }
 }
 
-function updateAliasesForDomain(domain: string, fresh: Alias[]): void {
-  if (popupState.value.kind !== "ready") return;
-  for (const r of popupState.value.recipients) {
-    if (r.parsed.domain === domain) {
-      r.existingAliases = matchingAliases(fresh, domain);
-    }
-  }
-}
-
 // ─── User Actions ─────────────────────────────────────────────────────────────
+
+async function handleAddressUpdate(
+  recipientIdx: number,
+  newAddress: string,
+): Promise<void> {
+  if (popupState.value.kind !== "ready") return;
+  const m = newAddress.match(/^(.+)@(.+)$/);
+  if (!m) return;
+  const r = popupState.value.recipients[recipientIdx];
+  r.parsed.address = newAddress;
+  r.parsed.localPart = m[1];
+  r.parsed.domain = m[2].toLowerCase();
+  r.parsed.original = newAddress;
+  r.existingAliases = matchingAliases(allAliases.value, r.parsed.domain);
+}
 
 async function handleCreate(
   recipientIdx: number,
@@ -421,6 +447,7 @@ function openSettings() {
         :default-domain="domainOptions.defaultAliasDomain"
         :default-format="domainOptions.defaultAliasFormat"
         @update:selected-alias="(v) => (r.selectedAlias = v)"
+        @update:address="(v) => handleAddressUpdate(idx, v)"
         @create="(p) => handleCreate(idx, p)"
         @disable="() => handleDisable(idx)"
         @restore="() => handleRestore(idx)"
