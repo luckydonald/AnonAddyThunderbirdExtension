@@ -68,8 +68,11 @@ async function save() {
     if (!alreadyGranted) {
       let granted: boolean;
       try {
+        console.log(`AnonAddyTB: messenger.permissions.request({ origins: [${origin}] })`, { origins: [origin] });
         granted = await messenger.permissions.request({ origins: [origin] });
-      } catch {
+        console.log(`AnonAddyTB: no error in messenger.permissions.request.`, { origins: [origin], granted });
+      } catch (e) {
+        console.warn(`AnonAddyTB: error in messenger.permissions.request: ${e}`, { origins: [origin], e });
         granted = false;
       }
       console.log("AnonAddyTB: permissions.request() result:", granted);
