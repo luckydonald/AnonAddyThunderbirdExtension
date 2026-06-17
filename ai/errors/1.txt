@@ -1,0 +1,5 @@
+api.onStartup is not a function ExtensionCommon.sys.mjs:1472:17
+    onStartup resource://gre/modules/ExtensionCommon.sys.mjs:1472
+1781710815053	addons.xpi	WARN	Exception running bootstrap method startup on AnonAddyTB@luckydonald.de:
+    TypeError: api.onStartup is not a function(resource://gre/modules/ExtensionCommon.sys.mjs:1472:17)
+    JS Stack trace: onStartup/<@ExtensionCommon.sys.mjs:1472:17

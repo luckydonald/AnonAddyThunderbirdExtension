@@ -27,6 +27,10 @@ async function refreshCache(): Promise<void> {
   await Promise.all([fetchDomainOptions(), fetchAllAliases()]);
 }
 
+// Wake the background (and thus activate the Experiment) on Thunderbird startup.
+// Without this the background only runs when an alarm or other event fires.
+messenger.runtime.onStartup.addListener(() => {});
+
 messenger.alarms.create("cache-refresh", { periodInMinutes: 60 });
 
 messenger.alarms.onAlarm.addListener(async (alarm) => {

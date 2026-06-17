@@ -20,8 +20,7 @@
       "parent": {
         "scopes": ["addon_parent"],
         "paths": [["AddressChipMenu"]],
-        "script": "experiment/implementation.js",
-        "events": ["startup"]
+        "script": "experiment/implementation.js"
       }
     }
   },
