@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import OptionsForm from "./components/OptionsForm.vue";
 import StatusBanner from "./components/StatusBanner.vue";
 import { useI18n } from "../composables/useI18n.js";
+import { addyApiRequest } from "../api/index.js";
 
 export type SaveStatus =
   | { kind: "idle" }
@@ -57,6 +58,14 @@ async function save() {
   }
   hostUrl.value = url;
 
+  // Save first so addyApiRequest() below picks up the new credentials.
+  await messenger.storage.local.set({
+    options: { hostUrl: url || null, apiKey: apiKey.value },
+  });
+  savedHostUrl.value = url;
+  savedApiKey.value = apiKey.value;
+
+  // Try the permissions API.
   let permissionJustGranted = false;
   if (url) {
     const origin = `${url}/`;
@@ -66,35 +75,42 @@ async function save() {
     });
     console.log("AnonAddyTB: permissions.contains():", alreadyGranted);
     if (!alreadyGranted) {
-      let granted: boolean;
+      let granted = false;
       try {
-        console.log(`AnonAddyTB: messenger.permissions.request({ origins: [${origin}] })`, { origins: [origin] });
+        console.log("AnonAddyTB: messenger.permissions.request()", { origins: [origin] });
         granted = await messenger.permissions.request({ origins: [origin] });
-        console.log(`AnonAddyTB: no error in messenger.permissions.request.`, { origins: [origin], granted });
+        console.log("AnonAddyTB: no error in messenger.permissions.request.", { origins: [origin], granted });
       } catch (e) {
-        console.warn(`AnonAddyTB: error in messenger.permissions.request: ${e}`, { origins: [origin], e });
-        granted = false;
+        console.warn("AnonAddyTB: error in messenger.permissions.request:", e, { origins: [origin] });
       }
       console.log("AnonAddyTB: permissions.request() result:", granted);
       const allAfter = await messenger.permissions.getAll();
       console.log("AnonAddyTB: permissions.getAll() after request:", JSON.stringify(allAfter, null, 2));
-      if (!granted) {
+      if (granted) {
+        permissionJustGranted = true;
+      } else {
         saveStatus.value = { kind: "permission_denied", hostUrl: url };
-        return;
+        // Fall through: still try a real request — it may itself trigger the prompt.
       }
-      permissionJustGranted = true;
     }
   }
 
-  await messenger.storage.local.set({
-    options: { hostUrl: url || null, apiKey: apiKey.value },
-  });
-  savedHostUrl.value = url;
-  savedApiKey.value = apiKey.value;
-
-  saveStatus.value = permissionJustGranted
-    ? { kind: "permission_granted", hostUrl: url }
-    : { kind: "success" };
+  // Also fire an actual API request; this may trigger Thunderbird's native
+  // host-permission prompt even when permissions.request() silently fails.
+  console.log("AnonAddyTB: testing API request (GET domain-options)...");
+  try {
+    const result = await addyApiRequest("GET", "domain-options");
+    console.log("AnonAddyTB: API test succeeded:", JSON.stringify(result));
+    saveStatus.value = permissionJustGranted
+      ? { kind: "permission_granted", hostUrl: url }
+      : { kind: "success" };
+  } catch (e) {
+    console.warn("AnonAddyTB: API test failed:", e);
+    // Keep permission_denied if already set; otherwise surface the API error.
+    if (saveStatus.value.kind !== "permission_denied") {
+      saveStatus.value = { kind: "error", message: String(e) };
+    }
+  }
 }
 
 function reset() {
