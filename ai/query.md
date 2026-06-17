@@ -835,3 +835,5 @@ onStartup() {
 <usage><subagent_tokens>67643</subagent_tokens><tool_uses>6</tool_uses><duration_ms>69837</duration_ms></usage>
 </task-notification>
 
+❯ I am on Thunderbird 151.0.1 (64-Bit) and am getting @ai/errors/1.txt
+
