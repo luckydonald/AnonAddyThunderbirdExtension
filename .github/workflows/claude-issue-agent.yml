@@ -1,0 +1,35 @@
+name: Claude Issue Agent
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  claude:
+    name: Handle @claude issue request
+    runs-on: ubuntu-latest
+    if: >-
+      (
+        github.event_name == 'issues' &&
+        contains(format('{0}', github.event.issue.body), '@claude')
+      ) ||
+      (
+        github.event_name == 'issue_comment' &&
+        !github.event.issue.pull_request &&
+        contains(format('{0}', github.event.comment.body), '@claude')
+      )
+    steps:
+      - name: Run Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          trigger_phrase: "@claude"
