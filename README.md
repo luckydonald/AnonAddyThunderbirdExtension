@@ -25,6 +25,7 @@ This history is intentionally rooted at `empty/init` from `https://github.com/Em
     * [All code for c) as a single copy pastable one:](#all-code-for-c-as-a-single-copy-pastable-one)
   * [After Adopting The Base](#after-adopting-the-base)
     * [Git LFS](#git-lfs)
+    * [Claude GitHub issue agent](#claude-github-issue-agent)
     * [Codex GitHub issue agent](#codex-github-issue-agent)
     * [Monorepo subfolders: per-subfolder `.claude/`](#monorepo-subfolders-per-subfolder-claude)
 <!-- TOC -->
@@ -214,6 +215,28 @@ Once the base is present in your repo, the files provided by this repo live in y
 This base tracks binary image files (`.png`, `.jpg`, `.jpeg`) with [Git LFS](https://git-lfs.com). The `git lfs install` command in the setup steps above is a one-time setup per machine. The `.gitattributes` file already defines which file types are tracked, so no additional `git lfs track` calls are needed.
 
 After the base files are present in a repository, `scripts/°base/init/checkout.sh` also installs the local LFS hooks and disables GitHub LFS lock verification for discovered GitHub HTTPS remotes. This avoids push failures like `You must have push access to verify locks` in repos that use LFS files but do not use LFS locks.
+
+### Claude GitHub issue agent
+
+This base includes `.github/workflows/claude-issue-agent.yml`, which lets you ask Claude to work on a GitHub issue by mentioning `@claude` in the issue body or in a new issue comment.
+
+To enable it in a consuming repository:
+
+1. Enable GitHub Actions for the repository.
+2. Add at least one of the following Actions secrets:
+   - `ANTHROPIC_API_KEY` — an Anthropic API key (pay-per-token, no subscription required).
+   - `CLAUDE_CODE_OAUTH_TOKEN` — a Claude Code OAuth token (tied to a Claude Pro/Max subscription).
+   Either secret is sufficient; if both are set, the action uses the OAuth token.
+3. Make sure the repository's Actions settings allow workflows to create pull requests. In GitHub, this is under repository **Settings** -> **Actions** -> **General** -> **Workflow permissions**.
+4. Create or edit an issue containing `@claude`, or add a new issue comment containing `@claude`.
+
+When a comment contains only `@claude`, the action addresses the issue title and body rather than treating the one-word comment as the request. If the comment contains more text alongside `@claude`, that comment text is the specific request. When Claude changes files it opens a pull request and comments the result back on the issue.
+
+Further documentation:
+
+- [Claude Code Action on GitHub](https://github.com/anthropics/claude-code-action) — action source, inputs, outputs, and examples.
+- [Anthropic API keys](https://console.anthropic.com/settings/keys) — where to generate an `ANTHROPIC_API_KEY`.
+- [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code/overview) — full Claude Code reference.
 
 ### Codex GitHub issue agent
 

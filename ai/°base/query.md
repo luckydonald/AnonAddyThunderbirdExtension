@@ -789,4 +789,6 @@ Also include a very short section about the base itself using `[base] [optional 
 › Does that also work with the openai subscription? Where do I get the `OPENAI_API_KEY`?
 › Is there an alternative with codex to use the normal chatgpt subscription?
 › Alright, make sure the integrations are gracefully disabled when the required env keys are not set.
+❯ With the requirements `ai/°base/query.md:786-792` executed, check if your @.github/workflows/claude-issue-agent.yml is correct.
+❯ Document how to set up claude github issues in the `README.md`, and link to further documentation.
 
