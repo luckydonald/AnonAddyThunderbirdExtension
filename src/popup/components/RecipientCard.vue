@@ -14,6 +14,7 @@ const props = defineProps<{
   address: string;
   name: string;
   existingAliases: Alias[];
+  allAliases: Alias[];
   selectedAlias: string | null;
   createdAlias: CreatedAliasInfo | null;
   availableDomains: string[];
@@ -36,6 +37,7 @@ const { t } = useI18n();
 
 const creating = ref(false);
 const editableAddress = ref(props.address);
+const aliasSearch = ref("");
 
 watch(
   () => props.address,
@@ -66,6 +68,24 @@ const displayAliases = computed(() => {
   return props.existingAliases.filter((a) => a.email !== props.createdAlias!.email);
 });
 
+// Typeahead: search across ALL aliases when the user types.
+const searchResults = computed(() => {
+  const q = aliasSearch.value.trim().toLowerCase();
+  if (!q) return [] as Alias[];
+  return props.allAliases
+    .filter(
+      (a) =>
+        a.email.toLowerCase().includes(q) ||
+        (a.description ?? "").toLowerCase().includes(q),
+    )
+    .slice(0, 15);
+});
+
+function selectFromSearch(email: string) {
+  emit("update:selectedAlias", email === props.selectedAlias ? null : email);
+  aliasSearch.value = "";
+}
+
 defineExpose({ resetCreating: () => (creating.value = false) });
 </script>
 
@@ -87,7 +107,41 @@ defineExpose({ resetCreating: () => (creating.value = false) });
     <!-- Existing aliases section (always visible) -->
     <p class="section-heading">{{ t("existingAliasesSection") }}</p>
 
-    <div class="alias-list">
+    <input
+      v-model="aliasSearch"
+      type="text"
+      class="alias-search"
+      placeholder="Search all aliases…"
+    />
+
+    <!-- Typeahead search results -->
+    <div v-if="searchResults.length > 0" class="alias-list alias-list--search">
+      <div
+        v-for="alias in searchResults"
+        :key="alias.id"
+        class="alias-option"
+        :class="{ selected: selectedAlias === alias.email }"
+        @click="selectFromSearch(alias.email)"
+      >
+        <input
+          type="radio"
+          :name="`alias-${address}`"
+          :value="alias.email"
+          :checked="selectedAlias === alias.email"
+          @change="selectFromSearch(alias.email)"
+        />
+        <div class="alias-option__body">
+          <div class="alias-option__row">
+            <kbd class="alias-option__email">{{ alias.email }}</kbd>
+            <span v-if="alias.description" class="alias-option__desc">
+              {{ alias.description }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alias-list" v-else>
       <!-- Created alias pinned at top with inline manage controls -->
       <div
         v-if="createdAlias"
@@ -266,6 +320,23 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   color: $color-muted;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.alias-search {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: $font-size-sm;
+  padding: $spacing-xs $spacing-sm;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  margin-bottom: $spacing-sm;
+  background: transparent;
+  color: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
 }
 
 .alias-list {

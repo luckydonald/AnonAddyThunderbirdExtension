@@ -82,15 +82,11 @@ async function parseAddress(raw: string): Promise<ParsedAddress | null> {
 
 function matchingAliases(aliases: Alias[], domain: string): Alias[] {
   const lower = domain.toLowerCase();
+  // Only match by description — email-based matching produces false positives
+  // when an alias domain happens to contain the recipient domain as a substring
+  // (e.g. alias on alias.company.com matching recipient on company.com).
   const matched = aliases.filter(
-    (a) =>
-      a.active &&
-      (a.email.toLowerCase().includes(lower) ||
-        (a.description ?? "").toLowerCase().includes(lower)),
-  );
-  // Sort: aliases whose address contains the domain first
-  matched.sort((a) =>
-    a.email.toLowerCase().startsWith(lower.split(".")[0]) ? -1 : 1,
+    (a) => a.active && (a.description ?? "").toLowerCase().includes(lower),
   );
   return matched.slice(0, 10);
 }
@@ -532,6 +528,7 @@ function openSettings() {
         :address="r.parsed.address"
         :name="r.parsed.name"
         :existing-aliases="r.existingAliases"
+        :all-aliases="allAliases"
         :selected-alias="r.selectedAlias"
         :created-alias="r.createdAlias"
         :available-domains="domainOptions.data"
