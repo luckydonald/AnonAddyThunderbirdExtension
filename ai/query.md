@@ -844,3 +844,7 @@ onStartup() {
 - @ai/errors/3.txt
 - have a refresh button in the addon window/popup.
 
+❯ @ai/errors/4.txt
+
+❯ @ai/errors/4.txt
+

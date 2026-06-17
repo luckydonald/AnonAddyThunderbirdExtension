@@ -1,0 +1,36 @@
+18:20:42.204 PopupNotifications._onButtonEvent: Button click happened before the security delay: 275.1489329999313ms
+18:20:47.334 GET
+data:text/html,%3C!DOCTYPE%20html%3E%0A%3Chtml%3E%0A%20%20%3Chead%3E%3Cmeta%20charset=%22utf-8%22%3E%3C/head%3E%0A%20%20%3Cbody%3E%0A%20%20%20%20%3Cscript%20type=%22module%22%20src=%22moz-extension://a6cf22b9-898d-4c84-a975-489d77b7c049/background.js%22%3E%3C/script%3E%0A%20%20%3C/body%3E%0A%3C/html%3E
+
+18:20:47.391 sendRemoveListener on closed conduit AnonAddyTB@luckydonald.de.824633721178 ConduitsChild.sys.mjs:122:13
+    _send resource://gre/modules/ConduitsChild.sys.mjs:122
+    removeListener resource://gre/modules/ExtensionChild.sys.mjs:713
+    removeListener resource://gre/modules/ExtensionChild.sys.mjs:969
+    register chrome://extensions/content/child/ext-storage.js:185
+    removeListener resource://gre/modules/ExtensionCommon.sys.mjs:2950
+    revoke resource://gre/modules/ExtensionCommon.sys.mjs:2972
+    close resource://gre/modules/ExtensionCommon.sys.mjs:2977
+    unload resource://gre/modules/ExtensionCommon.sys.mjs:976
+    unload resource://gre/modules/ExtensionPageChild.sys.mjs:277
+    unload resource://gre/modules/ExtensionPageChild.sys.mjs:320
+    destroyExtensionContext resource://gre/modules/ExtensionPageChild.sys.mjs:492
+    observe resource://gre/modules/ExtensionPageChild.sys.mjs:393
+18:20:47.449 Error: No API key configured index-rOS1XSY6.js:1:361
+18:20:47.482 Uncaught (in promise) Error: Error while loading 'jar:file:///home/user/.thunderbird/0xlvvmir.default-esr/extensions/AnonAddyTB@luckydonald.de.xpi!/experiment/schema.json' (NS_ERROR_FAILURE)
+    readJSON resource://gre/modules/Extension.sys.mjs:1133
+    onStopRequest resource://gre/modules/NetUtil.sys.mjs:122
+3 Extension.sys.mjs:1133:20
+18:21:10.585 GET
+data:text/html;charset=UTF-8,%253C!DOCTYPE%2520html%253E%250A%253Chtml%253E%250A%2520%2520%253Chead%253E%253Cmeta%2520charset%3D%2522utf-8%2522%253E%253C%2Fhead%253E%250A%2520%2520%253Cbody%253E%250A%2520%2520%2520%2520%253Cscript%2520type%3D%2522module%2522%2520src%3D%2522moz-extension%3A%2F%2Fa6cf22b9-898d-4c84-a975-489d77b7c049%2Fbackground.js%2522%253E%253C%2Fscript%253E%250A%2520%2520%253C%2Fbody%253E%250A%253C%2Fhtml%253E
+
+18:21:10.630 GET
+data:text/html;charset=UTF-8,%253C!DOCTYPE%2520html%253E%250A%253Chtml%253E%250A%2520%2520%253Chead%253E%253Cmeta%2520charset%3D%2522utf-8%2522%253E%253C%2Fhead%253E%250A%2520%2520%253Cbody%253E%250A%2520%2520%2520%2520%253Cscript%2520type%3D%2522module%2522%2520src%3D%2522moz-extension%3A%2F%2Fa6cf22b9-898d-4c84-a975-489d77b7c049%2Fbackground.js%2522%253E%253C%2Fscript%253E%250A%2520%2520%253C%2Fbody%253E%250A%253C%2Fhtml%253E
+
+18:21:10.678 Diese Seite befindet sich im Kompatibilitätsmodus (Quirks). Das Seitenlayout kann beeinflusst werden. Verwenden Sie für den Standardmodus "<!DOCTYPE html>". data:%3C!DOCTYPE%20html%3E%0A%3Chtml%3E%0A%20%20%3Chead%3E%3Cmeta%20charse
+18:22:08.432 GET
+data:text/html;charset=UTF-8,%253C!DOCTYPE%2520html%253E%250A%253Chtml%253E%250A%2520%2520%253Chead%253E%253Cmeta%2520charset%3D%2522utf-8%2522%253E%253C%2Fhead%253E%250A%2520%2520%253Cbody%253E%250A%2520%2520%2520%2520%253Cscript%2520type%3D%2522module%2522%2520src%3D%2522moz-extension%3A%2F%2Fa6cf22b9-898d-4c84-a975-489d77b7c049%2Fbackground.js%2522%253E%253C%2Fscript%253E%250A%2520%2520%253C%2Fbody%253E%250A%253C%2Fhtml%253E
+
+18:22:08.433 GET
+data:text/html;charset=UTF-8,%253C!DOCTYPE%2520html%253E%250A%253Chtml%253E%250A%2520%2520%253Chead%253E%253Cmeta%2520charset%3D%2522utf-8%2522%253E%253C%2Fhead%253E%250A%2520%2520%253Cbody%253E%250A%2520%2520%2520%2520%253Cscript%2520type%3D%2522module%2522%2520src%3D%2522moz-extension%3A%2F%2Fa6cf22b9-898d-4c84-a975-489d77b7c049%2Fbackground.js%2522%253E%253C%2Fscript%253E%250A%2520%2520%253C%2Fbody%253E%250A%253C%2Fhtml%253E
+
+18:22:23.547 Diese Seite befindet sich im Kompatibilitätsmodus (Quirks). Das Seitenlayout kann beeinflusst werden. Verwenden Sie für den Standardmodus "<!DOCTYPE html>". 2 Extension.sys.mjs
