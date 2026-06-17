@@ -46,15 +46,31 @@
   "replaceWithPrefix": { "message": "Replace" },
   "replaceWithSuffix": { "message": "with:" },
   "inactive": { "message": "inactive" },
-  "disable": { "message": "Disable" },
-  "reenable": { "message": "Re-enable" },
-  "deleteAlias": { "message": "Delete" },
+  "disable": {
+    "message": "Disable on Addy",
+    "description": "Disables the alias on the Addy server so it stops forwarding."
+  },
+  "disableHint": {
+    "message": "Disables this alias on the Addy server (stops all forwarding)."
+  },
+  "reenable": {
+    "message": "Re-enable on Addy",
+    "description": "Re-enables a disabled alias on the Addy server."
+  },
+  "deleteAlias": {
+    "message": "Delete from Addy",
+    "description": "Permanently deletes the alias from the Addy server."
+  },
+  "deleteHint": {
+    "message": "Permanently deletes this alias from the Addy server."
+  },
   "dontReplace": { "message": "Don't replace" },
   "noExistingAliases": {
     "message": "No existing aliases for this domain."
   },
-  "hideCreateForm": { "message": "▲ Hide create form" },
-  "showCreateForm": { "message": "▼ Create new alias" },
+  "existingAliasesSection": { "message": "Existing aliases" },
+  "createAliasSection": { "message": "Create new alias" },
+  "aliasPreviewLabel": { "message": "Sends via:" },
 
   "domain": { "message": "Domain" },
   "format": { "message": "Format" },

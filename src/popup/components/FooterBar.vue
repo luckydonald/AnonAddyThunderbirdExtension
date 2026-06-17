@@ -67,7 +67,7 @@ const hostname = computed(() => {
   &__links {
     display: flex;
     align-items: center;
-    gap: $spacing-md;
+    gap: $spacing-xl;
   }
 
   &__addy-link {

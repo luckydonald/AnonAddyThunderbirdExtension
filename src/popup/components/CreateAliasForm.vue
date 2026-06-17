@@ -3,11 +3,21 @@ import { ref, computed } from "vue";
 import { useI18n } from "../../composables/useI18n.js";
 import type { AliasFormat } from "../../api/types.js";
 
+const FORMAT_PLACEHOLDERS: Record<AliasFormat, string> = {
+  random_characters: "[chars]",
+  random_words: "[words]",
+  random_male_name: "[name]",
+  random_female_name: "[name]",
+  random_noun: "[noun]",
+  custom: "",
+};
+
 const props = defineProps<{
   availableDomains: string[];
   defaultDomain: string;
   defaultFormat: AliasFormat;
   loading: boolean;
+  targetEmail: string;
 }>();
 
 const emit = defineEmits<{
@@ -39,6 +49,20 @@ const formats = computed((): { value: AliasFormat; label: string }[] => [
   { value: "custom", label: t("formatCustom") },
 ]);
 
+const aliasLocalPreview = computed(() => {
+  if (format.value === "custom") {
+    return customPrefix.value.trim() || "[custom]";
+  }
+  return FORMAT_PLACEHOLDERS[format.value] || "[alias]";
+});
+
+const forwardingPreview = computed(() => {
+  const m = props.targetEmail.match(/^(.+)@(.+)$/);
+  if (!m) return null;
+  const [, targetLocal, targetDomain] = m;
+  return `${aliasLocalPreview.value}+${targetLocal}=${targetDomain}@${domain.value}`;
+});
+
 function submit() {
   emit("create", {
     domain: domain.value,
@@ -50,6 +74,8 @@ function submit() {
 
 <template>
   <div class="create-form">
+    <p class="section-heading">{{ t("createAliasSection") }}</p>
+
     <div class="field">
       <label>{{ t("domain") }}</label>
       <div class="domain-picker">
@@ -107,6 +133,11 @@ function submit() {
     >
       {{ loading ? t("creating") : t("createAlias") }}
     </button>
+
+    <p v-if="forwardingPreview" class="preview">
+      <span class="preview-label">{{ t("aliasPreviewLabel") }}</span>
+      <code class="preview-address">{{ forwardingPreview }}</code>
+    </p>
   </div>
 </template>
 
@@ -116,7 +147,16 @@ function submit() {
 .create-form {
   border-top: 1px solid $color-border;
   padding-top: $spacing-md;
-  margin-top: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.section-heading {
+  margin: 0 0 $spacing-sm;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .field {
@@ -124,9 +164,11 @@ function submit() {
   align-items: flex-start;
   gap: $spacing-md;
   margin-bottom: $spacing-md;
+  min-width: 0;
 
   > label {
     min-width: 56px;
+    flex-shrink: 0;
     padding-top: 5px;
     font-size: $font-size-sm;
     color: $color-muted;
@@ -139,6 +181,7 @@ function submit() {
   flex-direction: column;
   gap: $spacing-xs;
   flex: 1;
+  min-width: 0;
 }
 
 .domain-search {
@@ -155,6 +198,7 @@ function submit() {
   flex-wrap: wrap;
   gap: $spacing-xs;
   flex: 1;
+  min-width: 0;
 }
 
 .pill {
@@ -165,6 +209,7 @@ function submit() {
   cursor: pointer;
   font-size: $font-size-sm;
   user-select: none;
+  white-space: nowrap;
 
   &.selected {
     background: $color-primary;
@@ -189,6 +234,7 @@ function submit() {
   display: flex;
   align-items: center;
   flex: 1;
+  min-width: 0;
   border: 1px solid $color-border;
   border-radius: 3px;
   overflow: hidden;
@@ -213,5 +259,28 @@ function submit() {
 
 .create-btn {
   width: 100%;
+}
+
+.preview {
+  margin: $spacing-sm 0 0;
+  font-size: $font-size-sm;
+  color: $color-muted;
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.preview-label {
+  flex-shrink: 0;
+}
+
+.preview-address {
+  font-family: monospace;
+  word-break: break-all;
+  background: #f5f5f5;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  padding: 1px 5px;
 }
 </style>

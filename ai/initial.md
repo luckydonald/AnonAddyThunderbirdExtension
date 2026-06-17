@@ -23,6 +23,8 @@
 7. Can we add a dropdown on the email in the TO/CC/BBC bar?
    - If yes, the structure would be:
    1. [addy logo] Use Addy alias for sending >
+      - direct click on this item opens the GUI popup, hovering causes it to unfold.
+      - all further menu entries are regular navigation.
       1. [reuse symbol] Existing >
          - list of existing custom domains previously used for that.
          1. existing-alias@example.org (**done**)

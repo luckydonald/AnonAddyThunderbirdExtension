@@ -786,7 +786,7 @@ The window type is `"msgcompose"`.
 
 ### 2. Address chip element: `&lt;mail-address-pill&gt;`
 
-Custom element tag: **`mail-address-pill`**  
+Custom element tag: **`mail-address-pill`**
 CSS class added at connect time: **`address-pill`**
 
 Attributes holding the address:
@@ -798,7 +798,7 @@ Attributes holding the address:
 
 Tag: **`&lt;mail-recipients-area&gt;`** (custom element, `customElements.define("mail-recipients-area", MailRecipientsArea)`)
 
-Field type (to/cc/bcc) is stored on the **address row** element:  
+Field type (to/cc/bcc) is stored on the **address row** element:
 `pill.closest(".address-row").dataset.recipienttype` → `"to"`, `"cc"`, or `"bcc"`
 
 ### 4. Event to hook
@@ -859,3 +859,15 @@ onStartup() {
 
 ❯ it seems we successfully crashed the email's context menu in @ai/errors/7.txt - which is progress.
 
+❯ Indeed. it does open the Popup from the context menu of that email! Cool!
+- it should not remove the existing context menu, but add itself to it.
+- it should follow the menu structure from **7.**, in @ai/initial.md:20-55 .
+- add <kbd>Existing…</kbd> format to the UI.
+- have the Formats break the line if too long, instead of just overflowing to the right if I make the window smaller.
+- add a bit of space between the bottom left refresh/settings/server buttons/links. Add more padding to the background, too.
+- remove the _hide/show create form_ toggle, and always display that section, separate from the existing mail aliases.
+- add a preview for the email it will be replaced with for the create-new dialogue.
+- if I have more content than horizontal popup space, I can only scroll down until the end of the _Cancel_/_Apply_ buttons lower border - not it's margin included, it stops before that.
+❯ - The _Disable_ / _Delete_ buttons are for the alias on the addy instance. However, the meaning is not clear - _Disable_ could mean to not remove it from the list to replace right now - i.e. to not replace it right now. Resolve disambiguity.
+
+❯ - The added domain alias is not merged into the list of existing/found aliases - hence it does not show it, but instead asks me to create any alias again. Entering the old values causes @ai/errors/8.txt

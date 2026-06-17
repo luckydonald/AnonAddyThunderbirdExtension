@@ -101,12 +101,21 @@ declare const messenger: {
     };
   };
   AddressChipMenu: {
+    setCache(data: {
+      aliases: Array<{ id: string; email: string; active: boolean }>;
+      domainOptions: { data: string[]; defaultAliasDomain: string; defaultAliasFormat: string };
+    }): void;
     onChipMenuClicked: {
       addListener(
         callback: (info: {
           email: string;
           displayName: string;
           fieldType: string;
+          action: "open_popup" | "select_alias" | "create_alias";
+          aliasEmail?: string;
+          domain?: string;
+          format?: string;
+          customPrefix?: string;
         }) => void,
       ): void;
     };
