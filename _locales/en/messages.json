@@ -43,8 +43,8 @@
   "permissionGrantedPrefix": { "message": "Host permission for" },
   "permissionGrantedSuffix": { "message": "granted. Settings saved." },
 
-  "replaceWithPrefix": { "message": "Replace" },
-  "replaceWithSuffix": { "message": "with:" },
+  "replaceWithPrefix": { "message": "Send" },
+  "replaceWithSuffix": { "message": "from:" },
   "inactive": { "message": "inactive" },
   "newTag": { "message": "new" },
   "disable": {
