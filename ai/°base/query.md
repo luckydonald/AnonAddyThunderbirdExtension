@@ -788,4 +788,5 @@ Also include a very short section about the base itself using `[base] [optional 
 › Document how to set up codex github issues in the `README.md`, and link to further documentation.
 › Does that also work with the openai subscription? Where do I get the `OPENAI_API_KEY`?
 › Is there an alternative with codex to use the normal chatgpt subscription?
+› Alright, make sure the integrations are gracefully disabled when the required env keys are not set.
 

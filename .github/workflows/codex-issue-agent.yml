@@ -15,6 +15,8 @@ jobs:
   codex:
     name: Handle @codex issue request
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     if: >-
       (
         github.event_name == 'issues' &&
@@ -70,12 +72,29 @@ jobs:
             core.setOutput("issue_url", issue.html_url);
             core.setOutput("prompt", prompt);
 
+      - name: Report disabled Codex integration
+        if: env.OPENAI_API_KEY == ''
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ steps.issue_context.outputs.issue_number }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(process.env.ISSUE_NUMBER),
+              body: "Codex issue handling is disabled for this repository because the `OPENAI_API_KEY` Actions secret is not set."
+            });
+
       - name: Check out default branch
+        if: env.OPENAI_API_KEY != ''
         uses: actions/checkout@v5
         with:
           persist-credentials: true
 
       - name: Create working branch
+        if: env.OPENAI_API_KEY != ''
         id: branch
         env:
           ISSUE_NUMBER: ${{ steps.issue_context.outputs.issue_number }}
@@ -85,14 +104,16 @@ jobs:
           echo "name=$branch" >> "$GITHUB_OUTPUT"
 
       - name: Run Codex
+        if: env.OPENAI_API_KEY != ''
         id: run_codex
         uses: openai/codex-action@v1
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          openai-api-key: ${{ env.OPENAI_API_KEY }}
           prompt: ${{ steps.issue_context.outputs.prompt }}
           sandbox: workspace-write
 
       - name: Create pull request if Codex changed files
+        if: env.OPENAI_API_KEY != ''
         id: pull_request
         env:
           BASE_REF: ${{ github.event.repository.default_branch }}
@@ -128,6 +149,7 @@ jobs:
           echo "url=$pr_url" >> "$GITHUB_OUTPUT"
 
       - name: Report Codex result
+        if: env.OPENAI_API_KEY != ''
         uses: actions/github-script@v7
         env:
           CODEX_FINAL_MESSAGE: ${{ steps.run_codex.outputs.final-message }}
