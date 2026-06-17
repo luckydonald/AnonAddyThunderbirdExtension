@@ -32,6 +32,7 @@ Update `package.json` — move `prettier` to `devDependencies`, add:
 ```
 
 Add `scripts`:
+
 ```json
 "scripts": {
   "build": "vite build",
@@ -71,8 +72,8 @@ import vue from "@vitejs/plugin-vue";
 import webExtension from "vite-plugin-web-extension";
 
 export default defineConfig({
-  plugins: [vue(), webExtension({ browser: "firefox" })],
-  build: { outDir: "dist", emptyOutDir: true },
+    plugins: [vue(), webExtension({ browser: "firefox" })],
+    build: { outDir: "dist", emptyOutDir: true },
 });
 ```
 
@@ -82,21 +83,26 @@ export default defineConfig({
 
 ```json
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2020", "DOM"],
-    "strict": true,
-    "jsx": "preserve",
-    "jsxImportSource": "vue",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] }
-  },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "vite.config.ts"]
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2020", "DOM"],
+        "strict": true,
+        "jsx": "preserve",
+        "jsxImportSource": "vue",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "baseUrl": ".",
+        "paths": { "@/*": ["src/*"] }
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.d.ts",
+        "src/**/*.vue",
+        "vite.config.ts"
+    ]
 }
 ```
 
@@ -142,11 +148,11 @@ Note: The existing JS comment `// "default_locale": "en"` in manifest.json is fi
 
 ```ts
 type SaveStatus =
-  | { kind: "idle" }
-  | { kind: "success" }
-  | { kind: "error"; message: string }
-  | { kind: "permission_denied"; hostUrl: string }
-  | { kind: "permission_granted"; hostUrl: string };
+    | { kind: "idle" }
+    | { kind: "success" }
+    | { kind: "error"; message: string }
+    | { kind: "permission_denied"; hostUrl: string }
+    | { kind: "permission_granted"; hostUrl: string };
 ```
 
 Reactive state: `hostUrl`, `apiKey`, `savedHostUrl`, `savedApiKey`, `saveStatus`.  
@@ -157,8 +163,8 @@ Computed: `isDirty` (form differs from saved values).
 1. Validate format (http/https, apiKey non-empty) → `{ kind: "error" }` and return on failure.
 2. If `hostUrl` set, check if permission already granted via `messenger.permissions.contains`.
 3. If not already granted, call `messenger.permissions.request({ origins: [hostUrl + "/"] })`.
-   - Denied → set `{ kind: "permission_denied", hostUrl }`, **do not save**, return.
-   - Granted → note that permission was just granted.
+    - Denied → set `{ kind: "permission_denied", hostUrl }`, **do not save**, return.
+    - Granted → note that permission was just granted.
 4. `await messenger.storage.local.set({ options: { hostUrl, apiKey } })`.
 5. Set status: `permission_granted` if step 3 applied, else `success`.
 
@@ -166,12 +172,12 @@ This fixes the current bug in `options.js:48` where a permission denial silently
 
 #### `StatusBanner.vue` messages
 
-| Status kind | Color | Message |
-|---|---|---|
-| `success` | green | "Settings saved." |
-| `error` | red | `{message}` |
-| `permission_denied` | amber | "Permission to access {hostUrl} was denied. Settings were not saved. Grant the host permission to use a custom server URL." |
-| `permission_granted` | green | "Host permission for {hostUrl} granted. Settings saved." |
+| Status kind          | Color | Message                                                                                                                     |
+| -------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| `success`            | green | "Settings saved."                                                                                                           |
+| `error`              | red   | `{message}`                                                                                                                 |
+| `permission_denied`  | amber | "Permission to access {hostUrl} was denied. Settings were not saved. Grant the host permission to use a custom server URL." |
+| `permission_granted` | green | "Host permission for {hostUrl} granted. Settings saved."                                                                    |
 
 #### `OptionsForm.vue`
 
@@ -228,6 +234,7 @@ Add `.github/workflows/release.yml`:
 Research whether Thunderbird's WebExtension API or content scripts allow injecting a context menu or dropdown into the individual email address "pill" widgets in the compose window address bar.
 
 Approach:
+
 1. Check `messenger.menus` API — it supports `compose_action` context, but not individual address fields.
 2. Investigate whether a compose content script (via `content_scripts` with `matches: ["*"]` in compose windows) can reach the DOM of the address bar and inject a trigger element.
 3. If feasible: implement the nested submenu structure from the spec (Existing > by-domain grouping, New > by-server > by-domain > by-generation-type, custom uses `prompt()` or a Thunderbird native dialog).
@@ -238,20 +245,22 @@ Approach:
 ## Verification
 
 ### Phase 1
+
 1. `npm ci && npm run build` — `dist/` produced without errors.
 2. `npm run typecheck` — no type errors.
 3. `npx prettier --check .` — no formatting issues.
 4. `make` — `AnonAddyTB.xpi` produced.
 5. Install in Thunderbird (`Install from file`):
-   - Open options: form loads with saved values.
-   - Enter a self-hosted URL + API key → browser permission dialog appears.
-   - Deny → amber banner shown, nothing saved.
-   - Grant → green "permission granted + saved" banner.
-   - Change API key only (no custom host) → saved without any permission dialog.
-   - Reset → reverts to stored values.
-   - Compose popup still works (composePopup unchanged).
+    - Open options: form loads with saved values.
+    - Enter a self-hosted URL + API key → browser permission dialog appears.
+    - Deny → amber banner shown, nothing saved.
+    - Grant → green "permission granted + saved" banner.
+    - Change API key only (no custom host) → saved without any permission dialog.
+    - Reset → reverts to stored values.
+    - Compose popup still works (composePopup unchanged).
 
 ### Phase 2
+
 - Open compose window → popup spinner shows briefly, then content renders.
 - Domain dropdown populates from cache; updates within 60 min alarm cycle.
 - Generation type selection changes what gets sent to the API.
@@ -261,7 +270,9 @@ Approach:
 - "Settings" link opens options page.
 
 ### Phase 3
+
 - Push a `v0.1.0` tag → Actions run → Release created with `.xpi` attached.
 
 ### Phase 4
+
 - Content script injection tested in Thunderbird compose window dev tools.

@@ -28,8 +28,6 @@
 
 ❯ /init
 
-❯ /init
-
 ❯ @ai/initial.md
 
 ❯ <task-notification>
@@ -258,7 +256,7 @@ This is a minimal, pure JavaScript Thunderbird extension with:
 > This is a very large feature set. Do you want a phased approach (implement incrementally, each phase shippable) or tackle everything in one big rewrite?
 > - Phased (Recommended)
 > - All at once
-> 
+>
 > Feature 7 (dropdown on the email To/CC/BCC address field in the compose window) — Thunderbird's WebExtension API doesn't expose a built-in way to inject dropdowns into address pill widgets. The compose action button (current approach) is what's officially supported. How should we handle this?
 > - Skip for now
 > - Research & attempt
@@ -310,7 +308,7 @@ This is a minimal, pure JavaScript Thunderbird extension with:
 >   "annotations": {}
 > }
 > ```
-> 
+>
 
 ❯ <task-notification>
 <task-id>acfb5bccc640794c3</task-id>

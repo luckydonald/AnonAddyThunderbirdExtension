@@ -1,0 +1,12 @@
+@use "variables" as *;
+
+body {
+  font-family: system-ui, sans-serif;
+  font-size: $font-size-base;
+  margin: $spacing-lg;
+  color: $color-text;
+}
+
+.options-page {
+  max-width: 600px;
+}
