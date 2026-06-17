@@ -58,34 +58,42 @@ async function save() {
   }
   hostUrl.value = url;
 
-  // Request the host permission FIRST — before any await — to preserve the
-  // user-gesture context that permissions.request() requires in Thunderbird.
-  // permissions.request() is a no-op (returns true) when already granted.
-  let permissionJustGranted = false;
-  if (url) {
-    const origin = `${url}/`;
-    let granted = false;
-    try {
-      console.log("AnonAddyTB: messenger.permissions.request()", { origins: [origin] });
-      granted = await messenger.permissions.request({ origins: [origin] });
-      console.log("AnonAddyTB: permissions.request() result:", granted);
-    } catch (e) {
-      console.warn("AnonAddyTB: error in messenger.permissions.request:", e, { origins: [origin] });
-    }
-    if (granted) {
-      permissionJustGranted = true;
-    } else {
-      saveStatus.value = { kind: "permission_denied", hostUrl: url };
-      // Fall through: still try a real request — it may itself trigger the prompt.
-    }
-  }
-
-  // Save so addyApiRequest() below picks up the new credentials.
+  // Save first so addyApiRequest() below picks up the new credentials.
   await messenger.storage.local.set({
     options: { hostUrl: url || null, apiKey: apiKey.value },
   });
   savedHostUrl.value = url;
   savedApiKey.value = apiKey.value;
+
+  // Try the permissions API.
+  let permissionJustGranted = false;
+  if (url) {
+    const origin = `${url}/`;
+    console.log("AnonAddyTB: checking permission for origin:", origin);
+    const alreadyGranted = await messenger.permissions.contains({
+      origins: [origin],
+    });
+    console.log("AnonAddyTB: permissions.contains():", alreadyGranted);
+    if (!alreadyGranted) {
+      let granted = false;
+      try {
+        console.log("AnonAddyTB: messenger.permissions.request()", { origins: [origin] });
+        granted = await messenger.permissions.request({ origins: [origin] });
+        console.log("AnonAddyTB: no error in messenger.permissions.request.", { origins: [origin], granted });
+      } catch (e) {
+        console.warn("AnonAddyTB: error in messenger.permissions.request:", e, { origins: [origin] });
+      }
+      console.log("AnonAddyTB: permissions.request() result:", granted);
+      const allAfter = await messenger.permissions.getAll();
+      console.log("AnonAddyTB: permissions.getAll() after request:", JSON.stringify(allAfter, null, 2));
+      if (granted) {
+        permissionJustGranted = true;
+      } else {
+        saveStatus.value = { kind: "permission_denied", hostUrl: url };
+        // Fall through: still try a real request — it may itself trigger the prompt.
+      }
+    }
+  }
 
   // Also fire an actual API request; this may trigger Thunderbird's native
   // host-permission prompt even when permissions.request() silently fails.

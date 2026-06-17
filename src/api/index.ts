@@ -10,13 +10,7 @@ function xhrRequest(
     xhr.open(method, url);
     for (const [key, val] of Object.entries(headers))
       xhr.setRequestHeader(key, val);
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(xhr.responseText);
-      } else {
-        reject(new Error(`HTTP ${xhr.status}: ${xhr.responseText}`));
-      }
-    };
+    xhr.onload = () => resolve(xhr.responseText);
     xhr.onerror = (e) => reject(e);
     xhr.send(body);
   });
