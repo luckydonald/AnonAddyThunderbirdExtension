@@ -8,7 +8,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "AnonAddyTB@luckydonald.de",
-      "strict_min_version": "151.0"
+      "strict_min_version": "140.0"
       // Experiments must target ESR to avoid monthly breakage.
       // Update this when a newer ESR is released.
       // "strict_max_version": "151.*"
