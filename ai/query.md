@@ -911,3 +911,7 @@ onStartup() {
 20. The format chips **still** don't wrap to the next line if too long.
 21. The logged stuff: @ai/errors/9.log
 
+❯ /plan
+21. Existing aliases are lacking the send-as information.
+22. After hovering over the cool new menu (IT FINALLY SHOWED UP!!!), it vanishes - see error @ai/errors/10.txt
+
