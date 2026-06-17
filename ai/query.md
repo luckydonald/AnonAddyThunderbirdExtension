@@ -837,3 +837,5 @@ onStartup() {
 
 ❯ I am on Thunderbird 151.0.1 (64-Bit) and am getting @ai/errors/1.txt
 
+❯ @ai/errors/2.txt
+
