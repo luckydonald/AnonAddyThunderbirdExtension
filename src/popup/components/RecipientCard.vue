@@ -96,6 +96,13 @@ function selectFromSearch(email: string) {
   aliasSearch.value = "";
 }
 
+function forwardingFor(aliasEmail: string): string | null {
+  const am = aliasEmail.match(/^(.+)@(.+)$/);
+  const rm = props.address.match(/^(.+)@(.+)$/);
+  if (!am || !rm) return null;
+  return `${am[1]}+${rm[1]}=${rm[2]}@${am[2]}`;
+}
+
 defineExpose({ resetCreating: () => (creating.value = false) });
 </script>
 
@@ -144,6 +151,10 @@ defineExpose({ resetCreating: () => (creating.value = false) });
             <kbd class="alias-option__email">{{ pinnedAlias.email }}</kbd>
             <span class="tag tag--selected">selected</span>
           </div>
+          <div v-if="forwardingFor(pinnedAlias.email)" class="alias-option__row alias-option__row--fwd">
+            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
+            <code class="alias-option__fwd">{{ forwardingFor(pinnedAlias.email) }}</code>
+          </div>
         </div>
       </div>
       <div
@@ -166,6 +177,10 @@ defineExpose({ resetCreating: () => (creating.value = false) });
             <span v-if="alias.description" class="alias-option__desc">
               {{ alias.description }}
             </span>
+          </div>
+          <div v-if="forwardingFor(alias.email)" class="alias-option__row alias-option__row--fwd">
+            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
+            <code class="alias-option__fwd">{{ forwardingFor(alias.email) }}</code>
           </div>
         </div>
       </div>
@@ -195,6 +210,10 @@ defineExpose({ resetCreating: () => (creating.value = false) });
             >{{ createdAlias.email }}</kbd>
             <span class="tag tag--new">{{ t("newTag") }}</span>
             <span v-if="!createdAlias.active" class="tag tag--inactive">{{ t("inactive") }}</span>
+          </div>
+          <div v-if="forwardingFor(createdAlias.email)" class="alias-option__row alias-option__row--fwd">
+            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
+            <code class="alias-option__fwd">{{ forwardingFor(createdAlias.email) }}</code>
           </div>
           <div class="alias-option__actions" @click.stop>
             <button
@@ -244,6 +263,10 @@ defineExpose({ resetCreating: () => (creating.value = false) });
             <span v-if="alias.description" class="alias-option__desc">
               {{ alias.description }}
             </span>
+          </div>
+          <div v-if="forwardingFor(alias.email)" class="alias-option__row alias-option__row--fwd">
+            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
+            <code class="alias-option__fwd">{{ forwardingFor(alias.email) }}</code>
           </div>
           <div class="alias-option__actions" @click.stop>
             <button
@@ -433,6 +456,24 @@ defineExpose({ resetCreating: () => (creating.value = false) });
     display: flex;
     flex-wrap: wrap;
     gap: $spacing-xs;
+  }
+
+  &__row--fwd {
+    margin-top: $spacing-xs;
+    gap: $spacing-xs;
+  }
+
+  &__fwd-label {
+    color: $color-muted;
+    font-size: $font-size-sm;
+    flex-shrink: 0;
+  }
+
+  &__fwd {
+    font-family: monospace;
+    font-size: $font-size-sm;
+    color: $color-muted;
+    word-break: break-all;
   }
 
   &--created {
