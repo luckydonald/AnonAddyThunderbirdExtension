@@ -27,9 +27,9 @@ const emit = defineEmits<{
   create: [
     payload: { domain: string; format: AliasFormat; customPrefix: string },
   ];
-  disable: [];
-  delete: [];
-  restore: [];
+  disable: [id: string];
+  delete: [id: string];
+  restore: [id: string];
 }>();
 
 const { t } = useI18n();
@@ -117,42 +117,71 @@ defineExpose({ resetCreating: () => (creating.value = false) });
               v-if="createdAlias.active"
               class="small danger"
               :title="t('disableHint')"
-              @click="$emit('disable')"
+              @click="$emit('disable', createdAlias.id)"
             >{{ t("disable") }}</button>
             <button
               v-else
               class="small"
               :title="t('disableHint')"
-              @click="$emit('restore')"
+              @click="$emit('restore', createdAlias.id)"
             >{{ t("reenable") }}</button>
             <button
               class="small danger"
               :title="t('deleteHint')"
-              @click="$emit('delete')"
+              @click="$emit('delete', createdAlias.id)"
             >{{ t("deleteAlias") }}</button>
           </div>
         </div>
       </div>
 
       <!-- Regular existing aliases -->
-      <label
+      <div
         v-for="alias in displayAliases"
         :key="alias.id"
         class="alias-option"
         :class="{ selected: selectedAlias === alias.email }"
+        @click="alias.active && selectAlias(alias.email)"
       >
         <input
           type="radio"
           :name="`alias-${address}`"
           :value="alias.email"
           :checked="selectedAlias === alias.email"
+          :disabled="!alias.active"
           @change="selectAlias(alias.email)"
         />
-        <kbd class="alias-option__email">{{ alias.email }}</kbd>
-        <span v-if="alias.description" class="alias-option__desc">
-          {{ alias.description }}
-        </span>
-      </label>
+        <div class="alias-option__body">
+          <div class="alias-option__row">
+            <kbd
+              class="alias-option__email"
+              :class="{ 'alias-option__email--inactive': !alias.active }"
+            >{{ alias.email }}</kbd>
+            <span v-if="!alias.active" class="tag tag--inactive">{{ t("inactive") }}</span>
+            <span v-if="alias.description" class="alias-option__desc">
+              {{ alias.description }}
+            </span>
+          </div>
+          <div class="alias-option__actions" @click.stop>
+            <button
+              v-if="alias.active"
+              class="small danger"
+              :title="t('disableHint')"
+              @click="$emit('disable', alias.id)"
+            >{{ t("disable") }}</button>
+            <button
+              v-else
+              class="small"
+              :title="t('disableHint')"
+              @click="$emit('restore', alias.id)"
+            >{{ t("reenable") }}</button>
+            <button
+              class="small danger"
+              :title="t('deleteHint')"
+              @click="$emit('delete', alias.id)"
+            >{{ t("deleteAlias") }}</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Empty state -->
       <div v-if="!createdAlias && displayAliases.length === 0" class="no-aliases">

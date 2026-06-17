@@ -345,44 +345,62 @@ async function handleCreate(
   }
 }
 
-async function handleDisable(recipientIdx: number): Promise<void> {
+async function handleDisable(recipientIdx: number, aliasId: string): Promise<void> {
   if (popupState.value.kind !== "ready") return;
   const r = popupState.value.recipients[recipientIdx];
-  if (!r.createdAlias) return;
   try {
-    await addyApiRequest("PATCH", `aliases/${r.createdAlias.id}`, null, {
-      active: false,
-    });
-    r.createdAlias.active = false;
-    r.selectedAlias = null;
+    await addyApiRequest("PATCH", `aliases/${aliasId}`, null, { active: false });
+    let disabledEmail: string | null = null;
+    if (r.createdAlias?.id === aliasId) {
+      r.createdAlias.active = false;
+      disabledEmail = r.createdAlias.email;
+    } else {
+      const a = r.existingAliases.find((x) => x.id === aliasId);
+      if (a) { a.active = false; disabledEmail = a.email; }
+    }
+    if (disabledEmail && r.selectedAlias === disabledEmail) r.selectedAlias = null;
   } catch (e) {
     console.error("AnonAddyTB: alias disable failed", e);
   }
 }
 
-async function handleRestore(recipientIdx: number): Promise<void> {
+async function handleRestore(recipientIdx: number, aliasId: string): Promise<void> {
   if (popupState.value.kind !== "ready") return;
   const r = popupState.value.recipients[recipientIdx];
-  if (!r.createdAlias) return;
   try {
-    await addyApiRequest("PATCH", `aliases/${r.createdAlias.id}`, null, {
-      active: true,
-    });
-    r.createdAlias.active = true;
-    r.selectedAlias = r.createdAlias.email;
+    await addyApiRequest("PATCH", `aliases/${aliasId}`, null, { active: true });
+    if (r.createdAlias?.id === aliasId) {
+      r.createdAlias.active = true;
+      r.selectedAlias = r.createdAlias.email;
+    } else {
+      const a = r.existingAliases.find((x) => x.id === aliasId);
+      if (a) {
+        a.active = true;
+        r.selectedAlias = a.email;
+      }
+    }
   } catch (e) {
     console.error("AnonAddyTB: alias restore failed", e);
   }
 }
 
-async function handleDelete(recipientIdx: number): Promise<void> {
+async function handleDelete(recipientIdx: number, aliasId: string): Promise<void> {
   if (popupState.value.kind !== "ready") return;
   const r = popupState.value.recipients[recipientIdx];
-  if (!r.createdAlias) return;
   try {
-    await addyApiRequest("DELETE", `aliases/${r.createdAlias.id}`);
-    r.createdAlias = null;
-    r.selectedAlias = null;
+    await addyApiRequest("DELETE", `aliases/${aliasId}`);
+    if (r.createdAlias?.id === aliasId) {
+      r.createdAlias = null;
+    } else {
+      const idx = r.existingAliases.findIndex((x) => x.id === aliasId);
+      if (idx >= 0) r.existingAliases.splice(idx, 1);
+    }
+    if (r.selectedAlias) {
+      const stillExists =
+        r.createdAlias?.email === r.selectedAlias ||
+        r.existingAliases.some((x) => x.email === r.selectedAlias);
+      if (!stillExists) r.selectedAlias = null;
+    }
   } catch (e) {
     console.error("AnonAddyTB: alias delete failed", e);
   }
@@ -402,9 +420,14 @@ async function applyAndClose(): Promise<void> {
   }
   const applyMap = new Map<string, ApplyEntry>();
   for (const r of popupState.value.recipients) {
-    const selected = r.createdAlias?.active
-      ? r.createdAlias.email
-      : r.selectedAlias;
+    // Resolve selected alias email; verify it's still active before applying.
+    const selectedEmail = r.selectedAlias;
+    const isActive = selectedEmail
+      ? (r.createdAlias?.email === selectedEmail
+          ? r.createdAlias.active
+          : (r.existingAliases.find((a) => a.email === selectedEmail)?.active ?? false))
+      : false;
+    const selected = isActive ? selectedEmail : null;
     const isPreAliased = r.composeAddress !== r.parsed.address;
     if (selected || isPreAliased) {
       applyMap.set(r.composeAddress, {
@@ -517,9 +540,9 @@ function openSettings() {
         @update:selected-alias="(v) => (r.selectedAlias = v)"
         @update:address="(v) => handleAddressUpdate(idx, v)"
         @create="(p) => handleCreate(idx, p)"
-        @disable="() => handleDisable(idx)"
-        @restore="() => handleRestore(idx)"
-        @delete="() => handleDelete(idx)"
+        @disable="(id) => handleDisable(idx, id)"
+        @restore="(id) => handleRestore(idx, id)"
+        @delete="(id) => handleDelete(idx, id)"
       />
 
       <div class="flex-spacer" />
