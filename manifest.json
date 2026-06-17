@@ -4,7 +4,7 @@
   "short_name": "__MSG_extensionShortName__",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "browser_specific_settings": {
     "gecko": {
       "id": "AnonAddyTB@luckydonald.de",
