@@ -792,3 +792,18 @@ Also include a very short section about the base itself using `[base] [optional 
 ❯ With the requirements `ai/°base/query.md:786-792` executed, check if your @.github/workflows/claude-issue-agent.yml is correct.
 ❯ Document how to set up claude github issues in the `README.md`, and link to further documentation.
 
+❯ I noticed claude sometimes writes something like @ai/°base/errors/4.diff to the query.
+1. Figure out/research where that comes from (which hook).
+2. I want to have that instead as a summary listing:
+   ```markdown
+   > - Task `a6bc9ead58e284556`: <kbd>completed</kbd>
+   > - > $summary
+   > - [Query (`123` chars)](../agents/001.a6bc9ead58e284556/prompt.md)
+   > - [Answer (`4567` chars)](../agents/001.a6bc9ead58e284556/result.md)
+   ```
+3. The query must be fetched from the relevant parts of the file at `<output-file>…</…>` and written to disk, to be linked to.
+4. the answer is already contained in the `<result>`…</…>` and written to disk and linked to.
+5. Both files are in `/ai/agents/number.task-id/` or the `/°base/ai/agents/…` equivalent.
+❯ Ah, add `> - [Raw log (`2 MB`)]($output-file)`, at the end, too. Make sure the _`NNN` chars_ and _`N UNIT`_ are calculated from the files/query strings/etc.
+❯ An, first line shall be `❯ Task Notification:` and the `>` shall only happens on the lines after that.
+

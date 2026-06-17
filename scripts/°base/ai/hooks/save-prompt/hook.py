@@ -2,14 +2,22 @@
 """UserPromptSubmit hook: append the user's prompt to ai/query.md and commit.
 
 Usage: hook.py [ai_tool_name]   (default: unknown)
+
+Task notifications (<task-notification> XML) are intercepted and written as a
+compact markdown summary block. The agent prompt and result are saved to
+ai/agents/NNN.task-id/ (or the °base equivalent) and linked from query.md.
 """
 from __future__ import annotations
 
+import json
+import re
+import subprocess
 import sys
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from _lib import append_and_commit, read_payload, resolve_log_path  # noqa: E402
+from _lib import append_and_commit, base_ai_commit_subject, read_payload, resolve_log_path  # noqa: E402
 
 PREFIXES = {"claude": "❯", "codex": "›"}
 DEFAULT_PREFIX = "⩼"
@@ -29,6 +37,134 @@ SKIP_PROMPTS = {
 }
 
 
+def _parse_task_notification(prompt: str) -> dict | None:
+    """Extract fields from a <task-notification> block. Returns None if absent."""
+    m = re.search(r"<task-notification>(.*?)</task-notification>", prompt, re.DOTALL)
+    if not m:
+        return None
+    try:
+        root = ET.fromstring(f"<task-notification>{m.group(1)}</task-notification>")
+    except ET.ParseError:
+        return None
+
+    def _text(tag: str) -> str:
+        el = root.find(tag)
+        return (el.text or "").strip() if el is not None else ""
+
+    return {
+        "task_id": _text("task-id"),
+        "status": _text("status"),
+        "summary": _text("summary"),
+        "result": _text("result"),
+        "output_file": _text("output-file"),
+    }
+
+
+def _extract_agent_prompt(output_file: str) -> str:
+    """Read the agent's JSONL output file and return the prompt string."""
+    try:
+        with open(output_file, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                msg = obj.get("message", {})
+                if msg.get("role") == "assistant":
+                    for item in msg.get("content", []):
+                        if item.get("type") == "tool_use" and item.get("name") == "Agent":
+                            return item.get("input", {}).get("prompt", "")
+    except OSError:
+        pass
+    return ""
+
+
+def _human_size(path: str) -> str:
+    """Return file size as a human-readable string, e.g. '2.1 MB', '47 KB', '512 B'."""
+    try:
+        size = Path(path).stat().st_size
+    except OSError:
+        return "? B"
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024 or unit == "GB":
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.3g} {unit}"
+        size /= 1024
+    return "? B"  # unreachable
+
+
+def _next_agent_number(agents_dir: Path) -> int:
+    """Return the next sequential 1-based agent number."""
+    if not agents_dir.exists():
+        return 1
+    nums = [
+        int(m.group(1))
+        for d in agents_dir.iterdir()
+        if d.is_dir() and (m := re.match(r"^(\d+)\.", d.name))
+    ]
+    return max(nums, default=0) + 1
+
+
+def _handle_task_notification(
+    prefix: str,
+    prompt: str,
+    log_path: Path,
+    commit_template_relpath: str,
+    default_commit_msg: str,
+) -> bool:
+    """If prompt contains a task notification, write agent files and a summary entry.
+
+    Returns True when handled; caller should skip the normal append.
+    """
+    info = _parse_task_notification(prompt)
+    if not info or not info["task_id"]:
+        return False
+
+    agents_dir = log_path.parent / "agents"
+    num = _next_agent_number(agents_dir)
+    dir_name = f"{num:03d}.{info['task_id']}"
+    agent_dir = agents_dir / dir_name
+    agent_dir.mkdir(parents=True, exist_ok=True)
+
+    agent_prompt = _extract_agent_prompt(info["output_file"])
+    prompt_file = agent_dir / "prompt.md"
+    result_file = agent_dir / "result.md"
+    prompt_file.write_text(agent_prompt, encoding="utf-8")
+    result_file.write_text(info["result"], encoding="utf-8")
+
+    cwd = Path.cwd()
+    prompt_rel = str(prompt_file.relative_to(cwd))
+    result_rel = str(result_file.relative_to(cwd))
+    subprocess.run(["git", "add", "--", prompt_rel, result_rel], capture_output=True)
+    subprocess.run(
+        ["git", "commit", "--only", prompt_rel, result_rel,
+         "-m", base_ai_commit_subject(f"ai: agent {dir_name} results")],
+        capture_output=True,
+    )
+
+    rel_prompt = f"agents/{dir_name}/prompt.md"
+    rel_result = f"agents/{dir_name}/result.md"
+    query_chars = len(agent_prompt)
+    result_chars = len(info["result"])
+    log_size = _human_size(info["output_file"])
+
+    content = (
+        f"{prefix} Task Notification:\n"
+        f"> - Task `{info['task_id']}`: <kbd>{info['status']}</kbd>\n"
+        f"> - > {info['summary']}\n"
+        f"> - [Query (`{query_chars}` chars, {_human_size(str(prompt_file))})]({rel_prompt})\n"
+        f"> - [Answer (`{result_chars}` chars, {_human_size(str(result_file))})]({rel_result})\n"
+        f"> - [Raw log (`{log_size}`)]({info['output_file']})\n"
+        "\n"
+    )
+    append_and_commit(
+        log_path,
+        content,
+        commit_template_relpath=commit_template_relpath,
+        default_commit_msg=default_commit_msg,
+    )
+    return True
+
+
 def main() -> int:
     ai_tool = sys.argv[1] if len(sys.argv) > 1 else "unknown"
     prefix = PREFIXES.get(ai_tool, DEFAULT_PREFIX)
@@ -43,6 +179,14 @@ def main() -> int:
         return 0
 
     log_path = resolve_log_path("ai/query.md", "ai/°base/query.md")
+
+    if _handle_task_notification(
+        prefix, prompt, log_path,
+        commit_template_relpath="ai/commit-templates/prompt.md",
+        default_commit_msg="ai: updated prompt",
+    ):
+        return 0
+
     append_and_commit(
         log_path,
         f"{prefix} {prompt}\n\n",
