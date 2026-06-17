@@ -1,0 +1,33 @@
+[
+  {
+    "namespace": "AddressChipMenu",
+    "description": "Attaches a context menu to compose-window address chips (mail-address-pill elements) and fires an event when the user selects the Addy alias action.",
+    "events": [
+      {
+        "name": "onChipMenuClicked",
+        "type": "function",
+        "description": "Fires when the user selects 'Replace with Addy alias' from the right-click menu on a compose-window address chip.",
+        "parameters": [
+          {
+            "name": "info",
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "description": "The email address of the chip that was right-clicked."
+              },
+              "displayName": {
+                "type": "string",
+                "description": "The display name of the chip, if any."
+              },
+              "fieldType": {
+                "type": "string",
+                "description": "Which field the chip is in: 'to', 'cc', or 'bcc'."
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

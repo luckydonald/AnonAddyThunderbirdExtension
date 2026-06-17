@@ -7,6 +7,8 @@ $(target): dist/
 dist/: src/ options.html composePopup.html $(static_files)
 	npm run build
 	cp $(static_files) dist/
+	mkdir -p dist/experiment
+	cp src/experiment/schema.json src/experiment/implementation.js dist/experiment/
 
 clean:
 	-rm -f $(target)

@@ -48,10 +48,24 @@ declare const messenger: {
       address: string,
     ): Promise<Array<{ email: string; name: string }>>;
   };
+  composeAction: {
+    openPopup(): Promise<void>;
+  };
   runtime: {
     openOptionsPage(): Promise<void>;
     onInstalled: {
       addListener(callback: (details: { reason: string }) => void): void;
+    };
+  };
+  AddressChipMenu: {
+    onChipMenuClicked: {
+      addListener(
+        callback: (info: {
+          email: string;
+          displayName: string;
+          fieldType: string;
+        }) => void,
+      ): void;
     };
   };
 };

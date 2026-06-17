@@ -8,7 +8,21 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "AnonAddyTB@kamens.us",
-      "strict_min_version": "128.0"
+      "strict_min_version": "128.0",
+      // Experiments must target ESR to avoid monthly breakage.
+      // Update this when a newer ESR is released.
+      "strict_max_version": "140.*"
+    }
+  },
+  "experiment_apis": {
+    "AddressChipMenu": {
+      "schema": "experiment/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["AddressChipMenu"]],
+        "script": "experiment/implementation.js",
+        "events": ["startup"]
+      }
     }
   },
   "host_permissions": ["*://app.addy.io/"],
