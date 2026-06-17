@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import CreateAliasForm from "./CreateAliasForm.vue";
+import { useI18n } from "../../composables/useI18n.js";
 import type { Alias, AliasFormat } from "../../api/types.js";
 
 export interface CreatedAliasInfo {
@@ -30,6 +31,8 @@ const emit = defineEmits<{
   restore: [];
 }>();
 
+const { t } = useI18n();
+
 const showCreate = ref(props.existingAliases.length === 0);
 const creating = ref(false);
 
@@ -52,9 +55,9 @@ defineExpose({ resetCreating: () => (creating.value = false) });
 <template>
   <div class="card">
     <p class="card__header">
-      Replace
+      {{ t("replaceWithPrefix") }}
       <strong>{{ name ? `${name} <${address}>` : address }}</strong>
-      with:
+      {{ t("replaceWithSuffix") }}
     </p>
 
     <div v-if="createdAlias" class="created-alias">
@@ -65,9 +68,9 @@ defineExpose({ resetCreating: () => (creating.value = false) });
         >
           {{ createdAlias.email }}
         </span>
-        <span v-if="!createdAlias.active" class="tag tag--inactive"
-          >inactive</span
-        >
+        <span v-if="!createdAlias.active" class="tag tag--inactive">{{
+          t("inactive")
+        }}</span>
       </div>
       <div class="created-alias__actions">
         <button
@@ -75,16 +78,18 @@ defineExpose({ resetCreating: () => (creating.value = false) });
           class="danger"
           @click="$emit('disable')"
         >
-          Disable
+          {{ t("disable") }}
         </button>
-        <button v-else @click="$emit('restore')">Re-enable</button>
-        <button class="danger" @click="$emit('delete')">Delete</button>
+        <button v-else @click="$emit('restore')">{{ t("reenable") }}</button>
+        <button class="danger" @click="$emit('delete')">
+          {{ t("deleteAlias") }}
+        </button>
       </div>
     </div>
 
     <div v-else>
       <div v-if="existingAliases.length === 0" class="no-aliases">
-        <em>No existing aliases for this domain.</em>
+        <em>{{ t("noExistingAliases") }}</em>
       </div>
 
       <div v-else class="alias-list">
@@ -117,12 +122,12 @@ defineExpose({ resetCreating: () => (creating.value = false) });
             :checked="selectedAlias === null"
             @change="$emit('update:selectedAlias', null)"
           />
-          <span>Don't replace</span>
+          <span>{{ t("dontReplace") }}</span>
         </label>
       </div>
 
       <button class="toggle-create" @click="showCreate = !showCreate">
-        {{ showCreate ? "▲ Hide create form" : "▼ Create new alias" }}
+        {{ showCreate ? t("hideCreateForm") : t("showCreateForm") }}
       </button>
 
       <CreateAliasForm

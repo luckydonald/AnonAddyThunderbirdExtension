@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from "../../composables/useI18n.js";
+
 const props = defineProps<{
   hostUrl: string;
   apiKey: string;
@@ -11,6 +13,8 @@ const emit = defineEmits<{
   save: [];
   reset: [];
 }>();
+
+const { t } = useI18n();
 
 function isValid() {
   if (
@@ -29,36 +33,38 @@ function isValid() {
 <template>
   <form @submit.prevent="emit('save')">
     <div class="field">
-      <label for="hostUrl">Addy URL</label>
+      <label for="hostUrl">{{ t("addyUrl") }}</label>
       <div class="field__input-wrap">
         <input
           id="hostUrl"
           type="text"
           :value="hostUrl"
-          placeholder="https://app.addy.io"
+          :placeholder="t('addyUrlPlaceholder')"
           @input="
             emit('update:hostUrl', ($event.target as HTMLInputElement).value)
           "
         />
-        <span class="field__hint">(leave blank for addy.io)</span>
+        <span class="field__hint">{{ t("addyUrlHint") }}</span>
       </div>
     </div>
     <div class="field">
-      <label for="apiKey">API key</label>
+      <label for="apiKey">{{ t("apiKey") }}</label>
       <input
         id="apiKey"
         type="text"
         :value="apiKey"
-        placeholder="addy_io_etc."
+        :placeholder="t('apiKeyPlaceholder')"
         @input="
           emit('update:apiKey', ($event.target as HTMLInputElement).value)
         "
       />
     </div>
     <div class="actions">
-      <button type="submit" :disabled="!isDirty || !isValid()">Save</button>
+      <button type="submit" :disabled="!isDirty || !isValid()">
+        {{ t("save") }}
+      </button>
       <button type="button" :disabled="!isDirty" @click="emit('reset')">
-        Reset
+        {{ t("reset") }}
       </button>
     </div>
   </form>

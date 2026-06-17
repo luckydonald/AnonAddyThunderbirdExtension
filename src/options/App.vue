@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import OptionsForm from "./components/OptionsForm.vue";
 import StatusBanner from "./components/StatusBanner.vue";
+import { useI18n } from "../composables/useI18n.js";
 
 export type SaveStatus =
   | { kind: "idle" }
@@ -15,6 +16,7 @@ const apiKey = ref("");
 const savedHostUrl = ref("");
 const savedApiKey = ref("");
 const saveStatus = ref<SaveStatus>({ kind: "idle" });
+const { t } = useI18n();
 
 const isDirty = computed(
   () =>
@@ -36,17 +38,11 @@ async function loadFromStorage() {
 async function save() {
   const url = hostUrl.value.replace(/\/+$/, "");
   if (url && !(url.startsWith("http://") || url.startsWith("https://"))) {
-    saveStatus.value = {
-      kind: "error",
-      message: 'Addy URL must start with "http://" or "https://".',
-    };
+    saveStatus.value = { kind: "error", message: t("errorInvalidUrl") };
     return;
   }
   if (!apiKey.value.trim()) {
-    saveStatus.value = {
-      kind: "error",
-      message: "API key must be specified.",
-    };
+    saveStatus.value = { kind: "error", message: t("errorApiKeyRequired") };
     return;
   }
   hostUrl.value = url;

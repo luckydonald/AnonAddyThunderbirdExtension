@@ -4,11 +4,12 @@ static_files = icon.svg manifest.json LICENSE.txt
 $(target): dist/
 	cd dist && zip -r ../$(target) .
 
-dist/: src/ options.html composePopup.html $(static_files)
+dist/: src/ _locales/ options.html composePopup.html $(static_files)
 	npm run build
 	cp $(static_files) dist/
 	mkdir -p dist/experiment
 	cp src/experiment/schema.json src/experiment/implementation.js dist/experiment/
+	cp -r _locales dist/_locales
 
 clean:
 	-rm -f $(target)

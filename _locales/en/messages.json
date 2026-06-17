@@ -1,0 +1,79 @@
+{
+  "extensionName": {
+    "message": "addy.io / AnonAddy for Thunderbird",
+    "description": "Extension name shown in the add-on manager."
+  },
+  "extensionShortName": {
+    "message": "AnonAddyTB",
+    "description": "Short name shown in compose toolbar."
+  },
+  "extensionDescription": {
+    "message": "Integrate Thunderbird with addy.io / AnonAddy",
+    "description": "Extension description shown in the add-on manager."
+  },
+
+  "cancel": { "message": "Cancel" },
+  "close": { "message": "Close" },
+  "apply": { "message": "Apply" },
+  "settingsLink": { "message": "⚙ Settings" },
+  "goTo": {
+    "message": "Go to $1",
+    "description": "Label for the link to the addy.io web UI. $1 is the hostname."
+  },
+
+  "addyUrl": { "message": "Addy URL" },
+  "addyUrlPlaceholder": { "message": "https://app.addy.io" },
+  "addyUrlHint": { "message": "(leave blank for addy.io)" },
+  "apiKey": { "message": "API key" },
+  "apiKeyPlaceholder": { "message": "addy_io_etc." },
+  "save": { "message": "Save" },
+  "reset": { "message": "Reset" },
+
+  "settingsSaved": { "message": "Settings saved." },
+  "errorInvalidUrl": {
+    "message": "Addy URL must start with \"http://\" or \"https://\"."
+  },
+  "errorApiKeyRequired": { "message": "API key must be specified." },
+  "permissionDeniedPrefix": { "message": "Permission to access" },
+  "permissionDeniedSuffix": {
+    "message": "was denied. Settings were not saved. Grant the host permission to use a custom server URL."
+  },
+  "permissionGrantedPrefix": { "message": "Host permission for" },
+  "permissionGrantedSuffix": { "message": "granted. Settings saved." },
+
+  "replaceWithPrefix": { "message": "Replace" },
+  "replaceWithSuffix": { "message": "with:" },
+  "inactive": { "message": "inactive" },
+  "disable": { "message": "Disable" },
+  "reenable": { "message": "Re-enable" },
+  "deleteAlias": { "message": "Delete" },
+  "dontReplace": { "message": "Don't replace" },
+  "noExistingAliases": {
+    "message": "No existing aliases for this domain."
+  },
+  "hideCreateForm": { "message": "▲ Hide create form" },
+  "showCreateForm": { "message": "▼ Create new alias" },
+
+  "domain": { "message": "Domain" },
+  "format": { "message": "Format" },
+  "prefixLabel": { "message": "Prefix" },
+  "filterDomains": { "message": "Filter domains…" },
+  "formatCharacters": { "message": "Characters" },
+  "formatWords": { "message": "Words" },
+  "formatMaleName": { "message": "Male name" },
+  "formatFemaleName": { "message": "Female name" },
+  "formatNoun": { "message": "Noun" },
+  "formatCustom": { "message": "Custom…" },
+  "customPrefixPlaceholder": { "message": "custom" },
+  "creating": { "message": "Creating…" },
+  "createAlias": { "message": "Create alias" },
+
+  "noRecipientsMessage": {
+    "message": "Add at least one address to the To/CC/BCC field first."
+  },
+
+  "replaceWithAddyAlias": {
+    "message": "Replace with Addy alias…",
+    "description": "Context menu item shown when right-clicking an address chip in the compose window."
+  }
+}

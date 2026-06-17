@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "../../composables/useI18n.js";
 
 const props = defineProps<{
   hostUrl: string;
@@ -11,6 +12,8 @@ defineEmits<{
   close: [];
   openSettings: [];
 }>();
+
+const { t } = useI18n();
 
 const hostname = computed(() => {
   try {
@@ -25,20 +28,20 @@ const hostname = computed(() => {
   <div class="footer">
     <div class="footer__links">
       <button class="link-btn" @click="$emit('openSettings')">
-        ⚙ Settings
+        {{ t("settingsLink") }}
       </button>
       <a :href="hostUrl" target="_blank" class="footer__addy-link">
-        Go to {{ hostname }}
+        {{ t("goTo", hostname) }}
       </a>
     </div>
     <div class="footer__actions">
-      <button @click="$emit('close')">Cancel</button>
+      <button @click="$emit('close')">{{ t("cancel") }}</button>
       <button
         class="primary"
         :disabled="!hasSelections"
         @click="$emit('apply')"
       >
-        Apply
+        {{ t("apply") }}
       </button>
     </div>
   </div>
