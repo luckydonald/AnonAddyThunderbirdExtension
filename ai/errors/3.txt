@@ -1,0 +1,8 @@
+PopupNotifications._onButtonEvent: Button click happened before the security delay: 369.0049209999852ms
+PopupNotifications._onButtonEvent: Button click happened before the security delay: 85.54077499965206ms
+sendRemoveListener on closed conduit AnonAddyTB@luckydonald.de.824633721093 ConduitsChild.sys.mjs:122:13
+Error: No API key configured index-rOS1XSY6.js:1:361
+Uncaught (in promise) Error: Error while loading 'jar:file:///home/user/.thunderbird/0xlvvmir.default-esr/extensions/AnonAddyTB@luckydonald.de.xpi!/experiment/schema.json' (NS_ERROR_FAILURE)
+    readJSON resource://gre/modules/Extension.sys.mjs:1133
+    onStopRequest resource://gre/modules/NetUtil.sys.mjs:122
+3 Extension.sys.mjs:1133:20
