@@ -1,4 +1,4 @@
-import { addyApiRequest } from "../api/index.js";
+import { addyApiRequest, RateLimitError } from "../api/index.js";
 import type { DomainOptions, Alias, PaginatedAliases } from "../api/types.js";
 
 async function fetchDomainOptions(): Promise<void> {
@@ -10,10 +10,21 @@ async function fetchAllAliases(): Promise<void> {
   const all: Alias[] = [];
   let page = 1;
   while (true) {
-    const response = await addyApiRequest<PaginatedAliases>("GET", "aliases", {
-      page: String(page),
-      "page[size]": "100",
-    });
+    let response: PaginatedAliases;
+    try {
+      response = await addyApiRequest<PaginatedAliases>("GET", "aliases", {
+        page: String(page),
+        "page[size]": "100",
+      });
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, e.retryAfterSeconds * 1000),
+        );
+        continue;
+      }
+      throw e;
+    }
     all.push(...response.data);
     if (response.meta.current_page >= response.meta.last_page) break;
     page++;
