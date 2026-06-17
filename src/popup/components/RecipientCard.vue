@@ -33,7 +33,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const showCreate = ref(props.existingAliases.length === 0);
 const creating = ref(false);
 
 function selectAlias(email: string) {
@@ -60,14 +59,15 @@ defineExpose({ resetCreating: () => (creating.value = false) });
       {{ t("replaceWithSuffix") }}
     </p>
 
+    <!-- Created alias: show manage actions -->
     <div v-if="createdAlias" class="created-alias">
       <div class="created-alias__row">
-        <span
+        <kbd
           class="created-alias__email"
           :class="{ 'created-alias__email--inactive': !createdAlias.active }"
         >
           {{ createdAlias.email }}
-        </span>
+        </kbd>
         <span v-if="!createdAlias.active" class="tag tag--inactive">{{
           t("inactive")
         }}</span>
@@ -76,18 +76,23 @@ defineExpose({ resetCreating: () => (creating.value = false) });
         <button
           v-if="createdAlias.active"
           class="danger"
+          :title="t('disableHint')"
           @click="$emit('disable')"
         >
           {{ t("disable") }}
         </button>
-        <button v-else @click="$emit('restore')">{{ t("reenable") }}</button>
-        <button class="danger" @click="$emit('delete')">
+        <button v-else :title="t('disableHint')" @click="$emit('restore')">{{ t("reenable") }}</button>
+        <button class="danger" :title="t('deleteHint')" @click="$emit('delete')">
           {{ t("deleteAlias") }}
         </button>
       </div>
     </div>
 
+    <!-- No created alias: show existing list + create form -->
     <div v-else>
+      <!-- Existing aliases section -->
+      <p class="section-heading">{{ t("existingAliasesSection") }}</p>
+
       <div v-if="existingAliases.length === 0" class="no-aliases">
         <em>{{ t("noExistingAliases") }}</em>
       </div>
@@ -106,7 +111,7 @@ defineExpose({ resetCreating: () => (creating.value = false) });
             :checked="selectedAlias === alias.email"
             @change="selectAlias(alias.email)"
           />
-          <span class="alias-option__email">{{ alias.email }}</span>
+          <kbd class="alias-option__email">{{ alias.email }}</kbd>
           <span v-if="alias.description" class="alias-option__desc">
             {{ alias.description }}
           </span>
@@ -126,16 +131,13 @@ defineExpose({ resetCreating: () => (creating.value = false) });
         </label>
       </div>
 
-      <button class="toggle-create" @click="showCreate = !showCreate">
-        {{ showCreate ? t("hideCreateForm") : t("showCreateForm") }}
-      </button>
-
+      <!-- Create new alias section (always visible) -->
       <CreateAliasForm
-        v-if="showCreate"
         :available-domains="availableDomains"
         :default-domain="defaultDomain"
         :default-format="defaultFormat"
         :loading="creating"
+        :target-email="address"
         @create="handleCreate"
       />
     </div>
@@ -155,6 +157,15 @@ defineExpose({ resetCreating: () => (creating.value = false) });
     margin: 0 0 $spacing-md;
     font-size: $font-size-sm;
   }
+}
+
+.section-heading {
+  margin: 0 0 $spacing-sm;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .alias-list {
@@ -183,7 +194,12 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   }
 
   &__email {
-    font-weight: 500;
+    font-family: monospace;
+    font-size: $font-size-sm;
+    background: #f5f5f5;
+    border: 1px solid $color-border;
+    border-radius: 3px;
+    padding: 1px 5px;
     word-break: break-all;
   }
 
@@ -205,20 +221,6 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   margin-bottom: $spacing-sm;
 }
 
-.toggle-create {
-  background: none;
-  border: none;
-  padding: 0;
-  color: $color-primary;
-  font-size: $font-size-sm;
-  cursor: pointer;
-  margin-bottom: $spacing-sm;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
 .created-alias {
   &__row {
     display: flex;
@@ -228,7 +230,12 @@ defineExpose({ resetCreating: () => (creating.value = false) });
   }
 
   &__email {
-    font-weight: 500;
+    font-family: monospace;
+    font-size: $font-size-sm;
+    background: #f5f5f5;
+    border: 1px solid $color-border;
+    border-radius: 3px;
+    padding: 2px 6px;
     word-break: break-all;
 
     &--inactive {

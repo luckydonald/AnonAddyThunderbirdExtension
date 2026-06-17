@@ -1,5 +1,11 @@
 import { addyApiRequest, RateLimitError } from "../api/index.js";
-import type { DomainOptions, Alias, PaginatedAliases } from "../api/types.js";
+import type {
+  DomainOptions,
+  Alias,
+  PaginatedAliases,
+  CreateAliasBody,
+  AliasFormat,
+} from "../api/types.js";
 
 async function fetchDomainOptions(): Promise<void> {
   const result = await addyApiRequest<DomainOptions>("GET", "domain-options");
@@ -36,11 +42,71 @@ async function fetchAllAliases(): Promise<void> {
 
 async function refreshCache(): Promise<void> {
   await Promise.all([fetchDomainOptions(), fetchAllAliases()]);
+  // Push fresh data into the experiment so context menus stay current.
+  try {
+    const storage = await messenger.storage.local.get({
+      domainOptions: { data: [], defaultAliasDomain: "", defaultAliasFormat: "random_characters" },
+      aliasCache: { aliases: [], fetchedAt: 0 },
+    });
+    messenger.AddressChipMenu.setCache({
+      aliases: (storage.aliasCache as { aliases: Alias[] }).aliases,
+      domainOptions: storage.domainOptions as DomainOptions,
+    });
+  } catch {
+    // Non-fatal — context menus will use stale data until next refresh.
+  }
 }
 
-// Wake the background (and thus activate the Experiment) on Thunderbird startup.
-// Without this the background only runs when an alarm or other event fires.
-messenger.runtime.onStartup.addListener(() => {});
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+async function findComposeTabId(): Promise<number | null> {
+  try {
+    const win = await messenger.windows.getLastFocused();
+    if (win.id === undefined) return null;
+    const tabs = await messenger.tabs.query({ windowId: win.id });
+    return tabs[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function buildForwardingAddress(
+  recipientEmail: string,
+  recipientName: string,
+  aliasEmail: string,
+): string {
+  const rm = recipientEmail.match(/^(.+)@(.+)$/);
+  const am = aliasEmail.match(/^(.+)@(.+)$/);
+  if (!rm || !am) return recipientEmail;
+  const forwarding = `${am[1]}+${rm[1]}=${rm[2]}@${am[2]}`;
+  return recipientName ? `${recipientName} <${forwarding}>` : forwarding;
+}
+
+async function applyAliasToCompose(
+  tabId: number,
+  recipientEmail: string,
+  recipientName: string,
+  aliasEmail: string,
+): Promise<void> {
+  const details = await messenger.compose.getComposeDetails(tabId);
+  const lower = recipientEmail.toLowerCase();
+
+  function rewrite(list: string[]): string[] {
+    return list.map((raw) => {
+      if (!raw.toLowerCase().includes(lower)) return raw;
+      // Extract display name from "Name <email>" or plain "email"
+      const nameMatch = raw.match(/^(.*?)\s*<[^>]+>$/);
+      const name = nameMatch ? nameMatch[1].trim() : recipientName;
+      return buildForwardingAddress(recipientEmail, name, aliasEmail);
+    });
+  }
+
+  await messenger.compose.setComposeDetails(tabId, {
+    to: rewrite(details.to),
+    cc: rewrite(details.cc),
+    bcc: rewrite(details.bcc),
+  });
+}
 
 async function openAliasWindow(tabId: number): Promise<void> {
   await messenger.windows.create({
@@ -50,6 +116,11 @@ async function openAliasWindow(tabId: number): Promise<void> {
     height: 600,
   });
 }
+
+// ── Lifecycle ──────────────────────────────────────────────────────────────────
+
+// Wake the background (and thus activate the Experiment) on Thunderbird startup.
+messenger.runtime.onStartup.addListener(() => {});
 
 messenger.alarms.create("cache-refresh", { periodInMinutes: 60 });
 
@@ -93,22 +164,67 @@ messenger.composeAction.onClicked.addListener(async (tab) => {
   }
 });
 
-// Right-click context menu on address chip → open alias window.
-// The compose window is still focused when this fires, so getLastFocused()
-// reliably returns it.
-messenger.AddressChipMenu.onChipMenuClicked.addListener(async (_info) => {
-  try {
-    const win = await messenger.windows.getLastFocused();
-    if (win.id !== undefined) {
-      const tabs = await messenger.tabs.query({ windowId: win.id });
-      const tab = tabs[0];
-      if (tab?.id !== undefined) {
-        await openAliasWindow(tab.id);
-        return;
+// Right-click context menu actions on address chips.
+messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
+  const action = info.action ?? "open_popup";
+
+  if (action === "open_popup") {
+    try {
+      const win = await messenger.windows.getLastFocused();
+      if (win.id !== undefined) {
+        const tabs = await messenger.tabs.query({ windowId: win.id });
+        const tab = tabs[0];
+        if (tab?.id !== undefined) {
+          await openAliasWindow(tab.id);
+          return;
+        }
       }
+      console.error("AnonAddyTB: could not find compose tab for chip menu click");
+    } catch (e) {
+      console.error("AnonAddyTB: could not open alias window from chip menu", e);
     }
-    console.error("AnonAddyTB: could not find compose tab for chip menu click");
-  } catch (e) {
-    console.error("AnonAddyTB: could not open alias window from chip menu", e);
+    return;
+  }
+
+  const tabId = await findComposeTabId();
+  if (tabId === null) {
+    console.error("AnonAddyTB: could not find compose tab for chip action", action);
+    return;
+  }
+
+  if (action === "select_alias") {
+    if (!info.aliasEmail) return;
+    try {
+      await applyAliasToCompose(tabId, info.email, info.displayName, info.aliasEmail);
+    } catch (e) {
+      console.error("AnonAddyTB: could not apply alias from context menu", e);
+    }
+    return;
+  }
+
+  if (action === "create_alias") {
+    if (!info.domain || !info.format) return;
+    try {
+      const body: CreateAliasBody = {
+        domain: info.domain,
+        description: `Created by AnonAddyTB for sending to ${info.email}`,
+        format: info.format as AliasFormat,
+      };
+      if (info.format === "custom" && info.customPrefix?.trim()) {
+        body.local_part = info.customPrefix.trim();
+      }
+      const response = await addyApiRequest<{ data: Alias }>(
+        "POST",
+        "aliases",
+        null,
+        body,
+      );
+      const aliasEmail = response.data.email;
+      await applyAliasToCompose(tabId, info.email, info.displayName, aliasEmail);
+      // Refresh cache in the background so the new alias shows up next time.
+      refreshCache().catch(() => {});
+    } catch (e) {
+      console.error("AnonAddyTB: could not create alias from context menu", e);
+    }
   }
 });

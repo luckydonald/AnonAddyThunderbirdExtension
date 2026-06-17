@@ -80,7 +80,10 @@ async function parseAddress(raw: string): Promise<ParsedAddress | null> {
 function matchingAliases(aliases: Alias[], domain: string): Alias[] {
   const lower = domain.toLowerCase();
   const matched = aliases.filter(
-    (a) => a.email.toLowerCase().includes(lower) && a.active,
+    (a) =>
+      a.active &&
+      (a.email.toLowerCase().includes(lower) ||
+        (a.description ?? "").toLowerCase().includes(lower)),
   );
   // Sort: aliases whose address contains the domain first
   matched.sort((a) =>
@@ -220,6 +223,7 @@ async function handleCreate(
     body.local_part = payload.customPrefix.trim();
   }
 
+  let alias: Alias | null = null;
   try {
     const response = await addyApiRequest<{ data: Alias }>(
       "POST",
@@ -227,11 +231,42 @@ async function handleCreate(
       null,
       body,
     );
-    const alias = response.data;
-    r.createdAlias = { id: alias.id, email: alias.email, active: true };
-    r.selectedAlias = alias.email;
+    alias = response.data;
   } catch (e) {
-    console.error("AnonAddyTB: alias creation failed", e);
+    // 422 means the alias already exists — recover it for custom format
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("422") && msg.includes("already exists") && body.local_part) {
+      try {
+        const searchEmail = `${body.local_part}@${payload.domain}`;
+        const res = await addyApiRequest<{ data: Alias[] }>("GET", "aliases", {
+          "filter[search]": searchEmail,
+        });
+        alias = res.data.find((a) => a.email === searchEmail) ?? null;
+      } catch {
+        // fall through
+      }
+    }
+    if (!alias) {
+      console.error("AnonAddyTB: alias creation failed", e);
+      return;
+    }
+  }
+
+  r.createdAlias = { id: alias.id, email: alias.email, active: alias.active };
+  r.selectedAlias = alias.active ? alias.email : null;
+
+  // Eagerly add to the local cache so the alias appears on the next popup open.
+  try {
+    const stored = await messenger.storage.local.get({
+      aliasCache: { aliases: [] as Alias[], fetchedAt: 0 },
+    });
+    const cache = stored.aliasCache as AliasCache;
+    if (!cache.aliases.some((a) => a.id === alias!.id)) {
+      cache.aliases.push(alias!);
+      await messenger.storage.local.set({ aliasCache: cache });
+    }
+  } catch {
+    // Non-fatal — background refresh will pick it up eventually.
   }
 }
 
