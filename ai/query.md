@@ -877,3 +877,15 @@ onStartup() {
 - Now the boring normal dropdown is back, our custom entry is gone again :(
 ❯ - The domain list, which is currently a multi-select (just not multi), shall be a proper typeahead like dropdown thingo. Are there any GNOME/Mac/Win Desktop UI libs I can use here?
 - When opening the UI, can I query those needed existing aliases more efficiently (instead of reloading the complete list?)
+
+❯ Alright, one commit per change now, to keep it easy on the eyes:
+1. background pre-fetch shall keep processing all of them, keeping the cache and all that. On UI open, do a quick merge with quick load of `filter[search]`. Also on creation, merge the created alias into the cached array.
+2. After _Sends via:_ add _Sends as:_ as a second line, showing the outgoing mail format - i.e. what the email receiver will see.
+3. The stuff in the window (especially the format pills I believe) does not wrap on thin windows, but creates a scrollbar.
+4. The email-pill context menu still is not back (it should be merged with the existing one, currently it's only the existing one, no Addy.
+5. Implement that menu structure as described in @ai/initial.md
+6. The bottom margin of the "dialog" buttons is still wrong. Maybe some box-sizing shinanigens?
+7. Merge the "just created an alias" display (with addy-disable/-delete buttons) and the existing alias chooser (radio buttons & _Don't replace_ option) into one, so you can delete previous aliases, and de-select it from actually being used right after creation.
+8. **Reply-To** shall not have that context menu.
+9. If we have replaced all those emails in _From_/_CC_/_BCC_, the UI shows _Add at least one address to the To/CC/BCC field first._ again, instead of detecting that this are existing aliases, and allowing to revert them again by selecting _Don't replace_.
+10. Check that the sender email (-account) is using (one of) the set _Alias Recipients_ for that email alias - otherwise the Addy item in the toolbar shall have a red-off-on-off fade cycle, and displays the error once clicked in the GUI.
