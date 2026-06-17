@@ -1,0 +1,598 @@
+19:19:38.480
+InvisibleToDebugger: DOMException {  }
+ThreadSafeDevToolsUtils.js:82:13
+19:19:42.079 GET
+data:text/html,%3C!DOCTYPE%20html%3E%0A%3Chtml%3E%0A%20%20%3Chead%3E%3Cmeta%20charset=%22utf-8%22%3E%3C/head%3E%0A%20%20%3Cbody%3E%0A%20%20%20%20%3Cscript%20type=%22module%22%20src=%22moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js%22%3E%3C/script%3E%0A%20%20%3C/body%3E%0A%3C/html%3E
+
+19:19:42.166 AnonAddyTB: initial cache refresh failed Error: No API key configured
+    l moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/index-rOS1XSY6.js:1
+    r moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+    o moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+    <anonymous> moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+background.js:1:1252
+19:19:42.595 AnonAddyTB: permissions.getAll() on load: {
+  "origins": [
+    "*://app.addy.io/*"
+  ],
+  "permissions": [
+    "alarms",
+    "compose",
+    "storage"
+  ]
+} options-D0sb8GHU.js:1:3138
+19:20:10.408 AnonAddyTB: checking permission for origin: https://addy.example.org/ options-D0sb8GHU.js:1:3853
+19:20:10.416 AnonAddyTB: permissions.contains(): false options-D0sb8GHU.js:1:3977
+19:20:10.416 AnonAddyTB: messenger.permissions.request()
+Object { origins: (1) […] }
+options-D0sb8GHU.js:1:4047
+19:20:10.417 AnonAddyTB: error in messenger.permissions.request: Error: permissions.request may only be called from a user input handler
+    m moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/options-D0sb8GHU.js:1
+    Mt moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    he moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    uo moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    setup/</d[4]< moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/options-D0sb8GHU.js:1
+    n moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:17
+    Mt moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    he moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    s moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:17
+    Ve moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:17
+    rl moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:17
+    cl moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:17
+    pe moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    z moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    M moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    x moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    run moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:9
+    te moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    ls moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    Dt moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    M moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    $e moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    pe moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    z moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    M moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    x moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    run moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:9
+    te moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    ls moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    Dt moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    M moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    Qs moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    mount moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:13
+    mount moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/useI18n-DJeZdfHH.js:17
+    <anonymous> moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/assets/options-D0sb8GHU.js:1
+
+Object { origins: (1) […] }
+options-D0sb8GHU.js:1:4276
+19:20:10.418 AnonAddyTB: permissions.request() result: false options-D0sb8GHU.js:1:4360
+19:20:10.425 XHRGET
+https://addy.example.org/api/v1/domain-options
+[HTTP/3 200  48ms]
+
+19:20:10.425 AnonAddyTB: permissions.getAll() after request: {
+  "origins": [
+    "*://app.addy.io/*"
+  ],
+  "permissions": [
+    "alarms",
+    "compose",
+    "storage"
+  ]
+} options-D0sb8GHU.js:1:4464
+19:20:10.425 AnonAddyTB: testing API request (GET domain-options)... options-D0sb8GHU.js:1:4605
+19:20:10.428 XHRGET
+https://addy.example.org/api/v1/aliases?page=1&page[size]=100
+[HTTP/3 200  86ms]
+
+19:20:10.429 XHROPTIONS
+https://addy.example.org/api/v1/domain-options
+[HTTP/3 204  54ms]
+
+19:20:10.442 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=1&page[size]=100
+[HTTP/3 204  40ms]
+
+19:20:10.445 XHRGET
+https://addy.example.org/api/v1/domain-options
+[HTTP/3 200  43ms]
+
+19:20:10.447 XHROPTIONS
+https://addy.example.org/api/v1/domain-options
+[HTTP/3 204  41ms]
+
+19:20:10.536 AnonAddyTB: API test succeeded: {"data":["example.com", "test.org", "my-site.net", "x--alpha.example", "βeta.example.com"],"sharedDomains":["example.com"],"defaultAliasDomain":"example.com","defaultAliasFormat":"custom"} options-D0sb8GHU.js:1:4720
+19:20:10.578 XHRGET
+https://addy.example.org/api/v1/aliases?page=2&page[size]=100
+[HTTP/3 200  70ms]
+
+19:20:10.581 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=2&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:10.686 XHRGET
+https://addy.example.org/api/v1/aliases?page=3&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:10.689 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=3&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:10.794 XHRGET
+https://addy.example.org/api/v1/aliases?page=4&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:10.797 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=4&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:10.897 XHRGET
+https://addy.example.org/api/v1/aliases?page=5&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:10.899 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=5&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:11.002 XHRGET
+https://addy.example.org/api/v1/aliases?page=6&page[size]=100
+[HTTP/3 200  69ms]
+
+19:20:11.004 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=6&page[size]=100
+[HTTP/3 204  28ms]
+
+19:20:11.118 XHRGET
+https://addy.example.org/api/v1/aliases?page=7&page[size]=100
+[HTTP/3 200  70ms]
+
+19:20:11.120 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=7&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:11.223 XHRGET
+https://addy.example.org/api/v1/aliases?page=8&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:11.226 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=8&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:11.326 XHRGET
+https://addy.example.org/api/v1/aliases?page=9&page[size]=100
+[HTTP/3 200  69ms]
+
+19:20:11.328 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=9&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:11.432 XHRGET
+https://addy.example.org/api/v1/aliases?page=10&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:11.434 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=10&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:11.532 XHRGET
+https://addy.example.org/api/v1/aliases?page=11&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:11.534 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=11&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:11.634 XHRGET
+https://addy.example.org/api/v1/aliases?page=12&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:11.636 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=12&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:11.737 XHRGET
+https://addy.example.org/api/v1/aliases?page=13&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:11.738 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=13&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:11.864 XHRGET
+https://addy.example.org/api/v1/aliases?page=14&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:11.868 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=14&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:11.978 XHRGET
+https://addy.example.org/api/v1/aliases?page=15&page[size]=100
+[HTTP/3 200  72ms]
+
+19:20:11.981 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=15&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:12.159 XHRGET
+https://addy.example.org/api/v1/aliases?page=16&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:12.161 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=16&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:12.262 XHRGET
+https://addy.example.org/api/v1/aliases?page=17&page[size]=100
+[HTTP/3 200  71ms]
+
+19:20:12.265 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=17&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:12.370 XHRGET
+https://addy.example.org/api/v1/aliases?page=18&page[size]=100
+[HTTP/3 200  65ms]
+
+19:20:12.372 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=18&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:12.471 XHRGET
+https://addy.example.org/api/v1/aliases?page=19&page[size]=100
+[HTTP/3 200  63ms]
+
+19:20:12.473 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=19&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:12.569 XHRGET
+https://addy.example.org/api/v1/aliases?page=20&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:12.571 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=20&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:12.670 XHRGET
+https://addy.example.org/api/v1/aliases?page=21&page[size]=100
+[HTTP/3 200  69ms]
+
+19:20:12.672 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=21&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:12.771 XHRGET
+https://addy.example.org/api/v1/aliases?page=22&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:12.773 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=22&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:12.871 XHRGET
+https://addy.example.org/api/v1/aliases?page=23&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:12.873 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=23&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:12.975 XHRGET
+https://addy.example.org/api/v1/aliases?page=24&page[size]=100
+[HTTP/3 200  74ms]
+
+19:20:12.977 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=24&page[size]=100
+[HTTP/3 204  23ms]
+
+19:20:13.082 XHRGET
+https://addy.example.org/api/v1/aliases?page=25&page[size]=100
+[HTTP/3 200  74ms]
+
+19:20:13.084 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=25&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:13.190 XHRGET
+https://addy.example.org/api/v1/aliases?page=26&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:13.191 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=26&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:13.291 XHRGET
+https://addy.example.org/api/v1/aliases?page=27&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:13.292 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=27&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:13.393 XHRGET
+https://addy.example.org/api/v1/aliases?page=28&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:13.396 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=28&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:13.497 XHRGET
+https://addy.example.org/api/v1/aliases?page=29&page[size]=100
+[HTTP/3 200  70ms]
+
+19:20:13.499 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=29&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:13.600 XHRGET
+https://addy.example.org/api/v1/aliases?page=30&page[size]=100
+[HTTP/3 200  79ms]
+
+19:20:13.602 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=30&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:13.714 XHRGET
+https://addy.example.org/api/v1/aliases?page=31&page[size]=100
+[HTTP/3 200  65ms]
+
+19:20:13.716 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=31&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:13.812 XHRGET
+https://addy.example.org/api/v1/aliases?page=32&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:13.814 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=32&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:13.913 XHRGET
+https://addy.example.org/api/v1/aliases?page=33&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:13.915 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=33&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:14.016 XHRGET
+https://addy.example.org/api/v1/aliases?page=34&page[size]=100
+[HTTP/3 200  74ms]
+
+19:20:14.018 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=34&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:14.124 XHRGET
+https://addy.example.org/api/v1/aliases?page=35&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:14.126 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=35&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:14.226 XHRGET
+https://addy.example.org/api/v1/aliases?page=36&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:14.228 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=36&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:14.327 XHRGET
+https://addy.example.org/api/v1/aliases?page=37&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:14.329 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=37&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:14.431 XHRGET
+https://addy.example.org/api/v1/aliases?page=38&page[size]=100
+[HTTP/3 200  72ms]
+
+19:20:14.433 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=38&page[size]=100
+[HTTP/3 204  23ms]
+
+19:20:14.536 XHRGET
+https://addy.example.org/api/v1/aliases?page=39&page[size]=100
+[HTTP/3 200  64ms]
+
+19:20:14.539 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=39&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:14.637 XHRGET
+https://addy.example.org/api/v1/aliases?page=40&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:14.639 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=40&page[size]=100
+[HTTP/3 204  27ms]
+
+19:20:14.740 XHRGET
+https://addy.example.org/api/v1/aliases?page=41&page[size]=100
+[HTTP/3 200  76ms]
+
+19:20:14.742 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=41&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:14.849 XHRGET
+https://addy.example.org/api/v1/aliases?page=42&page[size]=100
+[HTTP/3 200  70ms]
+
+19:20:14.851 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=42&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:14.951 XHRGET
+https://addy.example.org/api/v1/aliases?page=43&page[size]=100
+[HTTP/3 200  79ms]
+
+19:20:14.953 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=43&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:15.063 XHRGET
+https://addy.example.org/api/v1/aliases?page=44&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:15.065 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=44&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:15.165 XHRGET
+https://addy.example.org/api/v1/aliases?page=45&page[size]=100
+[HTTP/3 200  72ms]
+
+19:20:15.167 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=45&page[size]=100
+[HTTP/3 204  27ms]
+
+19:20:15.273 XHRGET
+https://addy.example.org/api/v1/aliases?page=46&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:15.275 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=46&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:15.375 XHRGET
+https://addy.example.org/api/v1/aliases?page=47&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:15.377 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=47&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:15.477 XHRGET
+https://addy.example.org/api/v1/aliases?page=48&page[size]=100
+[HTTP/3 200  71ms]
+
+19:20:15.479 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=48&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:15.583 XHRGET
+https://addy.example.org/api/v1/aliases?page=49&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:15.586 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=49&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:15.686 XHRGET
+https://addy.example.org/api/v1/aliases?page=50&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:15.688 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=50&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:15.788 XHRGET
+https://addy.example.org/api/v1/aliases?page=51&page[size]=100
+[HTTP/3 200  65ms]
+
+19:20:15.789 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=51&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:15.888 XHRGET
+https://addy.example.org/api/v1/aliases?page=52&page[size]=100
+[HTTP/3 200  65ms]
+
+19:20:15.891 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=52&page[size]=100
+[HTTP/3 204  24ms]
+
+19:20:15.989 XHRGET
+https://addy.example.org/api/v1/aliases?page=53&page[size]=100
+[HTTP/3 200  68ms]
+
+19:20:15.991 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=53&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:16.093 XHRGET
+https://addy.example.org/api/v1/aliases?page=54&page[size]=100
+[HTTP/3 200  67ms]
+
+19:20:16.094 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=54&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:16.195 XHRGET
+https://addy.example.org/api/v1/aliases?page=55&page[size]=100
+[HTTP/3 200  65ms]
+
+19:20:16.197 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=55&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:16.296 XHRGET
+https://addy.example.org/api/v1/aliases?page=56&page[size]=100
+[HTTP/3 200  69ms]
+
+19:20:16.298 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=56&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:16.399 XHRGET
+https://addy.example.org/api/v1/aliases?page=57&page[size]=100
+[HTTP/3 200  66ms]
+
+19:20:16.401 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=57&page[size]=100
+[HTTP/3 204  26ms]
+
+19:20:16.501 XHRGET
+https://addy.example.org/api/v1/aliases?page=58&page[size]=100
+[HTTP/3 200  71ms]
+
+19:20:16.503 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=58&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:16.607 XHRGET
+https://addy.example.org/api/v1/aliases?page=59&page[size]=100
+[HTTP/3 429  34ms]
+
+
+GET
+	https://addy.example.org/api/v1/aliases?page=59&page[size]=100
+Status
+429
+VersionHTTP/3
+Übertragen1,67 kB (13,42 kB Größe)
+Referrer Policystrict-origin-when-cross-origin
+HEADER:
+HTTP/3 429
+x-ratelimit-limit: 60
+cache-control: no-cache, private
+content-encoding: zstd
+x-ratelimit-remaining: 0
+retry-after: 54
+x-ratelimit-reset: 1781716870
+date: Wed, 17 Jun 2026 17:20:16 GMT
+server: nginx
+access-control-allow-origin: *
+access-control-expose-headers: Cache-Control, Content-Language, Content-Type, Expires, Last-Modified, Pragma
+content-type: application/json
+vary: Accept-Encoding
+
+19:20:16.608 XHROPTIONS
+https://addy.example.org/api/v1/aliases?page=59&page[size]=100
+[HTTP/3 204  25ms]
+
+19:20:16.670 AnonAddyTB: cache refresh on settings change failed TypeError: can't access property Symbol.iterator, s.data is undefined
+    c moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+    o moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+    <anonymous> moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+    Async* moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+background.js:1:982
+    <anonym> moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
+    <anonym> moz-extension://32c144f3-a23f-4aa7-b844-1ce7d1722b83/background.js:1
