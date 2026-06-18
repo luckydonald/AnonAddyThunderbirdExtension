@@ -47,6 +47,12 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
     let chipMenuFire = null;
     const attached = new Map();
 
+    // Icon URLs — the Addy extension icon and built-in TB address-book icons.
+    const ICON_ADDY = context.extension.baseURI.spec + "icon.svg";
+    // chrome://messenger/skin icons available in all TB themes.
+    const ICON_EXISTING = "chrome://messenger/skin/addressbook/icons/addressbook.png";
+    const ICON_NEW = "chrome://messenger/skin/icons/addcontact16.png";
+
     function buildFormatItems(parentPopup, doc, win, email, displayName, fieldType, domain) {
       for (const fmt of FORMAT_ITEMS) {
         const item = doc.createXULElement("menuitem");
@@ -118,6 +124,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       // Top-level menu entry — direct click opens popup, hover/arrow unfolds submenu.
       const menu = doc.createXULElement("menu");
       menu.setAttribute("label", "Use Addy alias for sending");
+      menu.setAttribute("image", ICON_ADDY);
       const menuPopup = doc.createXULElement("menupopup");
       // Thunderbird's onpopupshowing runs on all menupopup events in the compose window
       // and crashes when triggerNode is not a pill (pill is null → pill.hasAttribute fails).
@@ -137,6 +144,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       // ── Existing… ▶ ──────────────────────────────────────────────────────────
       const existingMenu = doc.createXULElement("menu");
       existingMenu.setAttribute("label", "Existing…");
+      existingMenu.setAttribute("image", ICON_EXISTING);
       const existingPopup = doc.createXULElement("menupopup");
 
       // "Open alias picker…" is first in Existing; provides easy access to full GUI.
@@ -240,6 +248,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       // ── New… ▶ ───────────────────────────────────────────────────────────────
       const newMenu = doc.createXULElement("menu");
       newMenu.setAttribute("label", "New…");
+      newMenu.setAttribute("image", ICON_NEW);
       const newPopup = doc.createXULElement("menupopup");
 
       if (availableDomains.length > 1) {
