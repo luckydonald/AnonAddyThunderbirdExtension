@@ -13,7 +13,7 @@ and experiment bug fixes. Each has a concrete root cause identified via code ins
 `.popup`. When TB opens the window narrower than 540 px the div forces the body wider than the
 viewport, producing a scrollbar.
 
-**Fix (two files):**
+**Fix (one file):**
 
 `src/popup/App.vue` — remove the `min-width` line; keep `max-width` and `width: 100%`:
 ```scss
@@ -25,10 +25,7 @@ viewport, producing a scrollbar.
 }
 ```
 
-`src/popup/styles/main.scss` — add to `body`:
-```scss
-overflow-x: hidden;
-```
+No `overflow-x: hidden` — if child content overflows, scrollbars are better than hidden/inaccessible UI.
 
 ---
 
@@ -153,12 +150,51 @@ with a call to the extracted function) to keep one code path.
 
 Four separate commits, one per issue, in order. Each commit message follows the `[extension] area: verb: description` style already in the log.
 
-## Verification
+## Issue 5 — Mock fixture lacks a matching alias for the test recipient
 
-- **Issue 1:** Build the extension, open the popup in a window narrower than 540 px (or resize
-  the TB window); confirm no horizontal scrollbar.
-- **Issue 2:** Click `+ Create alias` in the popup; confirm a separate TB window opens.
-- **Issue 3:** Right-click an address pill in a compose window; confirm icons appear next to each
-  menu entry.
-- **Issue 4:** Restart TB (or reload the extension), right-click a pill, open "Existing…";
-  confirm aliases are populated.
+**Problem:** Marionette tests for issues 3 and 4 (and the existing alias-matching tests) only work
+if `tests/fixtures/aliases.json` contains at least one active alias whose description includes the
+domain of the test recipient (`example.com`). Verify the fixture has this; if not, add it. Also
+ensure `tests/marionette/conftest.py` injects this fixture data into extension storage before each
+test that exercises alias lookup (both popup and chip-menu suites).
+
+**Fix:** Confirm `aliases.json` has ≥1 active entry with `"description": "…example.com…"`.
+If missing, add one (e.g. `{ "id": "a1", "email": "shop@anonaddy.me", "description": "Shopping alias for example.com", "active": true }`).
+Ensure `conftest.py` writes `aliasCache` + `domainOptions` to extension storage via the existing
+`ExtensionStorageIDB` / `sendAsyncMessage` injection pattern before tests that depend on it.
+
+---
+
+## Issue 6 — Run all tests and fix failures
+
+After all code changes are committed, run the full test suite:
+```bash
+npm test                        # Vitest unit tests
+cd tests/marionette && uv run pytest -v   # Marionette e2e tests
+```
+Fix any failures introduced by the 4 fixes above before considering the work done. This includes
+type errors (`npm run typecheck`), Prettier formatting (`npx prettier --check .`), and any broken
+Marionette assumptions (e.g. selectors that no longer match after RecipientCard restructure).
+
+---
+
+## Verification (automated tests)
+
+Each issue gets a test committed alongside the fix.
+
+- **Issue 1:** New Marionette test in `test_popup.py`: `test_popup_no_min_width` — open the popup
+  in a window narrower than 540 px (set window width via `client.set_window_rect`), check that
+  `.popup` `scrollWidth <= clientWidth` (no horizontal overflow). The existing
+  `test_popup_responsive_width` test already partially covers this; update/extend it.
+
+- **Issue 2:** New Marionette test in `test_popup.py`: `test_create_alias_opens_own_window` —
+  open the main popup, wait for a `RecipientCard`, click the `+ Create alias` button, assert that
+  a second TB window appears (`len(client.window_handles) > 1`).
+
+- **Issue 3:** New Marionette test in `test_chip_menu.py`: `test_addy_menu_items_have_icons` —
+  open the Addy submenu, inspect the `image` attribute (or `list-style-image` style) on the top
+  menu, "Existing…", and "New…" menu elements; assert all are non-empty/non-chrome-url.
+
+- **Issue 4:** New Marionette test in `test_chip_menu.py`: `test_existing_aliases_populated` —
+  inject aliases into storage (without calling `refreshCache`), reload the background, right-click
+  a pill, open "Existing…"; assert the expected alias labels are present in the submenu.
