@@ -11,6 +11,7 @@ import {
   parseForwardingAddress,
   buildForwardingAddress,
 } from "./utils.js";
+import { hasApplyableChanges } from "./applyState.js";
 import type { Alias, DomainOptions } from "../api/types.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ const { t } = useI18n();
 
 const hasSelections = computed(() => {
   if (popupState.value.kind !== "ready") return false;
-  return popupState.value.recipients.some((r) => r.selectedAlias !== null);
+  return hasApplyableChanges(popupState.value.recipients);
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
