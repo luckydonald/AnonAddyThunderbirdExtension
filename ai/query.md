@@ -930,3 +930,5 @@ onStartup() {
 
 ❯ /plan wire up Vitest with that first test, and do marionette python tests for the chrome.
 
+❯ Also test the email pill context menu integration. Mock the alias creation for all those, so we don't need real addy instance. Have the mocked data neatly organized as json files in a directory structure, used for both js and py tests to share - i.e. so they can test under the same assumptions.
+
