@@ -235,20 +235,20 @@ class TestPopup:
             f"scrollWidth={nval.get('scrollWidth')}"
         )
 
-        # Check 3: format-choice pills must use flex-wrap: wrap
-        wrap_check = popup_query(
+        # Check 3: .popup must have no min-width (the responsive fix removes it so
+        # the window can be narrower than 540 px without causing horizontal overflow)
+        min_width_check = popup_query(
             tb, popup_handle,
             """(function() {
-                const pills = content.document.querySelector('.format-pills');
-                if (!pills) return { found: false };
-                const wrap = content.window.getComputedStyle(pills).flexWrap;
-                return { found: true, flexWrap: wrap };
+                const popup = content.document.querySelector('.popup');
+                if (!popup) return { err: 'no .popup element' };
+                const mw = content.window.getComputedStyle(popup).minWidth;
+                return { minWidth: mw };
             })()""",
         )
-        wval = wrap_check.get("value", {})
-        assert wval.get("found"), "No .format-pills element found in popup"
-        assert wval.get("flexWrap") == "wrap", (
-            f"format-pills is not wrapping: flexWrap={wval.get('flexWrap')!r}"
+        mval = min_width_check.get("value", {})
+        assert mval.get("minWidth") in ("0px", ""), (
+            f"popup still has a min-width that causes overflow: {mval.get('minWidth')!r}"
         )
 
         with tb.using_context("chrome"):

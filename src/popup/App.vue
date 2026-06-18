@@ -543,7 +543,6 @@ function openSettings() {
 @use "./styles/variables" as *;
 
 .popup {
-  min-width: $window-min-width;
   max-width: $window-min-width;
   width: 100%;
   box-sizing: border-box;
