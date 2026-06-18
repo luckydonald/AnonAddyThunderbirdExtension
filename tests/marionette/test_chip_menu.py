@@ -104,6 +104,19 @@ def click_menu_item(client, label_fragment: str):
     return result
 
 
+def press_key(client, key: str):
+    """Dispatch a keydown event on the compose document (for XUL popup navigation)."""
+    with client.using_context("chrome"):
+        client.execute_script(
+            """
+            document.documentElement.dispatchEvent(new KeyboardEvent("keydown", {
+                key: arguments[0], bubbles: true, cancelable: true
+            }));
+            """,
+            script_args=[key],
+        )
+
+
 def open_submenu(client, menu_label_fragment: str):
     """Click a XUL menu element (parent item with popup) matching the label fragment."""
     with client.using_context("chrome"):
@@ -205,6 +218,76 @@ class TestChipMenu:
         assert path == "/api/v1/aliases"
         assert body.get("format") == "random_characters"
 
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script("window.close();")
+
+    def test_addy_menu_survives_submenu_navigation(self, tb):
+        """Regression: enter Addy submenu, navigate back out, arrow up to a native
+        pre-existing menu item — then close the popup and re-open it.  The Addy menu
+        item must still appear.
+
+        Bug: after navigating out of the Addy submenu and onto a native menu item,
+        the Addy entry vanishes from all subsequent right-click menus until the
+        extension is reloaded.
+        """
+        compose_handle = open_compose_with_recipient(tb, RECIPIENT)
+        right_click_first_pill(tb)
+
+        # Verify Addy entry is present on the first open
+        with tb.using_context("chrome"):
+            found_initial = tb.execute_script(
+                """
+                const items = document.querySelectorAll("menuitem, menu");
+                for (const it of items) {
+                    const lbl = it.getAttribute("label") || it.textContent || "";
+                    if (lbl.toLowerCase().includes("addy")) return lbl;
+                }
+                return null;
+                """
+            )
+        assert found_initial is not None, "Addy menu item not found on initial right-click"
+
+        # Enter the Addy submenu (one level deep)
+        opened = open_submenu(tb, "addy")
+        assert opened, "Could not open Addy submenu"
+        time.sleep(0.4)
+
+        # Navigate back out of the submenu to the parent popup
+        press_key(tb, "Escape")
+        time.sleep(0.3)
+
+        # Move up to a native (pre-existing) menu item above the Addy entry
+        press_key(tb, "ArrowUp")
+        time.sleep(0.2)
+
+        # Close the context menu entirely
+        press_key(tb, "Escape")
+        time.sleep(0.4)
+
+        # Re-open the context menu with another right-click
+        right_click_first_pill(tb)
+
+        # The Addy entry must still be present — this is what the bug breaks
+        with tb.using_context("chrome"):
+            found_after = tb.execute_script(
+                """
+                const items = document.querySelectorAll("menuitem, menu");
+                for (const it of items) {
+                    const lbl = it.getAttribute("label") || it.textContent || "";
+                    if (lbl.toLowerCase().includes("addy")) return lbl;
+                }
+                return null;
+                """
+            )
+        assert found_after is not None, (
+            "Addy menu item vanished after entering submenu and navigating to a native "
+            "menu item — extension state broken until reload (regression)"
+        )
+
+        # Cleanup
+        press_key(tb, "Escape")
+        time.sleep(0.2)
         with tb.using_context("chrome"):
             tb.switch_to_window(compose_handle)
             tb.execute_script("window.close();")
