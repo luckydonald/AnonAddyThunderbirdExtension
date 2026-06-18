@@ -20,6 +20,10 @@ let _cacheData = {
   },
 };
 
+function getAddyDomainSet() {
+  return new Set((_cacheData.domainOptions?.data || []).map((d) => d.toLowerCase()));
+}
+
 const FORMAT_ITEMS = [
   { value: "random_characters", label: "Characters" },
   { value: "random_words", label: "Words" },
@@ -48,6 +52,7 @@ function matchingAliasesForEmail(email) {
 this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
   getAPI(context) {
     let chipMenuFire = null;
+    // Each value is { cleanup, doc, pillIconMap } so setCache can re-decorate.
     const attached = new Map();
 
     // Icon URLs — the Addy extension icon and built-in TB address-book icons.
@@ -55,6 +60,71 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
     // chrome://messenger/skin icons available in all TB themes.
     const ICON_EXISTING = "chrome://messenger/skin/addressbook/icons/addressbook.png";
     const ICON_NEW = "chrome://messenger/skin/icons/addcontact16.png";
+
+    // Compiled forwarding-address utilities (dist/utils.js from src/shared/forwardingAddress.ts).
+    const { parseForwardingAddress } = ChromeUtils.importESModule(
+      context.extension.baseURI.spec + "utils.js",
+    );
+
+    // Pill decoration helpers (dist/experiment/pillDecoration.js).
+    const {
+      decoratePillViaTextNode,
+      decoratePillViaCSSAdopted,
+      upsertPillIcon,
+      removePillIcon,
+    } = ChromeUtils.importESModule(
+      context.extension.baseURI.spec + "experiment/pillDecoration.js",
+    );
+
+    // ── Pill decoration ───────────────────────────────────────────────────────
+
+    function injectAddyPillStyles(doc) {
+      if (doc.getElementById("addy-pill-styles")) return;
+      const style = doc.createElement("style");
+      style.id = "addy-pill-styles";
+      style.textContent = `
+        .addy-pill-icon {
+          width: 12px;
+          height: 12px;
+          vertical-align: middle;
+          margin-right: 3px;
+          pointer-events: none;
+        }
+        .addy-pill-icon.addy-aliased {
+          filter: grayscale(1) opacity(0.6);
+        }
+      `;
+      doc.head.appendChild(style);
+    }
+
+    function decoratePill(pill, pillIconMap) {
+      const email = pill.getAttribute("emailAddress") || "";
+      const fwd = parseForwardingAddress(email, getAddyDomainSet());
+      const domain = email.match(/@(.+)$/)?.[1]?.toLowerCase() ?? "";
+
+      if (fwd) {
+        const label = `${fwd.aliasEmail} → ${fwd.originalEmail}`;
+        decoratePillViaTextNode(pill, label);
+        decoratePillViaCSSAdopted(pill, label);
+        upsertPillIcon(pill, pillIconMap, ICON_ADDY, true);
+      } else if (getAddyDomainSet().has(domain)) {
+        decoratePillViaTextNode(pill, null);
+        decoratePillViaCSSAdopted(pill, null);
+        upsertPillIcon(pill, pillIconMap, ICON_ADDY, false);
+      } else {
+        decoratePillViaTextNode(pill, null);
+        decoratePillViaCSSAdopted(pill, null);
+        removePillIcon(pill, pillIconMap);
+      }
+    }
+
+    function decorateAllPills(doc, pillIconMap) {
+      doc.querySelectorAll("mail-address-pill").forEach((pill) => {
+        decoratePill(pill, pillIconMap);
+      });
+    }
+
+    // ── Context menu ──────────────────────────────────────────────────────────
 
     function buildFormatItems(parentPopup, doc, win, email, displayName, fieldType, domain) {
       for (const fmt of FORMAT_ITEMS) {
@@ -274,9 +344,44 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       return menu;
     }
 
+    // ── Window attachment ─────────────────────────────────────────────────────
+
     function attachToWindow(win) {
       if (attached.has(win)) return;
       const doc = win.document;
+      const pillIconMap = new WeakMap();
+
+      injectAddyPillStyles(doc);
+      decorateAllPills(doc, pillIconMap);
+
+      const observer = new win.MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (node.tagName?.toLowerCase() === "mail-address-pill") {
+              decoratePill(node, pillIconMap);
+            }
+          }
+          for (const node of mutation.removedNodes) {
+            if (node.tagName?.toLowerCase() === "mail-address-pill") {
+              removePillIcon(node, pillIconMap);
+            }
+          }
+          if (
+            mutation.type === "attributes" &&
+            mutation.target.tagName?.toLowerCase() === "mail-address-pill"
+          ) {
+            decoratePill(mutation.target, pillIconMap);
+          }
+        }
+      });
+
+      // Observe the whole document body for pill additions/removals/changes.
+      observer.observe(doc.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["emailaddress"],
+      });
 
       let pendingPill = null;
       let pendingReset = null;
@@ -357,10 +462,15 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       doc.addEventListener("contextmenu", onContextMenu, true);
       doc.addEventListener("popupshowing", onPopupShowing, true);
 
-      attached.set(win, () => {
-        doc.removeEventListener("contextmenu", onContextMenu, true);
-        doc.removeEventListener("popupshowing", onPopupShowing, true);
-        clearTimeout(pendingReset);
+      attached.set(win, {
+        cleanup() {
+          doc.removeEventListener("contextmenu", onContextMenu, true);
+          doc.removeEventListener("popupshowing", onPopupShowing, true);
+          observer.disconnect();
+          clearTimeout(pendingReset);
+        },
+        doc,
+        pillIconMap,
       });
     }
 
@@ -386,9 +496,9 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         const win = xulWin
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIDOMWindow);
-        const cleanup = attached.get(win);
-        if (cleanup) {
-          cleanup();
+        const entry = attached.get(win);
+        if (entry) {
+          entry.cleanup();
           attached.delete(win);
         }
       },
@@ -398,6 +508,9 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       AddressChipMenu: {
         setCache(data) {
           _cacheData = data;
+          for (const { doc, pillIconMap } of attached.values()) {
+            decorateAllPills(doc, pillIconMap);
+          }
         },
 
         onChipMenuClicked: new ExtensionCommon.EventManager({
@@ -419,7 +532,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
             return () => {
               chipMenuFire = null;
               Services.wm.removeListener(windowListener);
-              for (const cleanup of attached.values()) cleanup();
+              for (const entry of attached.values()) entry.cleanup();
               attached.clear();
             };
           },
