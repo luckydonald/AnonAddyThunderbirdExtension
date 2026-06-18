@@ -6,6 +6,7 @@ import {
   removePillIcon,
 } from "./pillDecoration.js";
 import { createMenuIconUrls } from "./menuIcons.js";
+import { createWindowAttachmentLifecycle } from "./windowAttachmentLifecycle.js";
 
 // ChromeUtils, Services, Ci are privileged TB globals; see src/types/experiment.d.ts.
 const { ExtensionCommon } = ChromeUtils.importESModule(
@@ -586,10 +587,33 @@ function matchingAliasesForEmail(email: string): any[] {
       },
     };
 
+    const lifecycle = createWindowAttachmentLifecycle({
+      addWindowListener() {
+        Services.wm.addListener(windowListener);
+      },
+      removeWindowListener() {
+        Services.wm.removeListener(windowListener);
+      },
+      attachExistingWindows() {
+        const iter = Services.wm.getEnumerator("msgcompose");
+        while (iter.hasMoreElements()) {
+          const win = iter.getNext();
+          if (win.document.readyState === "complete") {
+            attachToWindow(win);
+          }
+        }
+      },
+      cleanupAttachedWindows() {
+        for (const entry of attached.values()) entry.cleanup();
+        attached.clear();
+      },
+    });
+
     return {
       AddressChipMenu: {
         setCache(data: typeof _cacheData) {
           _cacheData = data;
+          lifecycle.ensureAttached();
           for (const { doc, pillIconMap } of attached.values()) {
             decorateAllPills(doc, pillIconMap);
           }
@@ -600,22 +624,11 @@ function matchingAliasesForEmail(email: string): any[] {
           name: "AddressChipMenu.onChipMenuClicked",
           register(fire: any) {
             chipMenuFire = fire;
-
-            Services.wm.addListener(windowListener);
-
-            const iter = Services.wm.getEnumerator("msgcompose");
-            while (iter.hasMoreElements()) {
-              const win = iter.getNext();
-              if (win.document.readyState === "complete") {
-                attachToWindow(win);
-              }
-            }
+            lifecycle.ensureAttached();
 
             return () => {
               chipMenuFire = null;
-              Services.wm.removeListener(windowListener);
-              for (const entry of attached.values()) entry.cleanup();
-              attached.clear();
+              lifecycle.releaseEventListener();
             };
           },
         }).api(),
