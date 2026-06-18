@@ -958,3 +958,6 @@ onStartup() {
 3. Can we get icons into the context menu?
 4. The _Existing_ context menu doesn't properly fill with the existing aliases. The UI one finds those.
 
+❯ /plan I want the mail-address-pill to have an grayscale or non-grayscale leading addy icon, depending if they are a "proxied" or "non proxied" address.
+In case they are a proxied one, I wanna have it display a different text: `alias@anon.my-mail.com → them@their-host.com` instead of `alias+them=their-host.com@anon.my-mail.com`.
+
