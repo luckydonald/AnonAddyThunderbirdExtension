@@ -952,3 +952,9 @@ onStartup() {
 
 ❯ how about fixing?
 
+❯ Commit for each:
+1. Write a test that the content of the overlay can handle getting smaller or bigger in width (i.e. no horizontal scrollbars, content being responsive basically)
+2. the "create new alias" shall be sub-popup window of it's own and opened with a <kbd>+ New Alias</kbd> button.
+3. Can we get icons into the context menu?
+4. The _Existing_ context menu doesn't properly fill with the existing aliases. The UI one finds those.
+
