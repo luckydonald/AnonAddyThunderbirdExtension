@@ -13,5 +13,6 @@
 3. **End-to-end / integration (hard)** — Testing against an actual Thunderbird instance requires `web-ext` + a real Thunderbird binary. Mozilla's `web-ext` CLI can run the extension in Thunderbird; you'd drive it via `puppeteer` or similar, but Thunderbird's WebDriver support is limited. This is significantly more complex to set up and maintain.
 
 **Realistic recommendation:**
+
 - Add **Vitest** for unit + component tests — low friction, no new build system, covers the API client, alias-matching logic, and component behavior.
 - Skip E2E automation unless there's a specific regression pain point — the Thunderbird testing story is still rough.

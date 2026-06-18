@@ -1,7 +1,8 @@
 Survey the testing landscape for this Thunderbird extension project. Look at:
+
 1. package.json for existing test scripts/dependencies
-2. Any existing test files (*.test.*, *.spec.*, __tests__/)
-3. The vite/build config (vite.config.*, tsconfig.json)
+2. Any existing test files (_.test._, _.spec._, **tests**/)
+3. The vite/build config (vite.config.\*, tsconfig.json)
 4. The src/ directory structure briefly
 5. Any CI config (.github/workflows/)
 

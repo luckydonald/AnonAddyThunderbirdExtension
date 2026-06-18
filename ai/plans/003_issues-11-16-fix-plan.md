@@ -12,6 +12,7 @@ After the merge of Batch 2 commits, six issues remain. Each is filed separately;
 targetName` gate hides the forwarding-address row when there is no display name — at which point the two rows show identical content, so the previous implementor removed one. The user wants both rows always visible.
 
 **Fix** (`src/popup/components/CreateAliasForm.vue`):
+
 - Line 201: change `v-if="forwardingPreview && targetName"` → `v-if="forwardingPreview"`.
 
 ---
@@ -26,31 +27,39 @@ targetName` gate hides the forwarding-address row when there is no display name 
 **Fix** (`src/experiment/implementation.js`):
 
 - In `onContextMenu`: add a `console.log` showing the composedPath tag names so the user can verify the pill is being found. Also add fallback: after the `composedPath().find(...)`, if `pill` is null AND `e.target?.tagName?.toLowerCase() === "mail-address-pill"`, use `e.target` directly.
-  ```javascript
-  let pill = e.composedPath().find(
-    (el) => el.tagName && el.tagName.toLowerCase() === "mail-address-pill",
-  ) ?? null;
-  // Fallback for cases where composedPath doesn't surface the host element.
-  if (!pill && e.target?.tagName?.toLowerCase() === "mail-address-pill") {
-    pill = e.target;
-  }
-  ```
+
+    ```javascript
+    let pill =
+        e
+            .composedPath()
+            .find(
+                (el) =>
+                    el.tagName &&
+                    el.tagName.toLowerCase() === "mail-address-pill",
+            ) ?? null;
+    // Fallback for cases where composedPath doesn't surface the host element.
+    if (!pill && e.target?.tagName?.toLowerCase() === "mail-address-pill") {
+        pill = e.target;
+    }
+    ```
 
 - In `onPopupShowing`: guard against consuming `pendingPill` for unrelated menupopups by checking `popup.triggerNode`. For a right-click context menu the triggerNode is set to the clicked element; for autocomplete popups it is typically null or a text input. Add:
-  ```javascript
-  // Only inject into the context menu triggered by our pill.
-  const trigger = popup.triggerNode;
-  if (trigger) {
-    // composedPath-safe containment: check whether the trigger is the pill or
-    // is inside it (open shadow DOM).
-    const inPill =
-      trigger === pendingPill ||
-      pendingPill.contains(trigger) ||
-      (trigger.getRootNode?.()?.host === pendingPill);
-    if (!inPill) return;   // don't consume pendingPill; keep it for the real popup
-  }
-  ```
-  If `triggerNode` is null (rare cases) we fall through and inject anyway (unchanged behaviour).
+
+    ```javascript
+    // Only inject into the context menu triggered by our pill.
+    const trigger = popup.triggerNode;
+    if (trigger) {
+        // composedPath-safe containment: check whether the trigger is the pill or
+        // is inside it (open shadow DOM).
+        const inPill =
+            trigger === pendingPill ||
+            pendingPill.contains(trigger) ||
+            trigger.getRootNode?.()?.host === pendingPill;
+        if (!inPill) return; // don't consume pendingPill; keep it for the real popup
+    }
+    ```
+
+    If `triggerNode` is null (rare cases) we fall through and inject anyway (unchanged behaviour).
 
 - Add a `console.log("AnonAddyTB contextmenu path:", ...)` and `console.log("AnonAddyTB popupshowing:", ...)` so the user can paste the output into an errors file.
 
@@ -63,21 +72,23 @@ targetName` gate hides the forwarding-address row when there is no display name 
 **Fix**:
 
 `src/popup/components/RecipientCard.vue`:
+
 - Change emits to carry an alias ID:
-  ```typescript
-  disable: [id: string]
-  delete: [id: string]
-  restore: [id: string]
-  ```
+    ```typescript
+    disable: [id: string]
+    delete: [id: string]
+    restore: [id: string]
+    ```
 - In the `displayAliases` template block, change `<label>` wrapper to `<div class="alias-option">` with radio + label inside, and add an `alias-option__actions` div with Disable/Delete buttons (`@click.stop` on the actions div). Inactive aliases get a Re-enable button instead of Disable.
 - The existing `createdAlias` block already has correct buttons — update it to emit the ID: `$emit('disable', createdAlias.id)` etc.
 - `existingAliases` items are `Alias` objects which have `active`, `id`, `email`. Use those to drive the button visibility (`v-if="alias.active"` for Disable vs Re-enable).
 
 `src/popup/App.vue`:
+
 - Update `handleDisable`, `handleRestore`, `handleDelete` to accept `(recipientIdx: number, aliasId: string)` instead of `(recipientIdx: number)`. They should no longer check `r.createdAlias` exclusively:
-  - Locate the alias by ID from `r.createdAlias` first, then from `r.existingAliases`.
-  - If found in `r.existingAliases`, update `r.existingAliases[idx].active` (disable/restore) or splice it out (delete), plus clear `r.selectedAlias` if it matches.
-  - If found in `r.createdAlias`, keep existing `r.createdAlias` mutation.
+    - Locate the alias by ID from `r.createdAlias` first, then from `r.existingAliases`.
+    - If found in `r.existingAliases`, update `r.existingAliases[idx].active` (disable/restore) or splice it out (delete), plus clear `r.selectedAlias` if it matches.
+    - If found in `r.createdAlias`, keep existing `r.createdAlias` mutation.
 - Update the event handlers in the template: `@disable="(id) => handleDisable(idx, id)"` etc.
 - `applyAndClose`: the current check `r.createdAlias?.active ? r.createdAlias.email : r.selectedAlias` should be generalised — check the actual active state of `r.selectedAlias` by looking it up across both `r.createdAlias` and `r.existingAliases`.
 
@@ -88,6 +99,7 @@ targetName` gate hides the forwarding-address row when there is no display name 
 **Root cause** (`src/popup/App.vue:83-95`): `matchingAliases` uses `a.email.toLowerCase().includes(lower)` — this matches any alias whose addy-domain happens to contain the recipient domain as a substring (e.g., alias `x@alias.company.com` when recipient is `user@company.com`).
 
 **Fix, part A — tighten matching**:
+
 - Remove the `a.email.toLowerCase().includes(lower)` branch entirely.
 - Keep only the description match: `(a.description ?? "").toLowerCase().includes(lower)`.
 - Sort/slice unchanged.
@@ -96,22 +108,28 @@ targetName` gate hides the forwarding-address row when there is no display name 
 **Fix, part B — typeahead for any alias**:
 
 `src/popup/components/RecipientCard.vue`:
+
 - Add `allAliases: Alias[]` prop.
 - Add `aliasSearch = ref("")` and computed `searchResults`:
-  ```typescript
-  const searchResults = computed(() => {
-    const q = aliasSearch.value.trim().toLowerCase();
-    if (!q) return [];
-    return props.allAliases
-      .filter(a => a.email.toLowerCase().includes(q) || (a.description ?? "").toLowerCase().includes(q))
-      .slice(0, 15);
-  });
-  ```
+    ```typescript
+    const searchResults = computed(() => {
+        const q = aliasSearch.value.trim().toLowerCase();
+        if (!q) return [];
+        return props.allAliases
+            .filter(
+                (a) =>
+                    a.email.toLowerCase().includes(q) ||
+                    (a.description ?? "").toLowerCase().includes(q),
+            )
+            .slice(0, 15);
+    });
+    ```
 - In the template, above the alias list, add a small `<input>` placeholder `"Search all aliases…"` bound to `aliasSearch`.
 - When `searchResults.length > 0` (search active), show `searchResults` instead of `displayAliases` + `createdAlias`. Clicking an item sets `selectedAlias`. Clear search on selection.
 - When search is empty, show the normal list (pre-filtered + created alias).
 
 `src/popup/App.vue`:
+
 - Pass `:all-aliases="allAliases"` to RecipientCard.
 
 ---
@@ -123,14 +141,18 @@ targetName` gate hides the forwarding-address row when there is no display name 
 The `@blur.self` / `@mousedown.prevent` combo in the combobox is correct and not the issue.
 
 **Fix** (`src/popup/App.vue` — `refreshAliasesInBackground`):
+
 - After the existing alias refresh loop, if `domainOptions.value.data.length === 0`, fetch domain options inline:
-  ```typescript
-  if (domainOptions.value.data.length === 0) {
-    const fresh = await addyApiRequest<DomainOptions>("GET", "domain-options");
-    domainOptions.value = fresh;
-    await messenger.storage.local.set({ domainOptions: fresh });
-  }
-  ```
+    ```typescript
+    if (domainOptions.value.data.length === 0) {
+        const fresh = await addyApiRequest<DomainOptions>(
+            "GET",
+            "domain-options",
+        );
+        domainOptions.value = fresh;
+        await messenger.storage.local.set({ domainOptions: fresh });
+    }
+    ```
 - This runs in the background after the popup is visible (same as alias refresh) so the combobox will populate within a second of opening.
 
 ---
@@ -138,6 +160,7 @@ The `@blur.self` / `@mousedown.prevent` combo in the combobox is correct and not
 ## Issue 16 — "Replace … with:" → "Send … from:"
 
 **Fix** (`_locales/en/messages.json`):
+
 - `"replaceWithPrefix": { "message": "Send" }` (was "Replace")
 - `"replaceWithSuffix": { "message": "from:" }` (was "with:")
 

@@ -39,13 +39,13 @@ flatpak form) are split with `shlex.split` so they work correctly with `subproce
 
 ## Mock server endpoints
 
-| Method | Path | Response |
-|--------|------|----------|
-| GET | `/api/v1/domain-options` | `tests/fixtures/domain-options.json` |
-| GET | `/api/v1/aliases` | `tests/fixtures/aliases.json` (paginated) |
-| POST | `/api/v1/aliases` | Constructed alias from request body |
-| PATCH | `/api/v1/aliases/{id}` | `200 {}` |
-| DELETE | `/api/v1/aliases/{id}` | `204` |
+| Method | Path                     | Response                                  |
+| ------ | ------------------------ | ----------------------------------------- |
+| GET    | `/api/v1/domain-options` | `tests/fixtures/domain-options.json`      |
+| GET    | `/api/v1/aliases`        | `tests/fixtures/aliases.json` (paginated) |
+| POST   | `/api/v1/aliases`        | Constructed alias from request body       |
+| PATCH  | `/api/v1/aliases/{id}`   | `200 {}`                                  |
+| DELETE | `/api/v1/aliases/{id}`   | `204`                                     |
 
 Recorded requests are available at `mock_server._Handler.recorded` for assertions.
 

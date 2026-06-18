@@ -1,10 +1,10 @@
 ---
 name: marionette-tb-chrome-patterns
 description: "Empirically verified Thunderbird/Marionette interaction patterns — chrome context, window handles, compose, extension popup OOP bridging, storage injection"
-metadata: 
-  node_type: memory
-  type: project
-  originSessionId: b3c2110f-ae97-47f6-bf3d-647bd0eaab60
+metadata:
+    node_type: memory
+    type: project
+    originSessionId: b3c2110f-ae97-47f6-bf3d-647bd0eaab60
 ---
 
 ## All TB windows are XUL chrome windows
@@ -15,10 +15,10 @@ metadata:
 
 ## Window types (windowtype attribute)
 
-| windowtype | Description |
-|---|---|
-| `mail:3pane` | Main Thunderbird window |
-| `msgcompose` | Compose window |
+| windowtype            | Description             |
+| --------------------- | ----------------------- |
+| `mail:3pane`          | Main Thunderbird window |
+| `msgcompose`          | Compose window          |
 | `mail:extensionPopup` | Extension toolbar popup |
 
 ## Opening a compose window
@@ -27,6 +27,7 @@ metadata:
 the XPCOM `nsIMessenger` mail service, not the WebExtension API.
 
 **Correct approach:**
+
 ```python
 before = set(client.chrome_window_handles)
 with client.using_context("chrome"):
@@ -42,6 +43,7 @@ new_handle = (set(client.chrome_window_handles) - before).pop()
 ## Adding a recipient pill
 
 The To: field ID is `toAddrInput`. Send the email + RETURN to create a pill:
+
 ```python
 with client.using_context("chrome"):
     field = client.find_element(By.ID, "toAddrInput")
@@ -59,6 +61,7 @@ with client.using_context("chrome"):
 does not work for XUL remote browser elements.
 
 **Bridge via messageManager frameScript:**
+
 ```python
 client.switch_to_window(popup_handle)
 with client.using_context("chrome"):
@@ -83,10 +86,18 @@ with client.using_context("chrome"):
 
 `mail-address-pill` elements are in the compose chrome document.
 Trigger right-click via dispatched MouseEvent:
+
 ```javascript
 const pill = document.querySelector("mail-address-pill");
-pill.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 }));
+pill.dispatchEvent(
+    new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        button: 2,
+    }),
+);
 ```
+
 The experiment injects XUL `<menu>` and `<menuitem>` elements into the popup.
 Find them with `document.querySelectorAll("menuitem, menu")` and check `getAttribute("label")`.
 
@@ -101,32 +112,39 @@ with client.using_context("chrome"):
 ## Extension storage injection (browser.storage.local)
 
 MV3 extensions use IndexedDB. Write via `ExtensionStorageIDB` from chrome context:
+
 ```javascript
 const { ExtensionStorageIDB } = ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
+    "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
 );
 const policy = WebExtensionPolicy.getByID("AnonAddyTB@luckydonald.de");
 const principal = ExtensionStorageIDB.getStoragePrincipal(policy.extension);
 const db = await ExtensionStorageIDB.open(principal);
 await db.set({ options: { hostUrl: "http://...", apiKey: "test-key" } });
 ```
+
 Verified working — returns the stored JSON when read back immediately.
 
 ## setTimeout / clearTimeout in experiment (privileged JS)
 
 Not in global scope in `implementation.js`. Must import:
+
 ```javascript
 var { setTimeout, clearTimeout } = ChromeUtils.importESModule(
-    "resource://gre/modules/Timer.sys.mjs"
+    "resource://gre/modules/Timer.sys.mjs",
 );
 ```
 
 ## Shadow DOM / composedPath
 
 Address pills are custom elements. Use `e.composedPath()` to find across shadow DOM:
+
 ```javascript
-e.composedPath().find(el => el.tagName?.toLowerCase() === "mail-address-pill")
+e.composedPath().find(
+    (el) => el.tagName?.toLowerCase() === "mail-address-pill",
+);
 ```
+
 `closest()` does not cross shadow-DOM boundaries.
 
 ## Thunderbird's onPillPopupShowing crash

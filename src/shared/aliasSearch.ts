@@ -14,6 +14,8 @@ export function aliasesForDomain(
 ): Alias[] {
   const lower = domain.toLowerCase();
   return (aliases ?? [])
-    .filter((a) => a.active && (a.description ?? "").toLowerCase().includes(lower))
+    .filter(
+      (a) => a.active && (a.description ?? "").toLowerCase().includes(lower),
+    )
     .slice(0, limit);
 }

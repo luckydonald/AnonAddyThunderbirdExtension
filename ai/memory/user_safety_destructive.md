@@ -1,10 +1,10 @@
 ---
 name: user-safety-destructive
 description: "User strongly objects to broad destructive commands (pkill, rm -rf, etc.) hitting processes/files they own unless explicitly authorized first"
-metadata: 
-  node_type: memory
-  type: feedback
-  originSessionId: b3c2110f-ae97-47f6-bf3d-647bd0eaab60
+metadata:
+    node_type: memory
+    type: feedback
+    originSessionId: b3c2110f-ae97-47f6-bf3d-647bd0eaab60
 ---
 
 Never use broad `pkill -f thunderbird` or similar commands that could kill the user's

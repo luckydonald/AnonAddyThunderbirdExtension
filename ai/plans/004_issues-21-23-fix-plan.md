@@ -41,44 +41,52 @@ This is a single-line change; no logic changes elsewhere.
 **Fix** (`src/popup/components/RecipientCard.vue`):
 
 1. Add helper function (after `pinnedAlias` computed):
-   ```typescript
-   function forwardingFor(aliasEmail: string): string | null {
-     const am = aliasEmail.match(/^(.+)@(.+)$/);
-     const rm = props.address.match(/^(.+)@(.+)$/);
-     if (!am || !rm) return null;
-     return `${am[1]}+${rm[1]}=${rm[2]}@${am[2]}`;
-   }
-   ```
-   Uses the `address` prop (the recipient email) which is already available.
+
+    ```typescript
+    function forwardingFor(aliasEmail: string): string | null {
+        const am = aliasEmail.match(/^(.+)@(.+)$/);
+        const rm = props.address.match(/^(.+)@(.+)$/);
+        if (!am || !rm) return null;
+        return `${am[1]}+${rm[1]}=${rm[2]}@${am[2]}`;
+    }
+    ```
+
+    Uses the `address` prop (the recipient email) which is already available.
 
 2. Add a forwarding preview row to each alias option — `createdAlias`, `displayAliases`, `pinnedAlias`, and `searchResults` blocks. Below the existing `alias-option__row`:
-   ```vue
-   <div v-if="forwardingFor(alias.email)" class="alias-option__row alias-option__row--fwd">
-     <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
-     <code class="alias-option__fwd">{{ forwardingFor(alias.email) }}</code>
-   </div>
-   ```
-   For `createdAlias` substitute `createdAlias.email`; for the rest use `alias.email`.
+
+    ```vue
+    <div
+        v-if="forwardingFor(alias.email)"
+        class="alias-option__row alias-option__row--fwd"
+    >
+      <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
+      <code class="alias-option__fwd">{{ forwardingFor(alias.email) }}</code>
+    </div>
+    ```
+
+    For `createdAlias` substitute `createdAlias.email`; for the rest use `alias.email`.
 
 3. Add SCSS rules:
-   ```scss
-   &__row--fwd {
-     margin-top: $spacing-xs;
-   }
 
-   &__fwd-label {
-     color: $color-muted;
-     font-size: $font-size-sm;
-     flex-shrink: 0;
-   }
+    ```scss
+    &__row--fwd {
+        margin-top: $spacing-xs;
+    }
 
-   &__fwd {
-     font-family: monospace;
-     font-size: $font-size-sm;
-     color: $color-muted;
-     word-break: break-all;
-   }
-   ```
+    &__fwd-label {
+        color: $color-muted;
+        font-size: $font-size-sm;
+        flex-shrink: 0;
+    }
+
+    &__fwd {
+        font-family: monospace;
+        font-size: $font-size-sm;
+        color: $color-muted;
+        word-break: break-all;
+    }
+    ```
 
 Reuses `aliasPreviewLabel` ("Sends via:") i18n key from `_locales/en/messages.json`.
 

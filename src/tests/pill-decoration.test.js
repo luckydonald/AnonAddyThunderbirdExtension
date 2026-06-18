@@ -89,7 +89,9 @@ describe("decoratePillViaTextNode", () => {
   it("null is a no-op when no original was saved", () => {
     const pill = makePill("<label>untouched</label>");
     decoratePillViaTextNode(pill, null);
-    expect(pill.shadowRoot.querySelector("label").textContent).toBe("untouched");
+    expect(pill.shadowRoot.querySelector("label").textContent).toBe(
+      "untouched",
+    );
   });
 });
 
@@ -135,7 +137,10 @@ describe("decoratePillViaCSSAdopted", () => {
     // CSS injection is skipped (no adoptedStyleSheets in jsdom), but the data
     // attribute must be set so attr(data-addy-label) works in TB at runtime.
     const pill = makePill("<label>x@y.com</label>");
-    const result = decoratePillViaCSSAdopted(pill, "alias@anon.email → x@y.com");
+    const result = decoratePillViaCSSAdopted(
+      pill,
+      "alias@anon.email → x@y.com",
+    );
     expect(result).toBe(true);
     expect(pill.dataset.addyLabel).toBe("alias@anon.email → x@y.com");
   });

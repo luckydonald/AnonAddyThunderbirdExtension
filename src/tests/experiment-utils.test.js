@@ -35,6 +35,8 @@ describe("matchingAliasesForEmail", () => {
 
   it("handles null/undefined aliases gracefully", () => {
     expect(matchingAliasesForEmail(null, "user@example.com")).toHaveLength(0);
-    expect(matchingAliasesForEmail(undefined, "user@example.com")).toHaveLength(0);
+    expect(matchingAliasesForEmail(undefined, "user@example.com")).toHaveLength(
+      0,
+    );
   });
 });

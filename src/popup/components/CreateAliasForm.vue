@@ -109,7 +109,9 @@ function onComboboxKey(e: KeyboardEvent) {
   }
 }
 
-watch(domainSearch, () => { comboboxActiveIdx.value = 0; });
+watch(domainSearch, () => {
+  comboboxActiveIdx.value = 0;
+});
 
 function domainLabel(d: string): { ascii: string; unicode: string | null } {
   if (!d.includes("xn--")) return { ascii: d, unicode: null };
@@ -133,11 +135,7 @@ function submit() {
     <div class="field">
       <label>{{ t("domain") }}</label>
       <div class="combobox" @keydown="onComboboxKey">
-        <button
-          type="button"
-          class="combobox__trigger"
-          @click="openCombobox"
-        >
+        <button type="button" class="combobox__trigger" @click="openCombobox">
           <span>{{ domainLabel(domain).unicode ?? domain }}</span>
           <span class="combobox__arrow">▾</span>
         </button>
@@ -155,11 +153,18 @@ function submit() {
               v-for="(d, i) in filteredDomains"
               :key="d"
               class="combobox__option"
-              :class="{ selected: domain === d, active: i === comboboxActiveIdx }"
+              :class="{
+                selected: domain === d,
+                active: i === comboboxActiveIdx,
+              }"
               @mousedown.prevent="selectDomain(d)"
             >
               <span>{{ domainLabel(d).unicode ?? d }}</span>
-              <span v-if="domainLabel(d).unicode" class="combobox__option-ascii">{{ d }}</span>
+              <span
+                v-if="domainLabel(d).unicode"
+                class="combobox__option-ascii"
+                >{{ d }}</span
+              >
             </li>
           </ul>
         </div>

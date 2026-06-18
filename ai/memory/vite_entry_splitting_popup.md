@@ -1,10 +1,10 @@
 ---
 name: vite-entry-splitting-popup
 description: Adding a TS file as a Vite entry with preserveEntrySignatures breaks the popup — Rollup extracts shared modules as external chunks
-metadata: 
-  node_type: memory
-  type: feedback
-  originSessionId: 30053dbd-5c03-4901-9e6e-3eeb5a0a3a38
+metadata:
+    node_type: memory
+    type: feedback
+    originSessionId: 30053dbd-5c03-4901-9e6e-3eeb5a0a3a38
 ---
 
 Do NOT add shared TypeScript files as additional Vite entries to produce a separately loadable `dist/utils.js`. This approach was tried and broken the popup.

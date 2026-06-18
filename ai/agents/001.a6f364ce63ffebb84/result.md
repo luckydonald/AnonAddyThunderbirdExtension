@@ -5,18 +5,19 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 ### 1. `/home/user/git/luckydonald/AnonAddyThunderbirdExtension/src/experiment/implementation.js`
 
 **Lines 253-310** (onContextMenu and onPopupShowing functions):
+
 ```javascript
 253	      menu.appendChild(menuPopup);
 254	      return menu;
 255	    }
-256	
+256
 257	    function attachToWindow(win) {
 258	      if (attached.has(win)) return;
 259	      const doc = win.document;
-260	
+260
 261	      let pendingPill = null;
 262	      let pendingReset = null;
-263	
+263
 264	      function onContextMenu(e) {
 265	        // composedPath() crosses shadow-DOM boundaries; closest() does not.
 266	        const pill = e.composedPath().find(
@@ -39,22 +40,22 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 283	          pendingPill = null;
 284	        }, 500);
 285	      }
-286	
+286
 287	      function onPopupShowing(e) {
 288	        if (!pendingPill) return;
 289	        const popup = e.target;
 290	        if (popup.tagName.toLowerCase() !== "menupopup") return;
-291	
+291
 292	        const pill = pendingPill;
 293	        pendingPill = null;
 294	        clearTimeout(pendingReset);
-295	
+295
 296	        const sep = doc.createXULElement("menuseparator");
 297	        const addyMenu = buildAddyMenu(doc, win, pill);
-298	
+298
 299	        popup.appendChild(sep);
 300	        popup.appendChild(addyMenu);
-301	
+301
 302	        popup.addEventListener(
 303	          "popuphidden",
 304	          () => {
@@ -67,26 +68,27 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 ```
 
 **Lines 100-135** (buildAddyMenu top section):
+
 ```javascript
 100	    function buildAddyMenu(doc, win, pill) {
 101	      const email = pill.getAttribute("emailAddress") || "";
 102	      const displayName = pill.getAttribute("displayName") || "";
 103	      const addressRow = pill.closest(".address-row");
 104	      const fieldType = (addressRow?.dataset?.recipienttype || "to").toLowerCase();
-105	
+105
 106	      const availableDomains = _cacheData.domainOptions?.data || [];
 107	      const defaultDomain =
 108	        _cacheData.domainOptions?.defaultAliasDomain ||
 109	        availableDomains[0] ||
 110	        "";
 111	      const existingAliases = matchingAliasesForEmail(email);
-112	
+112
 113	      // Top-level menu entry — direct click opens popup, hover/arrow unfolds submenu.
 114	      const menu = doc.createXULElement("menu");
 115	      const menuPopup = doc.createXULElement("menupopup");
 116	      menu.setAttribute("label", "Use Addy alias for sending");
 117	      const menuPopup = doc.createXULElement("menupopup");
-118	
+118
 119	      // Direct click on the <menu> element itself (not on a submenu item) opens popup.
 120	      menu.addEventListener("click", (e) => {
 121	        if (e.target === menu) {
@@ -95,12 +97,12 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 124	          e.preventDefault();
 125	        }
 126	      });
-127	
+127
 128	      // ── Existing… ▶ ──────────────────────────────────────────────────────────
 129	      const existingMenu = doc.createXULElement("menu");
 130	      existingMenu.setAttribute("label", "Existing…");
 131	      const existingPopup = doc.createXULElement("menupopup");
-132	
+132
 133	      // "Open alias picker…" is first in Existing; provides easy access to full GUI.
 134	      const pickerItem = doc.createXULElement("menuitem");
 135	      pickerItem.setAttribute("label", "Open alias picker…");
@@ -109,19 +111,20 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 ### 2. `/home/user/git/luckydonald/AnonAddyThunderbirdExtension/src/popup/components/CreateAliasForm.vue`
 
 **Lines 55-75** (forwardingPreview / sendsAsPreview computed properties):
+
 ```javascript
 55	    return customPrefix.value.trim() || "[custom]";
 56	  }
 57	  return FORMAT_PLACEHOLDERS[format.value] || "[alias]";
 58	});
-59	
+59
 60	const forwardingPreview = computed(() => {
 61	  const m = props.targetEmail.match(/^(.+)@(.+)$/);
 62	  if (!m) return null;
 63	  const [, targetLocal, targetDomain] = m;
 64	  return `${aliasLocalPreview.value}+${targetLocal}=${targetDomain}@${domain.value}`;
 65	});
-66	
+66
 67	const sendsAsPreview = computed(() => {
 68	  if (!forwardingPreview.value) return null;
 69	  return props.targetName
@@ -131,6 +134,7 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 ```
 
 **Lines 195-215** (preview template section):
+
 ```vue
 200	    <!-- "Sends via:" only when name is present (forwarding addr buried in Sends as:) -->
 201	    <p v-if="forwardingPreview && targetName" class="preview">
@@ -144,14 +148,15 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 209	    </p>
 210	  </div>
 211	</template>
-212	
+212
 213	<style scoped lang="scss">
 214	@use "../styles/variables" as *;
-215	
+215
 ```
 
 **Lines 126-160** (combobox domain picker template):
-```vue
+
+````vue
 126	      <div class="combobox" @keydown="onComboboxKey">
 127	        <button
 128	          type="button"
@@ -184,7 +189,7 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 154	        </div>
 155	      </div>
 156	    </div>
-157	
+157
 158	    <div class="field">
 159	      <label>{{ t("format") }}</label>
 160	      <div class="format-pills">
@@ -198,20 +203,21 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 39	    ? props.availableDomains.filter((d) => d.toLowerCase().includes(q))
 40	    : props.availableDomains;
 41	});
-42	
+42
 43	const formats = computed((): { value: AliasFormat; label: string }[] => [
 44	  { value: "random_characters", label: t("formatCharacters") },
 45	  { value: "random_words", label: t("formatWords") },
-```
+````
 
 ### 3. `/home/user/git/luckydonald/AnonAddyThunderbirdExtension/src/popup/components/RecipientCard.vue`
 
 **Lines 86-180** (full alias-list section in template):
+
 ```vue
-86	
+86
 87	    <!-- Existing aliases section (always visible) -->
 88	    <p class="section-heading">{{ t("existingAliasesSection") }}</p>
-89	
+89
 90	    <div class="alias-list">
 91	      <!-- Created alias pinned at top with inline manage controls -->
 92	      <div
@@ -258,7 +264,7 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 133	          </div>
 134	        </div>
 135	      </div>
-136	
+136
 137	      <!-- Regular existing aliases -->
 138	      <label
 139	        v-for="alias in displayAliases"
@@ -278,12 +284,12 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 152	          {{ alias.description }}
 153	        </span>
 154	      </label>
-155	
+155
 156	      <!-- Empty state -->
 157	      <div v-if="!createdAlias && displayAliases.length === 0" class="no-aliases">
 158	        <em>{{ t("noExistingAliases") }}</em>
 159	      </div>
-160	
+160
 161	      <!-- Don't replace option -->
 162	      <label
 163	        v-if="createdAlias || displayAliases.length > 0"
@@ -299,7 +305,7 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 172	        <span>{{ t("dontReplace") }}</span>
 173	      </label>
 174	    </div>
-175	
+175
 176	    <!-- Create new alias section (always visible) -->
 177	    <CreateAliasForm
 178	      :available-domains="availableDomains"
@@ -310,6 +316,7 @@ Perfect! I have all the files. Now let me extract the exact sections you request
 ### 4. `/home/user/git/luckydonald/AnonAddyThunderbirdExtension/src/popup/App.vue`
 
 **Lines 80-95** (matchingAliases function):
+
 ```javascript
 83	function matchingAliases(aliases: Alias[], domain: string): Alias[] {
 84	  const lower = domain.toLowerCase();

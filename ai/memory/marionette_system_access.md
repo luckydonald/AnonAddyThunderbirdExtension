@@ -1,10 +1,10 @@
 ---
 name: marionette-system-access
 description: "How to enable Marionette chrome/system access in Thunderbird 151+, including Flatpak-specific setup"
-metadata: 
-  node_type: memory
-  type: project
-  originSessionId: b3c2110f-ae97-47f6-bf3d-647bd0eaab60
+metadata:
+    node_type: memory
+    type: project
+    originSessionId: b3c2110f-ae97-47f6-bf3d-647bd0eaab60
 ---
 
 ## Two mechanisms must fire simultaneously

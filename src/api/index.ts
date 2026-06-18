@@ -57,8 +57,7 @@ export async function addyApiRequest<T = unknown>(
   );
 
   if (status === 429) throw new RateLimitError(retryAfter ?? 60);
-  if (status < 200 || status >= 300)
-    throw new Error(`HTTP ${status}: ${text}`);
+  if (status < 200 || status >= 300) throw new Error(`HTTP ${status}: ${text}`);
 
   return JSON.parse(text) as T;
 }

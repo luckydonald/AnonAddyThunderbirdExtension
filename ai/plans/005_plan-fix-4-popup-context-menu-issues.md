@@ -16,6 +16,7 @@ viewport, producing a scrollbar.
 **Fix (one file):**
 
 `src/popup/App.vue` — remove the `min-width` line; keep `max-width` and `width: 100%`:
+
 ```scss
 .popup {
   /* min-width: $window-min-width;  ← remove */
@@ -35,6 +36,7 @@ No `overflow-x: hidden` — if child content overflows, scrollbars are better th
 `<CreateAliasForm>` panel. User wants `messenger.windows.create()` — a real separate popup window.
 
 **New entry point:**
+
 - `createAlias.html` — HTML shell (mirrors `composePopup.html`)
 - `src/createAlias/main.ts` — Vue mount
 - `src/createAlias/App.vue` — reads `?tabId=X&email=Y&name=Z` from URL, loads `domainOptions`
@@ -45,22 +47,27 @@ No `overflow-x: hidden` — if child content overflows, scrollbars are better th
 **`vite.config.ts`** — add `createAlias: resolve(__dirname, "createAlias.html")` to rollup inputs.
 
 **`RecipientCard.vue`** — replace the `showCreateForm` toggle block with a single emit:
+
 ```ts
 emit("open-create-window", { email: editableAddress.value, name: props.name });
 ```
+
 Remove the `CreateAliasForm` import, the `showCreateForm` ref, `watch(createdAlias)`, and the
 `create-alias-panel` template block. Also remove `create` from the emits list.
 
 **`App.vue`** — handle `open-create-window` from `RecipientCard`: open the window:
+
 ```ts
 messenger.windows.create({
-  url: messenger.runtime.getURL("createAlias.html")
-    + `?tabId=${tabId}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`,
-  type: "popup",
-  width: 520,
-  height: 460,
+    url:
+        messenger.runtime.getURL("createAlias.html") +
+        `?tabId=${tabId}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`,
+    type: "popup",
+    width: 520,
+    height: 460,
 });
 ```
+
 Remove the `handleCreate` / `handleDisable` / `handleDelete` / `handleRestore` wiring that fed
 `RecipientCard`'s `create` event (those now live in the create-alias window directly).
 
@@ -84,17 +91,17 @@ nodes via `setAttribute("image", …)` in modern TB.
 
 Icon set (all inline `data:image/svg+xml,…`):
 
-| Constant | Description |
-|---|---|
-| `ICON_ADDY` | keep as `context.extension.baseURI.spec + "icon.svg"` — extension-owned, always valid |
-| `ICON_EXISTING` | arrows/recycle SVG (reuse symbol) |
-| `ICON_NEW` | plus/server SVG (new symbol) |
-| `ICON_FMT_CHARS` | letter "A" SVG |
-| `ICON_FMT_WORDS` | text-lines SVG |
-| `ICON_FMT_MALE` | person SVG |
-| `ICON_FMT_FEMALE` | person SVG (or alternative) |
-| `ICON_FMT_NOUN` | tag SVG |
-| `ICON_FMT_CUSTOM` | pencil SVG |
+| Constant          | Description                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| `ICON_ADDY`       | keep as `context.extension.baseURI.spec + "icon.svg"` — extension-owned, always valid |
+| `ICON_EXISTING`   | arrows/recycle SVG (reuse symbol)                                                     |
+| `ICON_NEW`        | plus/server SVG (new symbol)                                                          |
+| `ICON_FMT_CHARS`  | letter "A" SVG                                                                        |
+| `ICON_FMT_WORDS`  | text-lines SVG                                                                        |
+| `ICON_FMT_MALE`   | person SVG                                                                            |
+| `ICON_FMT_FEMALE` | person SVG (or alternative)                                                           |
+| `ICON_FMT_NOUN`   | tag SVG                                                                               |
+| `ICON_FMT_CUSTOM` | pencil SVG                                                                            |
 
 Apply via `setAttribute("image", ICON_…)` as already done; if that still doesn't render on
 `<menu>`, also set `item.style.listStyleImage = "url('…')"` as a fallback.
@@ -104,9 +111,11 @@ Apply via `setAttribute("image", ICON_…)` as already done; if that still doesn
 ## Issue 4 — Alias list empty in context menu after background restart
 
 **Root cause:** `background/index.ts` line 123:
+
 ```ts
 messenger.runtime.onStartup.addListener(() => {});
 ```
+
 This is empty — it does nothing. `_cacheData` in `implementation.js` is module-level and resets
 to `{ aliases: [], domainOptions: { … } }` every time the MV3 service worker restarts. `setCache`
 is only called inside `refreshCache()`, which only runs on install, hourly alarm, or settings
@@ -116,30 +125,40 @@ change. After a plain TB restart, `_cacheData` stays empty until the next hourly
 
 Extract a `syncCacheToExperiment()` that reads stored data and calls `setCache` without doing
 any API fetch:
+
 ```ts
 async function syncCacheToExperiment(): Promise<void> {
-  const storage = await messenger.storage.local.get({
-    domainOptions: { data: [], defaultAliasDomain: "", defaultAliasFormat: "random_characters" },
-    aliasCache: { aliases: [], fetchedAt: 0 },
-  });
-  try {
-    messenger.AddressChipMenu.setCache({
-      aliases: (storage.aliasCache as { aliases: Alias[] }).aliases,
-      domainOptions: storage.domainOptions as DomainOptions,
+    const storage = await messenger.storage.local.get({
+        domainOptions: {
+            data: [],
+            defaultAliasDomain: "",
+            defaultAliasFormat: "random_characters",
+        },
+        aliasCache: { aliases: [], fetchedAt: 0 },
     });
-  } catch { /* non-fatal */ }
+    try {
+        messenger.AddressChipMenu.setCache({
+            aliases: (storage.aliasCache as { aliases: Alias[] }).aliases,
+            domainOptions: storage.domainOptions as DomainOptions,
+        });
+    } catch {
+        /* non-fatal */
+    }
 }
 ```
 
 Call it in two places:
+
 1. **Module top-level** (runs on every service-worker activation):
-   ```ts
-   void syncCacheToExperiment();
-   ```
+    ```ts
+    void syncCacheToExperiment();
+    ```
 2. **`onStartup` listener** (belt-and-suspenders for TB restart):
-   ```ts
-   messenger.runtime.onStartup.addListener(() => { void syncCacheToExperiment(); });
-   ```
+    ```ts
+    messenger.runtime.onStartup.addListener(() => {
+        void syncCacheToExperiment();
+    });
+    ```
 
 Also call `syncCacheToExperiment()` inside `refreshCache()` (replace the inline `setCache` block
 with a call to the extracted function) to keep one code path.
@@ -168,10 +187,12 @@ Ensure `conftest.py` writes `aliasCache` + `domainOptions` to extension storage 
 ## Issue 6 — Run all tests and fix failures
 
 After all code changes are committed, run the full test suite:
+
 ```bash
 npm test                        # Vitest unit tests
 cd tests/marionette && uv run pytest -v   # Marionette e2e tests
 ```
+
 Fix any failures introduced by the 4 fixes above before considering the work done. This includes
 type errors (`npm run typecheck`), Prettier formatting (`npx prettier --check .`), and any broken
 Marionette assumptions (e.g. selectors that no longer match after RecipientCard restructure).

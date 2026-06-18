@@ -36,7 +36,10 @@ async function loadFromStorage() {
   savedApiKey.value = apiKey.value;
 
   const all = await messenger.permissions.getAll();
-  console.log("AnonAddyTB: permissions.getAll() on load:", JSON.stringify(all, null, 2));
+  console.log(
+    "AnonAddyTB: permissions.getAll() on load:",
+    JSON.stringify(all, null, 2),
+  );
 
   messenger.permissions.onAdded.addListener((added) => {
     console.log("AnonAddyTB: permissions.onAdded:", JSON.stringify(added));
@@ -77,15 +80,25 @@ async function save() {
     if (!alreadyGranted) {
       let granted = false;
       try {
-        console.log("AnonAddyTB: messenger.permissions.request()", { origins: [origin] });
+        console.log("AnonAddyTB: messenger.permissions.request()", {
+          origins: [origin],
+        });
         granted = await messenger.permissions.request({ origins: [origin] });
-        console.log("AnonAddyTB: no error in messenger.permissions.request.", { origins: [origin], granted });
+        console.log("AnonAddyTB: no error in messenger.permissions.request.", {
+          origins: [origin],
+          granted,
+        });
       } catch (e) {
-        console.warn("AnonAddyTB: error in messenger.permissions.request:", e, { origins: [origin] });
+        console.warn("AnonAddyTB: error in messenger.permissions.request:", e, {
+          origins: [origin],
+        });
       }
       console.log("AnonAddyTB: permissions.request() result:", granted);
       const allAfter = await messenger.permissions.getAll();
-      console.log("AnonAddyTB: permissions.getAll() after request:", JSON.stringify(allAfter, null, 2));
+      console.log(
+        "AnonAddyTB: permissions.getAll() after request:",
+        JSON.stringify(allAfter, null, 2),
+      );
       if (granted) {
         permissionJustGranted = true;
       } else {
