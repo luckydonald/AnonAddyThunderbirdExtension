@@ -968,3 +968,5 @@ In case they are a proxied one, I wanna have it display a different text: `alias
 > - [Answer (`336` chars, 342 B)](agents/003.ae8a96fbb64cfab06/result.md)
 > - [Raw log (`38.4 KB`)](/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/b3c2110f-ae97-47f6-bf3d-647bd0eaab60/tasks/ae8a96fbb64cfab06.output)
 
+❯ Probably the search stuff should be a single func for both UI and Context Menu, and be shared and be properly unittested, too.
+
