@@ -36,12 +36,24 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const creating = ref(false);
+const showCreateForm = ref(false);
 const editableAddress = ref(props.address);
 const aliasSearch = ref("");
 
 watch(
   () => props.address,
   (v) => { editableAddress.value = v; },
+);
+
+// Close the create form automatically when a new alias appears (creation succeeded).
+watch(
+  () => props.createdAlias,
+  (v) => {
+    if (v) {
+      showCreateForm.value = false;
+      creating.value = false;
+    }
+  },
 );
 
 function onAddressChange() {
@@ -103,7 +115,7 @@ function forwardingFor(aliasEmail: string): string | null {
   return `${am[1]}+${rm[1]}=${rm[2]}@${am[2]}`;
 }
 
-defineExpose({ resetCreating: () => (creating.value = false) });
+defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.value = false; } });
 </script>
 
 <template>
@@ -311,16 +323,27 @@ defineExpose({ resetCreating: () => (creating.value = false) });
       <span>{{ t("dontReplace") }}</span>
     </label>
 
-    <!-- Create new alias section (always visible) -->
-    <CreateAliasForm
-      :available-domains="availableDomains"
-      :default-domain="defaultDomain"
-      :default-format="defaultFormat"
-      :loading="creating"
-      :target-email="editableAddress"
-      :target-name="name"
-      @create="handleCreate"
-    />
+    <!-- Create new alias — collapsed behind a button, expands into a sub-panel -->
+    <div v-if="!showCreateForm" class="new-alias-trigger">
+      <button class="new-alias-btn" @click="showCreateForm = true">
+        + {{ t("createAlias") }}
+      </button>
+    </div>
+
+    <div v-else class="create-alias-panel">
+      <CreateAliasForm
+        :available-domains="availableDomains"
+        :default-domain="defaultDomain"
+        :default-format="defaultFormat"
+        :loading="creating"
+        :target-email="editableAddress"
+        :target-name="name"
+        @create="handleCreate"
+      />
+      <button class="cancel-create-btn" @click="showCreateForm = false">
+        {{ t("cancel") }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -524,5 +547,50 @@ defineExpose({ resetCreating: () => (creating.value = false) });
 button.small {
   font-size: $font-size-sm;
   padding: 1px $spacing-sm;
+}
+
+.new-alias-trigger {
+  margin-top: $spacing-sm;
+}
+
+.new-alias-btn {
+  font-size: $font-size-sm;
+  padding: 3px $spacing-md;
+  border: 1px dashed $color-border;
+  border-radius: 3px;
+  background: transparent;
+  color: $color-primary;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+
+  &:hover {
+    border-color: $color-primary;
+    background: #f0f5ff;
+  }
+}
+
+.create-alias-panel {
+  margin-top: $spacing-sm;
+  border: 1px solid $color-primary;
+  border-radius: 4px;
+  padding: $spacing-md;
+  background: #f8fbff;
+}
+
+.cancel-create-btn {
+  margin-top: $spacing-sm;
+  width: 100%;
+  font-size: $font-size-sm;
+  padding: 3px $spacing-md;
+  border: 1px solid $color-border;
+  border-radius: 3px;
+  background: transparent;
+  color: $color-muted;
+  cursor: pointer;
+
+  &:hover {
+    background: #eee;
+  }
 }
 </style>
