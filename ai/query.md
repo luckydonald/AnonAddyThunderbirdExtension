@@ -942,3 +942,5 @@ onStartup() {
 
 ❯ Welcome to Thunderbird Add your email address
 
+❯ it launched, but without mail account the `+ new mail` button seems disabled
+
