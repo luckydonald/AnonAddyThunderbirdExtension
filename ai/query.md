@@ -934,3 +934,5 @@ onStartup() {
 
 ❯ document how to run the marionette tests
 
+❯ How do I do it with the flatpack thunderbird?
+

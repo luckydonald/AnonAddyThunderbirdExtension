@@ -16,4 +16,4 @@ clean:
 	-rm -rf dist/
 
 test-marionette:
-	cd tests/marionette && uv sync && THUNDERBIRD_BIN=$(or $(THUNDERBIRD_BIN),thunderbird) uv run pytest -v
+	cd tests/marionette && uv sync && uv run pytest -v

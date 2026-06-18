@@ -58,6 +58,9 @@ Drives a real Thunderbird instance via the [Marionette](https://firefox-source-d
 ```bash
 # from repo root — builds the .xpi, then runs pytest
 THUNDERBIRD_BIN=/usr/bin/thunderbird make test-marionette
+
+# Flatpak install
+THUNDERBIRD_BIN="flatpak run org.mozilla.Thunderbird" make test-marionette
 ```
 
 Or manually:
@@ -66,9 +69,14 @@ Or manually:
 cd tests/marionette
 uv sync                                          # create .venv, install deps
 THUNDERBIRD_BIN=/usr/bin/thunderbird uv run pytest -v
+
+# Flatpak
+THUNDERBIRD_BIN="flatpak run org.mozilla.Thunderbird" uv run pytest -v
 ```
 
-`THUNDERBIRD_BIN` defaults to `thunderbird` (i.e. whatever is on `$PATH`).
+`THUNDERBIRD_BIN` defaults to `thunderbird` (i.e. whatever is on `$PATH`). Multi-word
+values like the flatpak form are handled correctly — the conftest splits them with
+`shlex.split` before passing to `subprocess`.
 
 **What it tests:**
 

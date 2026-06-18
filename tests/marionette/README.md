@@ -13,13 +13,22 @@ End-to-end tests that drive a real Thunderbird instance via the [Marionette](htt
 cd tests/marionette
 uv sync                                         # create .venv, install deps
 THUNDERBIRD_BIN=/usr/bin/thunderbird uv run pytest -v
+
+# Flatpak install
+THUNDERBIRD_BIN="flatpak run org.mozilla.Thunderbird" uv run pytest -v
 ```
 
 Or from the repo root:
 
 ```bash
 THUNDERBIRD_BIN=/usr/bin/thunderbird make test-marionette
+
+# Flatpak
+THUNDERBIRD_BIN="flatpak run org.mozilla.Thunderbird" make test-marionette
 ```
+
+`THUNDERBIRD_BIN` defaults to `thunderbird` on `$PATH`. Multi-word values (e.g. the
+flatpak form) are split with `shlex.split` so they work correctly with `subprocess`.
 
 ## How it works
 

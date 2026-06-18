@@ -14,10 +14,9 @@ The fixture:
   6. Yields the Marionette client
 """
 
-import json
 import os
+import shlex
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -28,7 +27,9 @@ import mock_server as mock_server_mod
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 XPI_PATH = REPO_ROOT / "AnonAddyTB.xpi"
-THUNDERBIRD_BIN = os.environ.get("THUNDERBIRD_BIN", "thunderbird")
+# Supports plain paths ("thunderbird", "/usr/bin/thunderbird") and
+# multi-word commands ("flatpak run org.mozilla.Thunderbird").
+THUNDERBIRD_CMD = shlex.split(os.environ.get("THUNDERBIRD_BIN", "thunderbird"))
 
 
 @pytest.fixture(scope="session")
@@ -53,13 +54,7 @@ def tb(mock_server_port, tmp_path_factory):
     )
 
     proc = subprocess.Popen(
-        [
-            THUNDERBIRD_BIN,
-            "--marionette",
-            "--no-remote",
-            "--profile",
-            str(profile_dir),
-        ],
+        THUNDERBIRD_CMD + ["--marionette", "--no-remote", "--profile", str(profile_dir)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
