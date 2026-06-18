@@ -34,7 +34,7 @@ function matchingAliasesForEmail(email) {
   if (!m) return [];
   const domain = m[1].toLowerCase();
   return (_cacheData.aliases || [])
-    .filter((a) => a.active && a.email.toLowerCase().includes(domain))
+    .filter((a) => a.active && (a.description ?? "").toLowerCase().includes(domain))
     .slice(0, 20);
 }
 
