@@ -1,0 +1,1 @@
+Content-Security-Policy: Die Einstellungen der Seite haben das Laden einer Ressource (img-src) auf data:image/svg+xml,%3Csvg%20xmlns%3D%22h… blockiert, da sie gegen folgende Direktive verstößt: "img-src chrome: moz-icon:"

@@ -1,0 +1,13 @@
+19:02:09.440 sendRemoveListener on closed conduit AnonAddyTB@luckydonald.de.137438954058 ConduitsChild.sys.mjs:122:13
+    _send resource://gre/modules/ConduitsChild.sys.mjs:122
+    removeListener resource://gre/modules/ExtensionChild.sys.mjs:713
+    removeListener resource://gre/modules/ExtensionChild.sys.mjs:969
+    register chrome://extensions/content/child/ext-storage.js:185
+    removeListener resource://gre/modules/ExtensionCommon.sys.mjs:2950
+    revoke resource://gre/modules/ExtensionCommon.sys.mjs:2972
+    close resource://gre/modules/ExtensionCommon.sys.mjs:2977
+    unload resource://gre/modules/ExtensionCommon.sys.mjs:976
+    unload resource://gre/modules/ExtensionPageChild.sys.mjs:277
+    unload resource://gre/modules/ExtensionPageChild.sys.mjs:320
+    destroyExtensionContext resource://gre/modules/ExtensionPageChild.sys.mjs:492
+    observe resource://gre/modules/ExtensionPageChild.sys.mjs:393

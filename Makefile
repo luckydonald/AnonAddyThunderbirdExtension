@@ -9,6 +9,7 @@ dist/: src/ _locales/ options.html composePopup.html $(static_files)
 	cp $(static_files) dist/
 	mkdir -p dist/experiment
 	cp src/experiment/schema.json dist/experiment/
+	cp -r src/experiment/icons dist/experiment/icons
 	cp -r _locales dist/_locales
 
 clean:

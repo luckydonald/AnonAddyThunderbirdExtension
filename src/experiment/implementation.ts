@@ -5,6 +5,7 @@ import {
   upsertPillIcon,
   removePillIcon,
 } from "./pillDecoration.js";
+import { createMenuIconUrls } from "./menuIcons.js";
 
 // ChromeUtils, Services, Ci are privileged TB globals; see src/types/experiment.d.ts.
 const { ExtensionCommon } = ChromeUtils.importESModule(
@@ -85,53 +86,7 @@ function matchingAliasesForEmail(email: string): any[] {
       }
     >();
 
-    // SVG data-URI helper — produces a 16×16 icon from SVG path markup.
-    function svgIcon(paths: string): string {
-      return (
-        "data:image/svg+xml," +
-        encodeURIComponent(
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
-            paths +
-            "</svg>",
-        )
-      );
-    }
-
-    // Top-level "Use Addy" entry — use the extension's own icon.svg.
-    const ICON_ADDY = context.extension.baseURI.spec + "icon.svg";
-    // Reuse/recycle arrows for "Existing…"
-    const ICON_EXISTING = svgIcon(
-      '<path fill="#4a90d9" d="M8 3V1L5 4l3 3V5a3 3 0 1 1-3 3H2a6 6 0 1 0 6-6z"/>',
-    );
-    // Plus symbol for "New…"
-    const ICON_NEW = svgIcon(
-      '<path fill="#4a90d9" d="M9 7V2H7v5H2v2h5v5h2V9h5V7z"/>',
-    );
-    // Format-item icons (keyed by FORMAT_ITEMS value)
-    const ICON_FMT: Record<string, string> = {
-      random_characters: svgIcon(
-        '<text x="1" y="12" font-size="11" font-family="monospace" fill="#4a90d9">Az</text>',
-      ),
-      random_words: svgIcon(
-        '<rect x="2" y="3" width="12" height="2" fill="#4a90d9"/>' +
-          '<rect x="2" y="7" width="9" height="2" fill="#4a90d9"/>' +
-          '<rect x="2" y="11" width="11" height="2" fill="#4a90d9"/>',
-      ),
-      random_male_name: svgIcon(
-        '<circle cx="8" cy="4" r="3" fill="#4a90d9"/>' +
-          '<path fill="#4a90d9" d="M3 14c0-3 2.5-5 5-5s5 2 5 5z"/>',
-      ),
-      random_female_name: svgIcon(
-        '<circle cx="8" cy="4" r="3" fill="#4a90d9"/>' +
-          '<path fill="#4a90d9" d="M3 14c0-3 2.5-5 5-5s5 2 5 5z"/>',
-      ),
-      random_noun: svgIcon(
-        '<path fill="#4a90d9" d="M1 4h9l4 4-4 4H1V4zm2 2v4h6l2-2-2-2H3z"/>',
-      ),
-      custom: svgIcon(
-        '<path fill="#4a90d9" d="M11 1l4 4-9 9H2v-4L11 1zm0 2L3 11v2h2l8-8z"/>',
-      ),
-    };
+    const ICONS = createMenuIconUrls(context.extension.baseURI.spec);
 
     // ── Pill decoration ───────────────────────────────────────────────────────
 
@@ -166,11 +121,11 @@ function matchingAliasesForEmail(email: string): any[] {
         const label = `${fwd.aliasEmail} → ${fwd.originalEmail}`;
         decoratePillViaTextNode(pill, label);
         decoratePillViaCSSAdopted(pill, label);
-        upsertPillIcon(pill, pillIconMap, ICON_ADDY, true);
+        upsertPillIcon(pill, pillIconMap, ICONS.addy, true);
       } else if (getAddyDomainSet().has(domain)) {
         decoratePillViaTextNode(pill, null);
         decoratePillViaCSSAdopted(pill, null);
-        upsertPillIcon(pill, pillIconMap, ICON_ADDY, false);
+        upsertPillIcon(pill, pillIconMap, ICONS.addy, false);
       } else {
         decoratePillViaTextNode(pill, null);
         decoratePillViaCSSAdopted(pill, null);
@@ -201,7 +156,7 @@ function matchingAliasesForEmail(email: string): any[] {
       for (const fmt of FORMAT_ITEMS) {
         const item = doc.createXULElement("menuitem");
         item.setAttribute("label", fmt.label);
-        const fmtIcon = ICON_FMT[fmt.value];
+        const fmtIcon = ICONS.format[fmt.value];
         if (fmtIcon) item.setAttribute("image", fmtIcon);
         if (fmt.value === "custom") {
           item.addEventListener(
@@ -272,7 +227,7 @@ function matchingAliasesForEmail(email: string): any[] {
       // Top-level menu entry — direct click opens popup, hover/arrow unfolds submenu.
       const menu = doc.createXULElement("menu");
       menu.setAttribute("label", "Use Addy alias for sending");
-      menu.setAttribute("image", ICON_ADDY);
+      menu.setAttribute("image", ICONS.addy);
       const menuPopup = doc.createXULElement("menupopup");
       // Thunderbird's onpopupshowing runs on all menupopup events in the compose window
       // and crashes when triggerNode is not a pill (pill is null → pill.hasAttribute fails).
@@ -299,12 +254,13 @@ function matchingAliasesForEmail(email: string): any[] {
       // ── Existing… ▶ ──────────────────────────────────────────────────────────
       const existingMenu = doc.createXULElement("menu");
       existingMenu.setAttribute("label", "Existing…");
-      existingMenu.setAttribute("image", ICON_EXISTING);
+      existingMenu.setAttribute("image", ICONS.existing);
       const existingPopup = doc.createXULElement("menupopup");
 
       // "Open alias picker…" is first in Existing; provides easy access to full GUI.
       const pickerItem = doc.createXULElement("menuitem");
       pickerItem.setAttribute("label", "Open alias picker…");
+      pickerItem.setAttribute("image", ICONS.picker);
       pickerItem.addEventListener("command", () => {
         chipMenuFire &&
           chipMenuFire.async({
@@ -335,10 +291,12 @@ function matchingAliasesForEmail(email: string): any[] {
           for (const [dm, aliases] of domainGroups) {
             const dmMenu = doc.createXULElement("menu");
             dmMenu.setAttribute("label", `…@${dm}`);
+            dmMenu.setAttribute("image", ICONS.domain);
             const dmPopup = doc.createXULElement("menupopup");
             for (const alias of aliases) {
               const item = doc.createXULElement("menuitem");
               item.setAttribute("label", alias.email);
+              item.setAttribute("image", ICONS.alias);
               item.addEventListener(
                 "command",
                 (function (ae: string) {
@@ -363,6 +321,7 @@ function matchingAliasesForEmail(email: string): any[] {
           for (const alias of existingAliases) {
             const item = doc.createXULElement("menuitem");
             item.setAttribute("label", alias.email);
+            item.setAttribute("image", ICONS.alias);
             item.addEventListener(
               "command",
               (function (ae: string) {
@@ -384,6 +343,7 @@ function matchingAliasesForEmail(email: string): any[] {
         for (const alias of existingAliases) {
           const item = doc.createXULElement("menuitem");
           item.setAttribute("label", alias.email);
+          item.setAttribute("image", ICONS.alias);
           item.addEventListener(
             "command",
             (function (ae: string) {
@@ -408,13 +368,14 @@ function matchingAliasesForEmail(email: string): any[] {
       // ── New… ▶ ───────────────────────────────────────────────────────────────
       const newMenu = doc.createXULElement("menu");
       newMenu.setAttribute("label", "New…");
-      newMenu.setAttribute("image", ICON_NEW);
+      newMenu.setAttribute("image", ICONS.newAlias);
       const newPopup = doc.createXULElement("menupopup");
 
       if (availableDomains.length > 1) {
         for (const domain of availableDomains) {
           const dmMenu = doc.createXULElement("menu");
           dmMenu.setAttribute("label", `@${domain}`);
+          dmMenu.setAttribute("image", ICONS.domain);
           const dmPopup = doc.createXULElement("menupopup");
           buildFormatItems(
             dmPopup,
