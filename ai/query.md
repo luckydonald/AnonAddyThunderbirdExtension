@@ -938,3 +938,5 @@ onStartup() {
 
 ❯ run the test
 
+❯ Your Thunderbird profile cannot be loaded. It may be missing or inaccessible.
+
