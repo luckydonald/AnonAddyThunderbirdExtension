@@ -940,3 +940,5 @@ onStartup() {
 
 ❯ Your Thunderbird profile cannot be loaded. It may be missing or inaccessible.
 
+❯ Welcome to Thunderbird Add your email address
+
