@@ -291,3 +291,36 @@ class TestChipMenu:
         with tb.using_context("chrome"):
             tb.switch_to_window(compose_handle)
             tb.execute_script("window.close();")
+
+    def test_addy_menu_items_have_icons(self, tb):
+        """The top-level Addy menu, 'Existing…', and 'New…' must each have an icon
+        set via the 'image' attribute.  Verifies that SVG data-URI icons are applied
+        (chrome:// URLs were broken in some TB versions)."""
+        compose_handle = open_compose_with_recipient(tb, RECIPIENT)
+        right_click_first_pill(tb)
+
+        with tb.using_context("chrome"):
+            icons = tb.execute_script(
+                """
+                const result = {};
+                for (const el of document.querySelectorAll("menu, menuitem")) {
+                    const lbl = (el.getAttribute("label") || "").toLowerCase();
+                    if (lbl.includes("addy")) result.addy = el.getAttribute("image") || "";
+                    if (lbl.includes("existing")) result.existing = el.getAttribute("image") || "";
+                    if (lbl.includes("new")) result.new = el.getAttribute("image") || "";
+                }
+                return result;
+                """
+            )
+
+        assert icons.get("addy"), "Addy top-level menu has no image attribute"
+        assert icons.get("existing"), "Existing… menu has no image attribute"
+        assert icons.get("new"), "New… menu has no image attribute"
+        for key, val in icons.items():
+            assert not val.startswith("chrome://"), (
+                f"Icon for '{key}' still uses a chrome:// URL: {val}"
+            )
+
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script("window.close();")
