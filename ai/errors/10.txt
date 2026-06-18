@@ -1,0 +1,12 @@
+00:41:57.479 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" emailAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" fullAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" displayName context="emailAddressPillPopup" allowevents="true" selected="selected" tooltiptext="isla.oconnell444+uqkozmb…ht in Ihrem Adressbuch." aria-label="isla.oconnell444+uqkozmb…en-Taste zum Entfernen.">
+implementation.js:276
+00:41:57.480 WebExtensions: AnonAddyTB popupshowing tag: menupopup triggerNode:
+<mail-address-pill class="address-pill" label="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" emailAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" fullAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" displayName context="emailAddressPillPopup" allowevents="true" selected="selected" tooltiptext="isla.oconnell444+uqkozmb…ht in Ihrem Adressbuch." aria-label="isla.oconnell444+uqkozmb…en-Taste zum Entfernen.">
+implementation.js:302
+00:41:59.564 Uncaught TypeError: can't access property "hasAttribute", pill is null
+    onPillPopupShowing chrome://messenger/content/messengercompose/addressingWidgetOverlay.js:1044
+    onpopupshowing chrome://messenger/content/messengercompose/messengercompose.xhtml:1
+addressingWidgetOverlay.js:1044:7

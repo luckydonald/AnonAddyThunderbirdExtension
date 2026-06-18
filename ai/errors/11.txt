@@ -1,0 +1,25 @@
+00:45:11.258 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" emailAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" fullAddress="isla.oconnell444+uqkozmb…dates.art@ispammail.xyz" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="isla.oconnell444+uqkozmb…ht in Ihrem Adressbuch." aria-label="isla.oconnell444+uqkozmb…en-Taste zum Entfernen." selected>
+implementation.js:276
+00:45:13.140 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" emailAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" fullAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" displayName context="emailAddressPillPopup" allowevents="true" aria-label="autotechnik-schapen+info…en-Taste zum Entfernen.">
+implementation.js:276
+00:45:22.018 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="ingo@atsgmbh.de" emailAddress="ingo@atsgmbh.de" fullAddress="ingo@atsgmbh.de" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="ingo@atsgmbh.de ist nicht in Ihrem Adressbuch." aria-label="ingo@atsgmbh.de, 1 von 3…en-Taste zum Entfernen.">
+implementation.js:276
+00:45:23.246 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="info@atsgmbh.eu" emailAddress="info@atsgmbh.eu" fullAddress="info@atsgmbh.eu" displayName context="emailAddressPillPopup" allowevents="true" tooltiptext="info@atsgmbh.eu ist nicht in Ihrem Adressbuch." aria-label="info@atsgmbh.eu, 1 von 3…en-Taste zum Entfernen.">
+implementation.js:276
+00:45:24.649 WebExtensions: AnonAddyTB contextmenu path:
+Array(8) [ "mail-address-pill", "hbox", "hbox", "mail-recipients-area", "toolbar", "html:div", "html:body", "html" ]
+ pill:
+<mail-address-pill class="address-pill" label="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" emailAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" fullAddress="autotechnik-schapen+info=atsgmbh.eu@t.duebel.cc" displayName context="emailAddressPillPopup" allowevents="true" aria-label="autotechnik-schapen+info…en-Taste zum Entfernen.">
+implementation.js:276
