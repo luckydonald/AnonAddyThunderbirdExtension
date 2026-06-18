@@ -919,3 +919,14 @@ onStartup() {
 
 ❯ Summarize important learnings into `CLAUDE.md`.
 
+❯ can I automate the thunderbird extension testing?
+
+❯ Task Notification:
+> - Task `ad54d12c0a6221318`: <kbd>completed</kbd>
+> - > Agent "Survey testing setup" came to rest
+> - [Query (`567` chars, 569 B)](agents/002.ad54d12c0a6221318/prompt.md)
+> - [Answer (`1376` chars, 1.35 KB)](agents/002.ad54d12c0a6221318/result.md)
+> - [Raw log (`22.4 KB`)](/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/b3c2110f-ae97-47f6-bf3d-647bd0eaab60/tasks/ad54d12c0a6221318.output)
+
+❯ /plan wire up Vitest with that first test, and do marionette python tests for the chrome.
+
