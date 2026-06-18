@@ -989,3 +989,11 @@ The verification needs to be automated tests.
 
 ❯ UI and context menu are broken now? it's only white and the other one is missing. Check with unittests.
 
+❯ add those to the plan:
+5. Add test data to the mock to return a matching email, to automatically test both UI and context menu finding that.
+6. Run those and all tests and fix errors.
+
+❯ this must be possible with no duplication on code side but smartly placed entrypoints for the ts compiler and it's tree shaking?
+
+❯ Document your learnings.
+
