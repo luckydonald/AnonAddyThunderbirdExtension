@@ -997,3 +997,23 @@ The verification needs to be automated tests.
 
 ❯ Document your learnings.
 
+❯ 0. Write at least one unit test per case, commit for each, and commit between working on resolving those issues, too.
+1. Good news, the in-context-menu icons are finally rendered, as broken images at least! Good news! See @ai/errors/12.txt for that.
+2. Add all the other icons, too, see specification in @ai/initial.md:23-50 (point **7.** there).
+3. The context menu keeps unregistering, at the same time as @ai/errors/13.txt is caused. Clicking the UI button recovers it, apparently.
+4. The display for email tags does not work (or the detection maybe?)
+5. I can't select _Don't replace_ of an already translated item to convert it back to the normal email - the _Apply_ button is disabled.
+6. Closing the composer shall close the Addy UI window automatically. Closing the Addy UI window should close the New Alias window, too. Can be chained.
+7. The context menu item _Existing…_ is **still** not showing any results.
+
+› 0. Write at least one unit test per case, commit for each, and commit between working on resolving those issues, too.
+1. Good news, the in-context-menu icons are finally rendered, as broken images at least! Good news! See @ai/errors/12.txt for that.
+2. Add all the other icons, too, see specification in @ai/initial.md:23-50 (point **7.** there).
+3. The context menu keeps unregistering, at the same time as @ai/errors/13.txt is caused. Clicking the UI button recovers it, apparently.
+4. The display for email tags does not work (or the detection maybe?)
+5. I can't select _Don't replace_ of an already translated item to convert it back to the normal email - the _Apply_ button is disabled.
+6. Closing the composer shall close the Addy UI window automatically. Closing the Addy UI window should close the New Alias window, too. Can be chained.
+7. The context menu item _Existing…_ is **still** not showing any results.
+
+› keep those included
+
