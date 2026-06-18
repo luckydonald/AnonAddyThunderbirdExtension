@@ -976,3 +976,9 @@ In case they are a proxied one, I wanna have it display a different text: `alias
 
 ❯ Regarding _displayName in email headers_, that's not a good solution. I'd just like to change the displayed representation. Would the CSS one resize the pill correctly?
 
+❯ /plan
+1. Still not responsive
+2. The new alias stuff is still not a popup aka. own window.
+3. I don't see any icons yet. I outlined them in the initial plan @ai/initial.md 
+4. seems unchanged and still an empty list.
+
