@@ -974,3 +974,5 @@ In case they are a proxied one, I wanna have it display a different text: `alias
 
 ❯ why pure js, just compile the existing TS to a js file there (with line breaks, if easy).
 
+❯ Regarding _displayName in email headers_, that's not a good solution. I'd just like to change the displayed representation. Would the CSS one resize the pill correctly?
+
