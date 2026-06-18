@@ -111,7 +111,7 @@ New `.github/workflows/test.yml` — runs on PR and push to main, Node 22, `npm 
 tests/
   fixtures/              ← shared fixture JSON (used by both JS and Python)
   marionette/
-    requirements.txt     # marionette_driver, pytest
+    pyproject.toml       # uv-managed project: marionette_driver, pytest as dependencies
     mock_server.py       # simple http.server that serves fixture JSON for addy API endpoints
     conftest.py          # session fixture: build xpi, start mock server, launch TB, yield client
     test_popup.py        # toolbar button → popup loads, alias shown, apply rewrites address
@@ -175,9 +175,8 @@ Extension `options` storage is set via a startup script injected through Marione
 
 ```bash
 cd tests/marionette
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-THUNDERBIRD_BIN=/usr/bin/thunderbird pytest -v
+uv sync                                        # creates .venv, installs from pyproject.toml
+THUNDERBIRD_BIN=/usr/bin/thunderbird uv run pytest -v
 ```
 
 Marionette tests are **not added to CI** initially — they need a real Thunderbird binary and display. A `Makefile` target `make test-marionette` documents the invocation.
@@ -203,7 +202,7 @@ Marionette tests are **not added to CI** initially — they need a real Thunderb
 | **Create** | `src/tests/experiment-utils.test.js` |
 | **Create** | `src/tests/api.test.ts` |
 | **Create** | `.github/workflows/test.yml` |
-| **Create** | `tests/marionette/requirements.txt` |
+| **Create** | `tests/marionette/pyproject.toml` |
 | **Create** | `tests/marionette/mock_server.py` |
 | **Create** | `tests/marionette/conftest.py` |
 | **Create** | `tests/marionette/test_popup.py` |
@@ -217,5 +216,5 @@ Marionette tests are **not added to CI** initially — they need a real Thunderb
 ```bash
 npm test                               # all Vitest tests pass
 npm run typecheck                      # no type errors after extracting utils.ts
-THUNDERBIRD_BIN=... pytest tests/marionette/ -v   # Marionette suite passes with mock server
+cd tests/marionette && THUNDERBIRD_BIN=... uv run pytest -v   # Marionette suite passes with mock server
 ```

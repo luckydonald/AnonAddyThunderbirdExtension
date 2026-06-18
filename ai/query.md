@@ -929,6 +929,6 @@ onStartup() {
 > - [Raw log (`22.4 KB`)](/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/b3c2110f-ae97-47f6-bf3d-647bd0eaab60/tasks/ad54d12c0a6221318.output)
 
 ❯ /plan wire up Vitest with that first test, and do marionette python tests for the chrome.
-
 ❯ Also test the email pill context menu integration. Mock the alias creation for all those, so we don't need real addy instance. Have the mocked data neatly organized as json files in a directory structure, used for both js and py tests to share - i.e. so they can test under the same assumptions.
+❯ use `uv` for the python deps.
 
