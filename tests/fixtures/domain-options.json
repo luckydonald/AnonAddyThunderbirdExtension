@@ -1,0 +1,5 @@
+{
+  "data": ["anonaddy.me", "anon.email"],
+  "defaultAliasDomain": "anonaddy.me",
+  "defaultAliasFormat": "random_characters"
+}

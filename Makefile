@@ -14,3 +14,6 @@ dist/: src/ _locales/ options.html composePopup.html $(static_files)
 clean:
 	-rm -f $(target)
 	-rm -rf dist/
+
+test-marionette:
+	cd tests/marionette && uv sync && THUNDERBIRD_BIN=$(or $(THUNDERBIRD_BIN),thunderbird) uv run pytest -v

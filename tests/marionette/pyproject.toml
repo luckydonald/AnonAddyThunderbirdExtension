@@ -1,0 +1,8 @@
+[project]
+name = "anonaddytb-marionette-tests"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "marionette-driver>=3.3.0",
+    "pytest>=8.0.0",
+]

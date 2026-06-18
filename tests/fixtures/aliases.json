@@ -1,0 +1,66 @@
+[
+  {
+    "id": "a1",
+    "local_part": "shop",
+    "domain": "anonaddy.me",
+    "email": "shop@anonaddy.me",
+    "active": true,
+    "description": "Shopping alias for example.com"
+  },
+  {
+    "id": "a2",
+    "local_part": "news",
+    "domain": "anonaddy.me",
+    "email": "news@anonaddy.me",
+    "active": true,
+    "description": "Newsletter alias for example.com"
+  },
+  {
+    "id": "a3",
+    "local_part": "work",
+    "domain": "anon.email",
+    "email": "work@anon.email",
+    "active": true,
+    "description": "Work alias for example.com"
+  },
+  {
+    "id": "a4",
+    "local_part": "old",
+    "domain": "anonaddy.me",
+    "email": "old@anonaddy.me",
+    "active": false,
+    "description": "Old inactive alias for example.com"
+  },
+  {
+    "id": "a5",
+    "local_part": "other",
+    "domain": "anonaddy.me",
+    "email": "other@anonaddy.me",
+    "active": true,
+    "description": "Unrelated alias for other-site.org"
+  },
+  {
+    "id": "a6",
+    "local_part": "relay1",
+    "domain": "relay.example.com",
+    "email": "relay1@relay.example.com",
+    "active": true,
+    "description": ""
+  },
+  {
+    "id": "a7",
+    "local_part": "relay2",
+    "domain": "relay.example.com",
+    "email": "relay2@relay.example.com",
+    "active": true,
+    "description": ""
+  },
+  {
+    "id": "a8",
+    "local_part": "old-relay",
+    "domain": "relay.example.com",
+    "email": "old-relay@relay.example.com",
+    "active": false,
+    "description": ""
+  }
+]

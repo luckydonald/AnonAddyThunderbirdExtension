@@ -3,16 +3,21 @@
     "build": "vite build",
     "typecheck": "vue-tsc --noEmit",
     "prettier:check": "prettier --check .",
-    "prettier:write": "prettier --write ."
+    "prettier:write": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
     "@types/webextension-polyfill": "^0.10.7",
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vue/test-utils": "^2.4.11",
+    "jsdom": "^29.1.1",
     "prettier": "^3.4.2",
     "sass": "^1.89.2",
     "typescript": "^5.8.3",
     "vite": "^5.4.19",
+    "vitest": "^4.1.9",
     "vue": "^3.5.16",
     "vue-tsc": "^2.2.10"
   },

@@ -6,6 +6,11 @@ import RecipientCard from "./components/RecipientCard.vue";
 import FooterBar from "./components/FooterBar.vue";
 import { addyApiRequest } from "../api/index.js";
 import { useI18n } from "../composables/useI18n.js";
+import {
+  matchingAliases,
+  parseForwardingAddress,
+  buildForwardingAddress,
+} from "./utils.js";
 import type {
   Alias,
   AliasFormat,
@@ -80,34 +85,6 @@ async function parseAddress(raw: string): Promise<ParsedAddress | null> {
   return { original: raw, address, localPart, domain, name: parsed.name ?? "" };
 }
 
-function matchingAliases(aliases: Alias[], domain: string): Alias[] {
-  const lower = domain.toLowerCase();
-  // Only match by description — email-based matching produces false positives
-  // when an alias domain happens to contain the recipient domain as a substring
-  // (e.g. alias on alias.company.com matching recipient on company.com).
-  const matched = aliases.filter(
-    (a) => a.active && (a.description ?? "").toLowerCase().includes(lower),
-  );
-  return matched.slice(0, 10);
-}
-
-/** Parse a forwarding address `aliasLocal+recipLocal=recipDomain@aliasDomain`. */
-function parseForwardingAddress(
-  email: string,
-  addyDomainSet: Set<string>,
-): { originalEmail: string; aliasEmail: string } | null {
-  const dm = email.match(/^(.+)@(.+)$/);
-  if (!dm) return null;
-  const [, localPart, domain] = dm;
-  if (!addyDomainSet.has(domain.toLowerCase())) return null;
-  const fw = localPart.match(/^(.+)\+(.+)=(.+)$/);
-  if (!fw) return null;
-  const [, aliasLocal, recipLocal, recipDomain] = fw;
-  return {
-    originalEmail: `${recipLocal}@${recipDomain}`,
-    aliasEmail: `${aliasLocal}@${domain}`,
-  };
-}
 
 // ─── Initialization ───────────────────────────────────────────────────────────
 
@@ -458,10 +435,8 @@ async function applyAndClose(): Promise<void> {
           : entry.originalEmail);
         continue;
       }
-      const am = entry.aliasEmail.match(/^(.+)@(.+)$/);
-      const om = entry.originalEmail.match(/^(.+)@(.+)$/);
-      if (!am || !om) { result.push(raw); continue; }
-      const forwarding = `${am[1]}+${om[1]}=${om[2]}@${am[2]}`;
+      const forwarding = buildForwardingAddress(entry.aliasEmail, entry.originalEmail);
+      if (!forwarding) { result.push(raw); continue; }
       result.push(displayName ? `${displayName} <${forwarding}>` : forwarding);
     }
     return result;

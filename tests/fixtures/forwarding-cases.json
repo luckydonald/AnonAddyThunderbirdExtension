@@ -1,0 +1,32 @@
+[
+  {
+    "description": "standard forwarding address",
+    "forwardingAddress": "shop+user=example.com@anonaddy.me",
+    "originalEmail": "user@example.com",
+    "aliasEmail": "shop@anonaddy.me"
+  },
+  {
+    "description": "contact on same domain",
+    "forwardingAddress": "news+contact=example.com@anonaddy.me",
+    "originalEmail": "contact@example.com",
+    "aliasEmail": "news@anonaddy.me"
+  },
+  {
+    "description": "different addy domain",
+    "forwardingAddress": "work+user=example.com@anon.email",
+    "originalEmail": "user@example.com",
+    "aliasEmail": "work@anon.email"
+  },
+  {
+    "description": "non-addy domain — should not parse",
+    "forwardingAddress": "shop+user=example.com@gmail.com",
+    "originalEmail": null,
+    "aliasEmail": null
+  },
+  {
+    "description": "malformed — no plus-equals pattern",
+    "forwardingAddress": "shop@anonaddy.me",
+    "originalEmail": null,
+    "aliasEmail": null
+  }
+]
