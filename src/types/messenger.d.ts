@@ -93,6 +93,15 @@ declare const messenger: {
   runtime: {
     getURL(path: string): string;
     openOptionsPage(): Promise<void>;
+    sendMessage(message: Record<string, unknown>): Promise<unknown>;
+    onMessage: {
+      addListener(
+        callback: (
+          message: Record<string, unknown>,
+          sender: { id?: string; tab?: { id: number } },
+        ) => void | Promise<unknown>,
+      ): void;
+    };
     onInstalled: {
       addListener(callback: (details: { reason: string }) => void): void;
     };
@@ -103,7 +112,11 @@ declare const messenger: {
   AddressChipMenu: {
     setCache(data: {
       aliases: Array<{ id: string; email: string; active: boolean }>;
-      domainOptions: { data: string[]; defaultAliasDomain: string; defaultAliasFormat: string };
+      domainOptions: {
+        data: string[];
+        defaultAliasDomain: string;
+        defaultAliasFormat: string;
+      };
     }): void;
     onChipMenuClicked: {
       addListener(

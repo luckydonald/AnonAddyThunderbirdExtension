@@ -11,12 +11,7 @@ import {
   parseForwardingAddress,
   buildForwardingAddress,
 } from "./utils.js";
-import type {
-  Alias,
-  AliasFormat,
-  DomainOptions,
-  CreateAliasBody,
-} from "../api/types.js";
+import type { Alias, DomainOptions } from "../api/types.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +29,6 @@ interface RecipientState {
   composeAddress: string;
   existingAliases: Alias[];
   selectedAlias: string | null;
-  createdAlias: { id: string; email: string; active: boolean } | null;
 }
 
 type PopupState =
@@ -64,9 +58,7 @@ const { t } = useI18n();
 
 const hasSelections = computed(() => {
   if (popupState.value.kind !== "ready") return false;
-  return popupState.value.recipients.some(
-    (r) => r.selectedAlias !== null || r.createdAlias !== null,
-  );
+  return popupState.value.recipients.some((r) => r.selectedAlias !== null);
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -84,7 +76,6 @@ async function parseAddress(raw: string): Promise<ParsedAddress | null> {
   if (address.includes('"')) return null;
   return { original: raw, address, localPart, domain, name: parsed.name ?? "" };
 }
-
 
 // ─── Initialization ───────────────────────────────────────────────────────────
 
@@ -168,7 +159,6 @@ async function buildRecipients(cachedAliases: Alias[]): Promise<void> {
             composeAddress: parsed.address,
             existingAliases: existing,
             selectedAlias: fwd.aliasEmail,
-            createdAlias: null,
           });
         }
       }
@@ -186,7 +176,6 @@ async function buildRecipients(cachedAliases: Alias[]): Promise<void> {
       composeAddress: parsed.address,
       existingAliases: existing,
       selectedAlias: autoSelect,
-      createdAlias: null,
     });
   }
 
@@ -231,7 +220,10 @@ async function refreshAliasesInBackground(): Promise<void> {
     // If domain options are empty (first install / background hasn't run yet),
     // fetch them now so the domain combobox in CreateAliasForm isn't blank.
     if (domainOptions.value.data.length === 0) {
-      const fresh = await addyApiRequest<DomainOptions>("GET", "domain-options");
+      const fresh = await addyApiRequest<DomainOptions>(
+        "GET",
+        "domain-options",
+      );
       domainOptions.value = fresh;
       await messenger.storage.local.set({ domainOptions: fresh });
     }
@@ -263,124 +255,73 @@ async function handleAddressUpdate(
   r.existingAliases = matchingAliases(allAliases.value, r.parsed.domain);
 }
 
-async function handleCreate(
+function openCreateWindow(
   recipientIdx: number,
-  payload: { domain: string; format: AliasFormat; customPrefix: string },
+  payload: { email: string; name: string },
+): void {
+  if (popupState.value.kind !== "ready") return;
+  const url =
+    messenger.runtime.getURL("createAlias.html") +
+    `?tabId=${tabId.value}&email=${encodeURIComponent(payload.email)}&name=${encodeURIComponent(payload.name)}`;
+  void messenger.windows.create({
+    url,
+    type: "popup",
+    width: 520,
+    height: 480,
+  });
+}
+
+async function handleDisable(
+  recipientIdx: number,
+  aliasId: string,
 ): Promise<void> {
   if (popupState.value.kind !== "ready") return;
   const r = popupState.value.recipients[recipientIdx];
-
-  const body: CreateAliasBody = {
-    domain: payload.domain,
-    description: `Created by AnonAddyTB for sending to ${r.parsed.address}`,
-    format: payload.format,
-  };
-  if (payload.format === "custom" && payload.customPrefix.trim()) {
-    body.local_part = payload.customPrefix.trim();
-  }
-
-  let alias: Alias | null = null;
   try {
-    const response = await addyApiRequest<{ data: Alias }>(
-      "POST",
-      "aliases",
-      null,
-      body,
-    );
-    alias = response.data;
-  } catch (e) {
-    // 422 means the alias already exists — recover it for custom format
-    const msg = e instanceof Error ? e.message : "";
-    if (msg.includes("422") && msg.includes("already exists") && body.local_part) {
-      try {
-        const searchEmail = `${body.local_part}@${payload.domain}`;
-        const res = await addyApiRequest<{ data: Alias[] }>("GET", "aliases", {
-          "filter[search]": searchEmail,
-        });
-        alias = res.data.find((a) => a.email === searchEmail) ?? null;
-      } catch {
-        // fall through
-      }
-    }
-    if (!alias) {
-      console.error("AnonAddyTB: alias creation failed", e);
-      return;
-    }
-  }
-
-  r.createdAlias = { id: alias.id, email: alias.email, active: alias.active };
-  r.selectedAlias = alias.active ? alias.email : null;
-
-  // Eagerly add to the local cache so the alias appears on the next popup open.
-  try {
-    const stored = await messenger.storage.local.get({
-      aliasCache: { aliases: [] as Alias[], fetchedAt: 0 },
+    await addyApiRequest("PATCH", `aliases/${aliasId}`, null, {
+      active: false,
     });
-    const cache = stored.aliasCache as AliasCache;
-    if (!cache.aliases.some((a) => a.id === alias!.id)) {
-      cache.aliases.push(alias!);
-      await messenger.storage.local.set({ aliasCache: cache });
+    const a = r.existingAliases.find((x) => x.id === aliasId);
+    if (a) {
+      a.active = false;
+      if (r.selectedAlias === a.email) r.selectedAlias = null;
     }
-  } catch {
-    // Non-fatal — background refresh will pick it up eventually.
-  }
-}
-
-async function handleDisable(recipientIdx: number, aliasId: string): Promise<void> {
-  if (popupState.value.kind !== "ready") return;
-  const r = popupState.value.recipients[recipientIdx];
-  try {
-    await addyApiRequest("PATCH", `aliases/${aliasId}`, null, { active: false });
-    let disabledEmail: string | null = null;
-    if (r.createdAlias?.id === aliasId) {
-      r.createdAlias.active = false;
-      disabledEmail = r.createdAlias.email;
-    } else {
-      const a = r.existingAliases.find((x) => x.id === aliasId);
-      if (a) { a.active = false; disabledEmail = a.email; }
-    }
-    if (disabledEmail && r.selectedAlias === disabledEmail) r.selectedAlias = null;
   } catch (e) {
     console.error("AnonAddyTB: alias disable failed", e);
   }
 }
 
-async function handleRestore(recipientIdx: number, aliasId: string): Promise<void> {
+async function handleRestore(
+  recipientIdx: number,
+  aliasId: string,
+): Promise<void> {
   if (popupState.value.kind !== "ready") return;
   const r = popupState.value.recipients[recipientIdx];
   try {
     await addyApiRequest("PATCH", `aliases/${aliasId}`, null, { active: true });
-    if (r.createdAlias?.id === aliasId) {
-      r.createdAlias.active = true;
-      r.selectedAlias = r.createdAlias.email;
-    } else {
-      const a = r.existingAliases.find((x) => x.id === aliasId);
-      if (a) {
-        a.active = true;
-        r.selectedAlias = a.email;
-      }
+    const a = r.existingAliases.find((x) => x.id === aliasId);
+    if (a) {
+      a.active = true;
+      r.selectedAlias = a.email;
     }
   } catch (e) {
     console.error("AnonAddyTB: alias restore failed", e);
   }
 }
 
-async function handleDelete(recipientIdx: number, aliasId: string): Promise<void> {
+async function handleDelete(
+  recipientIdx: number,
+  aliasId: string,
+): Promise<void> {
   if (popupState.value.kind !== "ready") return;
   const r = popupState.value.recipients[recipientIdx];
   try {
     await addyApiRequest("DELETE", `aliases/${aliasId}`);
-    if (r.createdAlias?.id === aliasId) {
-      r.createdAlias = null;
-    } else {
-      const idx = r.existingAliases.findIndex((x) => x.id === aliasId);
-      if (idx >= 0) r.existingAliases.splice(idx, 1);
-    }
-    if (r.selectedAlias) {
-      const stillExists =
-        r.createdAlias?.email === r.selectedAlias ||
-        r.existingAliases.some((x) => x.email === r.selectedAlias);
-      if (!stillExists) r.selectedAlias = null;
+    const idx = r.existingAliases.findIndex((x) => x.id === aliasId);
+    if (idx >= 0) {
+      if (r.selectedAlias === r.existingAliases[idx].email)
+        r.selectedAlias = null;
+      r.existingAliases.splice(idx, 1);
     }
   } catch (e) {
     console.error("AnonAddyTB: alias delete failed", e);
@@ -404,9 +345,8 @@ async function applyAndClose(): Promise<void> {
     // Resolve selected alias email; verify it's still active before applying.
     const selectedEmail = r.selectedAlias;
     const isActive = selectedEmail
-      ? (r.createdAlias?.email === selectedEmail
-          ? r.createdAlias.active
-          : (r.existingAliases.find((a) => a.email === selectedEmail)?.active ?? false))
+      ? (r.existingAliases.find((a) => a.email === selectedEmail)?.active ??
+        false)
       : false;
     const selected = isActive ? selectedEmail : null;
     const isPreAliased = r.composeAddress !== r.parsed.address;
@@ -423,20 +363,34 @@ async function applyAndClose(): Promise<void> {
     const result: string[] = [];
     for (const raw of recipients) {
       const parsed = await parseAddress(raw);
-      if (!parsed) { result.push(raw); continue; }
+      if (!parsed) {
+        result.push(raw);
+        continue;
+      }
       const entry = applyMap.get(parsed.address);
-      if (!entry) { result.push(raw); continue; }
+      if (!entry) {
+        result.push(raw);
+        continue;
+      }
 
       const displayName = parsed.name || entry.originalName;
       if (!entry.aliasEmail) {
         // Revert pre-aliased address back to original recipient email.
-        result.push(displayName
-          ? `${displayName} <${entry.originalEmail}>`
-          : entry.originalEmail);
+        result.push(
+          displayName
+            ? `${displayName} <${entry.originalEmail}>`
+            : entry.originalEmail,
+        );
         continue;
       }
-      const forwarding = buildForwardingAddress(entry.aliasEmail, entry.originalEmail);
-      if (!forwarding) { result.push(raw); continue; }
+      const forwarding = buildForwardingAddress(
+        entry.aliasEmail,
+        entry.originalEmail,
+      );
+      if (!forwarding) {
+        result.push(raw);
+        continue;
+      }
       result.push(displayName ? `${displayName} <${forwarding}>` : forwarding);
     }
     return result;
@@ -513,13 +467,9 @@ function openSettings() {
         :existing-aliases="r.existingAliases"
         :all-aliases="allAliases"
         :selected-alias="r.selectedAlias"
-        :created-alias="r.createdAlias"
-        :available-domains="domainOptions.data"
-        :default-domain="domainOptions.defaultAliasDomain"
-        :default-format="domainOptions.defaultAliasFormat"
         @update:selected-alias="(v) => (r.selectedAlias = v)"
         @update:address="(v) => handleAddressUpdate(idx, v)"
-        @create="(p) => handleCreate(idx, p)"
+        @open-create-window="(p) => openCreateWindow(idx, p)"
         @disable="(id) => handleDisable(idx, id)"
         @restore="(id) => handleRestore(idx, id)"
         @delete="(id) => handleDelete(idx, id)"

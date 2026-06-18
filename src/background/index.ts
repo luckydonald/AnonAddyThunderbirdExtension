@@ -45,7 +45,11 @@ async function refreshCache(): Promise<void> {
   // Push fresh data into the experiment so context menus stay current.
   try {
     const storage = await messenger.storage.local.get({
-      domainOptions: { data: [], defaultAliasDomain: "", defaultAliasFormat: "random_characters" },
+      domainOptions: {
+        data: [],
+        defaultAliasDomain: "",
+        defaultAliasFormat: "random_characters",
+      },
       aliasCache: { aliases: [], fetchedAt: 0 },
     });
     messenger.AddressChipMenu.setCache({
@@ -155,6 +159,50 @@ messenger.runtime.onInstalled.addListener(async ({ reason: _reason }) => {
   }
 });
 
+// Create-alias popup window → create alias and apply it to the compose tab.
+messenger.runtime.onMessage.addListener(async (rawMessage) => {
+  const message = rawMessage as {
+    action: string;
+    tabId: number;
+    email: string;
+    name: string;
+    domain: string;
+    format: string;
+    customPrefix: string;
+  };
+  if (message.action !== "create_alias_and_apply") return;
+  try {
+    const body: CreateAliasBody = {
+      domain: message.domain,
+      description: `Created by AnonAddyTB for sending to ${message.email}`,
+      format: message.format as AliasFormat,
+    };
+    if (message.format === "custom" && message.customPrefix?.trim()) {
+      body.local_part = message.customPrefix.trim();
+    }
+    const response = await addyApiRequest<{ data: Alias }>(
+      "POST",
+      "aliases",
+      null,
+      body,
+    );
+    const alias = response.data;
+    await applyAliasToCompose(
+      message.tabId,
+      message.email,
+      message.name,
+      alias.email,
+    );
+    refreshCache().catch(() => {});
+    return { success: true, aliasEmail: alias.email };
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
+});
+
 // Toolbar button click → open alias window for the current compose tab.
 messenger.composeAction.onClicked.addListener(async (tab) => {
   try {
@@ -179,23 +227,36 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
           return;
         }
       }
-      console.error("AnonAddyTB: could not find compose tab for chip menu click");
+      console.error(
+        "AnonAddyTB: could not find compose tab for chip menu click",
+      );
     } catch (e) {
-      console.error("AnonAddyTB: could not open alias window from chip menu", e);
+      console.error(
+        "AnonAddyTB: could not open alias window from chip menu",
+        e,
+      );
     }
     return;
   }
 
   const tabId = await findComposeTabId();
   if (tabId === null) {
-    console.error("AnonAddyTB: could not find compose tab for chip action", action);
+    console.error(
+      "AnonAddyTB: could not find compose tab for chip action",
+      action,
+    );
     return;
   }
 
   if (action === "select_alias") {
     if (!info.aliasEmail) return;
     try {
-      await applyAliasToCompose(tabId, info.email, info.displayName, info.aliasEmail);
+      await applyAliasToCompose(
+        tabId,
+        info.email,
+        info.displayName,
+        info.aliasEmail,
+      );
     } catch (e) {
       console.error("AnonAddyTB: could not apply alias from context menu", e);
     }
@@ -220,7 +281,12 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
         body,
       );
       const aliasEmail = response.data.email;
-      await applyAliasToCompose(tabId, info.email, info.displayName, aliasEmail);
+      await applyAliasToCompose(
+        tabId,
+        info.email,
+        info.displayName,
+        aliasEmail,
+      );
       // Refresh cache in the background so the new alias shows up next time.
       refreshCache().catch(() => {});
     } catch (e) {

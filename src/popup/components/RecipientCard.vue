@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
-import CreateAliasForm from "./CreateAliasForm.vue";
 import { useI18n } from "../../composables/useI18n.js";
-import type { Alias, AliasFormat } from "../../api/types.js";
-
-export interface CreatedAliasInfo {
-  id: string;
-  email: string;
-  active: boolean;
-}
+import type { Alias } from "../../api/types.js";
 
 const props = defineProps<{
   address: string;
@@ -16,18 +9,12 @@ const props = defineProps<{
   existingAliases: Alias[];
   allAliases: Alias[];
   selectedAlias: string | null;
-  createdAlias: CreatedAliasInfo | null;
-  availableDomains: string[];
-  defaultDomain: string;
-  defaultFormat: AliasFormat;
 }>();
 
 const emit = defineEmits<{
   "update:selectedAlias": [value: string | null];
   "update:address": [value: string];
-  create: [
-    payload: { domain: string; format: AliasFormat; customPrefix: string },
-  ];
+  "open-create-window": [payload: { email: string; name: string }];
   disable: [id: string];
   delete: [id: string];
   restore: [id: string];
@@ -35,24 +22,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const creating = ref(false);
-const showCreateForm = ref(false);
 const editableAddress = ref(props.address);
 const aliasSearch = ref("");
 
 watch(
   () => props.address,
-  (v) => { editableAddress.value = v; },
-);
-
-// Close the create form automatically when a new alias appears (creation succeeded).
-watch(
-  () => props.createdAlias,
   (v) => {
-    if (v) {
-      showCreateForm.value = false;
-      creating.value = false;
-    }
+    editableAddress.value = v;
   },
 );
 
@@ -64,21 +40,6 @@ function onAddressChange() {
 function selectAlias(email: string) {
   emit("update:selectedAlias", email === props.selectedAlias ? null : email);
 }
-
-function handleCreate(payload: {
-  domain: string;
-  format: AliasFormat;
-  customPrefix: string;
-}) {
-  creating.value = true;
-  emit("create", payload);
-}
-
-// Exclude the created alias from the regular list to avoid it appearing twice.
-const displayAliases = computed(() => {
-  if (!props.createdAlias) return props.existingAliases;
-  return props.existingAliases.filter((a) => a.email !== props.createdAlias!.email);
-});
 
 // Typeahead: search across ALL aliases when the user types.
 const searchResults = computed(() => {
@@ -96,10 +57,8 @@ const searchResults = computed(() => {
 // Pin the currently selected alias when it's not in the search results.
 const pinnedAlias = computed((): Alias | null => {
   if (!props.selectedAlias || !aliasSearch.value.trim()) return null;
-  if (searchResults.value.some((a) => a.email === props.selectedAlias)) return null;
-  if (props.createdAlias?.email === props.selectedAlias) {
-    return { id: props.createdAlias.id, email: props.createdAlias.email, active: props.createdAlias.active } as Alias;
-  }
+  if (searchResults.value.some((a) => a.email === props.selectedAlias))
+    return null;
   return props.allAliases.find((a) => a.email === props.selectedAlias) ?? null;
 });
 
@@ -114,8 +73,6 @@ function forwardingFor(aliasEmail: string): string | null {
   if (!am || !rm) return null;
   return `${am[1]}+${rm[1]}=${rm[2]}@${am[2]}`;
 }
-
-defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.value = false; } });
 </script>
 
 <template>
@@ -144,7 +101,10 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
     />
 
     <!-- Typeahead search results -->
-    <div v-if="searchResults.length > 0 || pinnedAlias" class="alias-list alias-list--search">
+    <div
+      v-if="searchResults.length > 0 || pinnedAlias"
+      class="alias-list alias-list--search"
+    >
       <!-- Pinned selected alias (when not already in search results) -->
       <div
         v-if="pinnedAlias"
@@ -163,9 +123,16 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
             <kbd class="alias-option__email">{{ pinnedAlias.email }}</kbd>
             <span class="tag tag--selected">selected</span>
           </div>
-          <div v-if="forwardingFor(pinnedAlias.email)" class="alias-option__row alias-option__row--fwd">
-            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
-            <code class="alias-option__fwd">{{ forwardingFor(pinnedAlias.email) }}</code>
+          <div
+            v-if="forwardingFor(pinnedAlias.email)"
+            class="alias-option__row alias-option__row--fwd"
+          >
+            <span class="alias-option__fwd-label">{{
+              t("aliasPreviewLabel")
+            }}</span>
+            <code class="alias-option__fwd">{{
+              forwardingFor(pinnedAlias.email)
+            }}</code>
           </div>
         </div>
       </div>
@@ -190,68 +157,25 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
               {{ alias.description }}
             </span>
           </div>
-          <div v-if="forwardingFor(alias.email)" class="alias-option__row alias-option__row--fwd">
-            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
-            <code class="alias-option__fwd">{{ forwardingFor(alias.email) }}</code>
+          <div
+            v-if="forwardingFor(alias.email)"
+            class="alias-option__row alias-option__row--fwd"
+          >
+            <span class="alias-option__fwd-label">{{
+              t("aliasPreviewLabel")
+            }}</span>
+            <code class="alias-option__fwd">{{
+              forwardingFor(alias.email)
+            }}</code>
           </div>
         </div>
       </div>
     </div>
 
     <div class="alias-list" v-else>
-      <!-- Created alias pinned at top with inline manage controls -->
+      <!-- Existing aliases -->
       <div
-        v-if="createdAlias"
-        class="alias-option alias-option--created"
-        :class="{ selected: selectedAlias === createdAlias.email }"
-        @click="!createdAlias.active || selectAlias(createdAlias.email)"
-      >
-        <input
-          type="radio"
-          :name="`alias-${address}`"
-          :value="createdAlias.email"
-          :checked="selectedAlias === createdAlias.email"
-          :disabled="!createdAlias.active"
-          @change="selectAlias(createdAlias.email)"
-        />
-        <div class="alias-option__body">
-          <div class="alias-option__row">
-            <kbd
-              class="alias-option__email"
-              :class="{ 'alias-option__email--inactive': !createdAlias.active }"
-            >{{ createdAlias.email }}</kbd>
-            <span class="tag tag--new">{{ t("newTag") }}</span>
-            <span v-if="!createdAlias.active" class="tag tag--inactive">{{ t("inactive") }}</span>
-          </div>
-          <div v-if="forwardingFor(createdAlias.email)" class="alias-option__row alias-option__row--fwd">
-            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
-            <code class="alias-option__fwd">{{ forwardingFor(createdAlias.email) }}</code>
-          </div>
-          <div class="alias-option__actions" @click.stop>
-            <button
-              v-if="createdAlias.active"
-              class="small danger"
-              :title="t('disableHint')"
-              @click="$emit('disable', createdAlias.id)"
-            >{{ t("disable") }}</button>
-            <button
-              v-else
-              class="small"
-              :title="t('disableHint')"
-              @click="$emit('restore', createdAlias.id)"
-            >{{ t("reenable") }}</button>
-            <button
-              class="small danger"
-              :title="t('deleteHint')"
-              @click="$emit('delete', createdAlias.id)"
-            >{{ t("deleteAlias") }}</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Regular existing aliases -->
-      <div
-        v-for="alias in displayAliases"
+        v-for="alias in existingAliases"
         :key="alias.id"
         class="alias-option"
         :class="{ selected: selectedAlias === alias.email }"
@@ -270,15 +194,25 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
             <kbd
               class="alias-option__email"
               :class="{ 'alias-option__email--inactive': !alias.active }"
-            >{{ alias.email }}</kbd>
-            <span v-if="!alias.active" class="tag tag--inactive">{{ t("inactive") }}</span>
+              >{{ alias.email }}</kbd
+            >
+            <span v-if="!alias.active" class="tag tag--inactive">{{
+              t("inactive")
+            }}</span>
             <span v-if="alias.description" class="alias-option__desc">
               {{ alias.description }}
             </span>
           </div>
-          <div v-if="forwardingFor(alias.email)" class="alias-option__row alias-option__row--fwd">
-            <span class="alias-option__fwd-label">{{ t("aliasPreviewLabel") }}</span>
-            <code class="alias-option__fwd">{{ forwardingFor(alias.email) }}</code>
+          <div
+            v-if="forwardingFor(alias.email)"
+            class="alias-option__row alias-option__row--fwd"
+          >
+            <span class="alias-option__fwd-label">{{
+              t("aliasPreviewLabel")
+            }}</span>
+            <code class="alias-option__fwd">{{
+              forwardingFor(alias.email)
+            }}</code>
           </div>
           <div class="alias-option__actions" @click.stop>
             <button
@@ -286,31 +220,37 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
               class="small danger"
               :title="t('disableHint')"
               @click="$emit('disable', alias.id)"
-            >{{ t("disable") }}</button>
+            >
+              {{ t("disable") }}
+            </button>
             <button
               v-else
               class="small"
               :title="t('disableHint')"
               @click="$emit('restore', alias.id)"
-            >{{ t("reenable") }}</button>
+            >
+              {{ t("reenable") }}
+            </button>
             <button
               class="small danger"
               :title="t('deleteHint')"
               @click="$emit('delete', alias.id)"
-            >{{ t("deleteAlias") }}</button>
+            >
+              {{ t("deleteAlias") }}
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Empty state -->
-      <div v-if="!createdAlias && displayAliases.length === 0" class="no-aliases">
+      <div v-if="existingAliases.length === 0" class="no-aliases">
         <em>{{ t("noExistingAliases") }}</em>
       </div>
     </div>
 
-    <!-- Don't replace — always visible when there are any aliases -->
+    <!-- Don't replace — visible when there are any aliases or a selection -->
     <label
-      v-if="createdAlias || displayAliases.length > 0 || selectedAlias !== null"
+      v-if="existingAliases.length > 0 || selectedAlias !== null"
       class="alias-option alias-option--none"
       :class="{ selected: selectedAlias === null }"
     >
@@ -323,25 +263,13 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
       <span>{{ t("dontReplace") }}</span>
     </label>
 
-    <!-- Create new alias — collapsed behind a button, expands into a sub-panel -->
-    <div v-if="!showCreateForm" class="new-alias-trigger">
-      <button class="new-alias-btn" @click="showCreateForm = true">
+    <!-- + New Alias — opens a dedicated TB popup window -->
+    <div class="new-alias-trigger">
+      <button
+        class="new-alias-btn"
+        @click="emit('open-create-window', { email: editableAddress, name })"
+      >
         + {{ t("createAlias") }}
-      </button>
-    </div>
-
-    <div v-else class="create-alias-panel">
-      <CreateAliasForm
-        :available-domains="availableDomains"
-        :default-domain="defaultDomain"
-        :default-format="defaultFormat"
-        :loading="creating"
-        :target-email="editableAddress"
-        :target-name="name"
-        @create="handleCreate"
-      />
-      <button class="cancel-create-btn" @click="showCreateForm = false">
-        {{ t("cancel") }}
       </button>
     </div>
   </div>
@@ -499,15 +427,6 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
     word-break: break-all;
   }
 
-  &--created {
-    border: 1px solid $color-primary;
-    background: #f0f5ff;
-
-    &.selected {
-      background: #dbeafe;
-    }
-  }
-
   &--none {
     color: $color-muted;
     font-style: italic;
@@ -529,12 +448,6 @@ defineExpose({ resetCreating: () => { creating.value = false; showCreateForm.val
   &--inactive {
     background: #eee;
     color: $color-muted;
-  }
-
-  &--new {
-    background: #dbeafe;
-    color: $color-primary;
-    font-weight: 600;
   }
 
   &--selected {
@@ -567,30 +480,6 @@ button.small {
   &:hover {
     border-color: $color-primary;
     background: #f0f5ff;
-  }
-}
-
-.create-alias-panel {
-  margin-top: $spacing-sm;
-  border: 1px solid $color-primary;
-  border-radius: 4px;
-  padding: $spacing-md;
-  background: #f8fbff;
-}
-
-.cancel-create-btn {
-  margin-top: $spacing-sm;
-  width: 100%;
-  font-size: $font-size-sm;
-  padding: 3px $spacing-md;
-  border: 1px solid $color-border;
-  border-radius: 3px;
-  background: transparent;
-  color: $color-muted;
-  cursor: pointer;
-
-  &:hover {
-    background: #eee;
   }
 }
 </style>

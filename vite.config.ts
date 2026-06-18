@@ -17,6 +17,7 @@ export default defineConfig({
       input: {
         options: resolve(__dirname, "options.html"),
         composePopup: resolve(__dirname, "composePopup.html"),
+        createAlias: resolve(__dirname, "createAlias.html"),
         background: resolve(__dirname, "src/background/index.ts"),
       },
       output: {

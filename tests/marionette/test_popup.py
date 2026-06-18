@@ -304,3 +304,51 @@ class TestPopup:
         with tb.using_context("chrome"):
             tb.switch_to_window(compose_handle)
             tb.execute_script("window.close();")
+
+    def test_create_alias_opens_own_window(self, tb):
+        """Clicking '+ Create alias' must open a separate TB popup window."""
+        compose_handle = open_compose_window(tb)
+        add_recipient(tb, compose_handle, RECIPIENT)
+
+        before = set(tb.chrome_window_handles)
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script(
+                "document.getElementById("
+                "'anonaddytb_luckydonald_de-composeAction-toolbarbutton').click();"
+            )
+        Wait(tb, timeout=10).until(
+            lambda _: len(set(tb.chrome_window_handles) - before) > 0
+        )
+        popup_handle = find_popup_handle(tb)
+        assert popup_handle is not None, "Extension popup did not open"
+        time.sleep(2)  # let Vue render
+
+        # Click the '+ Create alias' button in the first recipient card
+        before_create = set(tb.chrome_window_handles)
+        popup_click(tb, popup_handle, "button.new-alias-btn")
+        # Wait for a second extension window to appear
+        Wait(tb, timeout=10).until(
+            lambda _: len(set(tb.chrome_window_handles) - before_create) > 0
+        )
+        new_handles = set(tb.chrome_window_handles) - before_create
+        assert new_handles, "Create alias window did not open"
+
+        # Confirm it's a separate popup window (not just a new compose window)
+        create_handle = new_handles.pop()
+        with tb.using_context("chrome"):
+            tb.switch_to_window(create_handle)
+            wtype = tb.execute_script(
+                "return document.documentElement.getAttribute('windowtype');"
+            )
+        assert wtype == "mail:extensionPopup", (
+            f"Create alias window has unexpected type: {wtype!r}"
+        )
+
+        # Clean up
+        with tb.using_context("chrome"):
+            tb.switch_to_window(create_handle)
+            tb.execute_script("window.close();")
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script("window.close();")
