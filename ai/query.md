@@ -961,3 +961,10 @@ onStartup() {
 ❯ /plan I want the mail-address-pill to have an grayscale or non-grayscale leading addy icon, depending if they are a "proxied" or "non proxied" address.
 In case they are a proxied one, I wanna have it display a different text: `alias@anon.my-mail.com → them@their-host.com` instead of `alias+them=their-host.com@anon.my-mail.com`.
 
+❯ Task Notification:
+> - Task `ae8a96fbb64cfab06`: <kbd>completed</kbd>
+> - > Agent "Save two memory entries" came to rest
+> - [Query (`3455` chars, 3.39 KB)](agents/003.ae8a96fbb64cfab06/prompt.md)
+> - [Answer (`336` chars, 342 B)](agents/003.ae8a96fbb64cfab06/result.md)
+> - [Raw log (`38.4 KB`)](/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/b3c2110f-ae97-47f6-bf3d-647bd0eaab60/tasks/ae8a96fbb64cfab06.output)
+
