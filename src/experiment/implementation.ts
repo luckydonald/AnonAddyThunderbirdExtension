@@ -8,6 +8,7 @@ import {
 } from "./pillDecoration.js";
 import { createMenuIconUrls } from "./menuIcons.js";
 import { createWindowAttachmentLifecycle } from "./windowAttachmentLifecycle.js";
+import { aliasesForContextMenuEmail } from "./aliasMatching.js";
 
 // ChromeUtils, Services, Ci are privileged TB globals; see src/types/experiment.d.ts.
 const { ExtensionCommon } = ChromeUtils.importESModule(
@@ -49,20 +50,6 @@ const FORMAT_ITEMS = [
   { value: "random_noun", label: "Noun" },
   { value: "custom", label: "Custom…" },
 ] as const;
-
-// Inline version of aliasSearch.ts matchingAliasesForEmail.
-// Keep in sync with src/shared/aliasSearch.ts.
-function matchingAliasesForEmail(email: string): any[] {
-  const m = email.match(/@(.+)$/);
-  if (!m) return [];
-  const domain = m[1].toLowerCase();
-  return (_cacheData.aliases || [])
-    .filter(
-      (a: any) =>
-        a.active && (a.description ?? "").toLowerCase().includes(domain),
-    )
-    .slice(0, 20);
-}
 
 // AddressChipMenu Experiment API
 //
@@ -227,7 +214,11 @@ function matchingAliasesForEmail(email: string): any[] {
         _cacheData.domainOptions?.defaultAliasDomain ||
         availableDomains[0] ||
         "";
-      const existingAliases = matchingAliasesForEmail(email);
+      const existingAliases = aliasesForContextMenuEmail(
+        _cacheData.aliases,
+        email,
+        getAddyDomainSet(),
+      );
 
       // Top-level menu entry — direct click opens popup, hover/arrow unfolds submenu.
       const menu = doc.createXULElement("menu");
