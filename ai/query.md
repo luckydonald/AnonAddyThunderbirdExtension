@@ -932,3 +932,5 @@ onStartup() {
 ❯ Also test the email pill context menu integration. Mock the alias creation for all those, so we don't need real addy instance. Have the mocked data neatly organized as json files in a directory structure, used for both js and py tests to share - i.e. so they can test under the same assumptions.
 ❯ use `uv` for the python deps.
 
+❯ document how to run the marionette tests
+

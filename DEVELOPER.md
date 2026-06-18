@@ -25,8 +25,57 @@ npm run build           # rebuild dist/ (Vite)
 npm run typecheck       # TypeScript type check (vue-tsc --noEmit)
 npm run prettier:check  # check code formatting
 npm run prettier:write  # auto-format all files
+npm test                # run Vitest unit tests (one-shot)
+npm run test:watch      # run Vitest in watch mode
 make clean              # remove AnonAddyTB.xpi and dist/
 ```
+
+## Testing
+
+### Unit tests (Vitest)
+
+No prerequisites beyond `npm ci`. Tests run in jsdom — no Thunderbird needed.
+
+```bash
+npm test                # run all tests and exit
+npm run test:watch      # watch mode for development
+```
+
+Tests live in `src/tests/`. Shared fixture data (aliases, domain options, forwarding
+cases) is in `tests/fixtures/` and is also used by the Marionette integration tests.
+
+### Integration tests (Marionette)
+
+Drives a real Thunderbird instance via the [Marionette](https://firefox-source-docs.mozilla.org/testing/marionette/) protocol. The addy.io API is replaced by a local mock HTTP server serving the fixture JSON — no real addy.io account needed.
+
+**Prerequisites:**
+
+- Python 3.11+ and [uv](https://docs.astral.sh/uv/)
+- Thunderbird installed
+
+**Run:**
+
+```bash
+# from repo root — builds the .xpi, then runs pytest
+THUNDERBIRD_BIN=/usr/bin/thunderbird make test-marionette
+```
+
+Or manually:
+
+```bash
+cd tests/marionette
+uv sync                                          # create .venv, install deps
+THUNDERBIRD_BIN=/usr/bin/thunderbird uv run pytest -v
+```
+
+`THUNDERBIRD_BIN` defaults to `thunderbird` (i.e. whatever is on `$PATH`).
+
+**What it tests:**
+
+- `test_popup.py` — toolbar button opens the popup, RecipientCard renders, Apply rewrites the To: field to forwarding format.
+- `test_chip_menu.py` — right-click on an address pill shows the Addy submenu, selecting an existing alias works, creating a new alias POSTs to the mock server.
+
+See `tests/marionette/README.md` for mock server endpoint details.
 
 ## Source archive for ATN submission
 
