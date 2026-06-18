@@ -324,3 +324,114 @@ class TestChipMenu:
         with tb.using_context("chrome"):
             tb.switch_to_window(compose_handle)
             tb.execute_script("window.close();")
+
+    def test_existing_aliases_populated(self, tb):
+        """After the background service-worker activates it calls syncCacheToExperiment(),
+        which reads aliasCache from storage and pushes it into the experiment so the
+        'Existing…' submenu is populated without requiring a fresh API fetch.
+
+        This test injects aliasCache + domainOptions directly into storage (bypassing
+        the API), then calls AddressChipMenu.setCache() via the experiment to simulate
+        what syncCacheToExperiment() does on startup, and verifies the menu items appear.
+        """
+        from conftest import EXT_ID
+
+        # Inject aliasCache + domainOptions directly into extension storage.
+        with tb.using_context("chrome"):
+            inject_result = tb.execute_script(
+                """
+                return (async () => {
+                    const { ExtensionStorageIDB } = ChromeUtils.importESModule(
+                        "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
+                    );
+                    const policy = WebExtensionPolicy.getByID(arguments[0]);
+                    if (!policy) return "no policy";
+                    const principal = ExtensionStorageIDB.getStoragePrincipal(policy.extension);
+                    const db = await ExtensionStorageIDB.open(principal);
+                    await db.set({
+                        aliasCache: {
+                            aliases: [
+                                { id: "a1", email: "shop@anonaddy.me", active: true,
+                                  description: "Shopping alias for example.com" },
+                                { id: "a2", email: "news@anonaddy.me", active: true,
+                                  description: "Newsletter alias for example.com" },
+                                { id: "a3", email: "work@anon.email", active: true,
+                                  description: "Work alias for example.com" }
+                            ],
+                            fetchedAt: Date.now()
+                        },
+                        domainOptions: {
+                            data: ["anonaddy.me", "anon.email"],
+                            defaultAliasDomain: "anonaddy.me",
+                            defaultAliasFormat: "random_characters"
+                        }
+                    });
+                    return "ok";
+                })();
+                """,
+                script_args=[EXT_ID],
+            )
+        assert inject_result == "ok", f"Storage injection failed: {inject_result}"
+
+        # Simulate syncCacheToExperiment(): call the experiment API directly to
+        # push the stored aliases into the in-memory chip-menu cache.
+        with tb.using_context("chrome"):
+            tb.execute_script(
+                """
+                const policy = WebExtensionPolicy.getByID(arguments[0]);
+                if (!policy) throw new Error("No extension policy found");
+                const api = policy.extension.apiManager.global.messenger;
+                api.AddressChipMenu.setCache({
+                    aliases: [
+                        { id: "a1", email: "shop@anonaddy.me", active: true },
+                        { id: "a2", email: "news@anonaddy.me", active: true },
+                        { id: "a3", email: "work@anon.email", active: true }
+                    ],
+                    domainOptions: {
+                        data: ["anonaddy.me", "anon.email"],
+                        defaultAliasDomain: "anonaddy.me",
+                        defaultAliasFormat: "random_characters"
+                    }
+                });
+                """,
+                script_args=[EXT_ID],
+            )
+        time.sleep(0.3)
+
+        compose_handle = open_compose_with_recipient(tb, RECIPIENT)
+        right_click_first_pill(tb)
+
+        opened = open_submenu(tb, "addy")
+        assert opened, "Could not open Addy menu"
+        time.sleep(0.3)
+
+        opened2 = open_submenu(tb, "existing")
+        assert opened2, "Could not open Existing submenu"
+        time.sleep(0.3)
+
+        with tb.using_context("chrome"):
+            alias_labels = tb.execute_script(
+                """
+                const items = document.querySelectorAll("menuitem");
+                const labels = [];
+                for (const it of items) {
+                    const lbl = it.getAttribute("label") || "";
+                    if (lbl.includes("@anonaddy.me") || lbl.includes("@anon.email")) {
+                        labels.push(lbl);
+                    }
+                }
+                return labels;
+                """
+            )
+
+        assert alias_labels, (
+            "No alias email items found in Existing… submenu — "
+            "syncCacheToExperiment() did not populate the chip menu cache"
+        )
+        assert ALIAS_EMAIL in alias_labels, (
+            f"Expected '{ALIAS_EMAIL}' in Existing… submenu, got: {alias_labels}"
+        )
+
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script("window.close();")

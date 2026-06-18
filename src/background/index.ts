@@ -40,22 +40,26 @@ async function fetchAllAliases(): Promise<void> {
   });
 }
 
+async function syncCacheToExperiment(): Promise<void> {
+  const storage = await messenger.storage.local.get({
+    domainOptions: {
+      data: [],
+      defaultAliasDomain: "",
+      defaultAliasFormat: "random_characters",
+    },
+    aliasCache: { aliases: [], fetchedAt: 0 },
+  });
+  messenger.AddressChipMenu.setCache({
+    aliases: (storage.aliasCache as { aliases: Alias[] }).aliases,
+    domainOptions: storage.domainOptions as DomainOptions,
+  });
+}
+
 async function refreshCache(): Promise<void> {
   await Promise.all([fetchDomainOptions(), fetchAllAliases()]);
   // Push fresh data into the experiment so context menus stay current.
   try {
-    const storage = await messenger.storage.local.get({
-      domainOptions: {
-        data: [],
-        defaultAliasDomain: "",
-        defaultAliasFormat: "random_characters",
-      },
-      aliasCache: { aliases: [], fetchedAt: 0 },
-    });
-    messenger.AddressChipMenu.setCache({
-      aliases: (storage.aliasCache as { aliases: Alias[] }).aliases,
-      domainOptions: storage.domainOptions as DomainOptions,
-    });
+    await syncCacheToExperiment();
   } catch {
     // Non-fatal — context menus will use stale data until next refresh.
   }
@@ -123,8 +127,14 @@ async function openAliasWindow(tabId: number): Promise<void> {
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 
-// Wake the background (and thus activate the Experiment) on Thunderbird startup.
-messenger.runtime.onStartup.addListener(() => {});
+// Push stored cache into the experiment on every service-worker activation.
+// The MV3 service worker restarts frequently; experiment module-level state
+// (_cacheData) resets each time, so we sync it immediately from storage.
+void syncCacheToExperiment().catch(() => {});
+
+messenger.runtime.onStartup.addListener(() => {
+  void syncCacheToExperiment().catch(() => {});
+});
 
 messenger.alarms.create("cache-refresh", { periodInMinutes: 60 });
 
