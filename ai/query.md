@@ -936,3 +936,5 @@ onStartup() {
 
 ❯ How do I do it with the flatpack thunderbird?
 
+❯ run the test
+
