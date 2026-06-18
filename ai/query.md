@@ -984,3 +984,8 @@ In case they are a proxied one, I wanna have it display a different text: `alias
 
 ❯ write both of those approaches as separate functions so I can test both and see which one is better. Speaking of tests, write them as well.
 
+❯ No overflow hidden. If it still goes out of bounds, rather have scrollbars then inaccessable UI.
+The verification needs to be automated tests.
+
+❯ UI and context menu are broken now? it's only white and the other one is missing. Check with unittests.
+

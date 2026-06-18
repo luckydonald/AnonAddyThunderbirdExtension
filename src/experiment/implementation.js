@@ -61,20 +61,96 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
     const ICON_EXISTING = "chrome://messenger/skin/addressbook/icons/addressbook.png";
     const ICON_NEW = "chrome://messenger/skin/icons/addcontact16.png";
 
-    // Compiled forwarding-address utilities (dist/utils.js from src/shared/forwardingAddress.ts).
-    const { parseForwardingAddress } = ChromeUtils.importESModule(
-      context.extension.baseURI.spec + "utils.js",
-    );
+    // ── Pill decoration helpers ───────────────────────────────────────────────
+    // Mirrored from src/experiment/pillDecoration.js (which is the version
+    // covered by unit tests). ChromeUtils.importESModule cannot load
+    // moz-extension:// URLs into the chrome compartment, so these run inline.
 
-    // Pill decoration helpers (dist/experiment/pillDecoration.js).
-    const {
-      decoratePillViaTextNode,
-      decoratePillViaCSSAdopted,
-      upsertPillIcon,
-      removePillIcon,
-    } = ChromeUtils.importESModule(
-      context.extension.baseURI.spec + "experiment/pillDecoration.js",
-    );
+    // Selector list tried in order when looking for the text-bearing element
+    // inside a mail-address-pill shadow root. First match wins.
+    const LABEL_SELECTORS = ["label", ".pill-label", "span", "[role='option']"];
+
+    const _adoptedSheets = new WeakMap();
+
+    function parseForwardingAddress(email, addyDomainSet) {
+      const dm = email.match(/^(.+)@(.+)$/);
+      if (!dm) return null;
+      const [, localPart, domain] = dm;
+      if (!addyDomainSet.has(domain.toLowerCase())) return null;
+      const fw = localPart.match(/^(.+)\+(.+)=(.+)$/);
+      if (!fw) return null;
+      const [, aliasLocal, recipLocal, recipDomain] = fw;
+      return { aliasEmail: `${aliasLocal}@${domain}`, originalEmail: `${recipLocal}@${recipDomain}` };
+    }
+
+    function decoratePillViaTextNode(pill, displayText) {
+      const shadow = pill.shadowRoot;
+      if (!shadow) return false;
+      let labelEl = null;
+      for (const sel of LABEL_SELECTORS) {
+        labelEl = shadow.querySelector(sel);
+        if (labelEl) break;
+      }
+      if (!labelEl) return false;
+      if (displayText === null || displayText === undefined) {
+        if ("addyOrigText" in pill.dataset) {
+          labelEl.textContent = pill.dataset.addyOrigText;
+          delete pill.dataset.addyOrigText;
+        }
+        return true;
+      }
+      if (!("addyOrigText" in pill.dataset)) {
+        pill.dataset.addyOrigText = labelEl.textContent;
+      }
+      labelEl.textContent = displayText;
+      return true;
+    }
+
+    function decoratePillViaCSSAdopted(pill, displayText) {
+      const shadow = pill.shadowRoot;
+      if (!shadow) return false;
+      if (displayText === null || displayText === undefined) {
+        delete pill.dataset.addyLabel;
+        const existing = _adoptedSheets.get(shadow);
+        if (existing && Array.isArray(shadow.adoptedStyleSheets)) {
+          shadow.adoptedStyleSheets = shadow.adoptedStyleSheets.filter((s) => s !== existing);
+          _adoptedSheets.delete(shadow);
+        }
+        return true;
+      }
+      pill.dataset.addyLabel = displayText;
+      if (Array.isArray(shadow.adoptedStyleSheets) && !_adoptedSheets.has(shadow)) {
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(`
+          :host::before { content: attr(data-addy-label); }
+          label, .pill-label, span { visibility: hidden; width: 0; overflow: hidden; }
+        `);
+        shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
+        _adoptedSheets.set(shadow, sheet);
+      }
+      return true;
+    }
+
+    function upsertPillIcon(pill, pillIconMap, iconUrl, proxied) {
+      const cls = proxied ? "addy-pill-icon addy-proxied" : "addy-pill-icon addy-aliased";
+      if (pillIconMap.has(pill)) {
+        pillIconMap.get(pill).className = cls;
+        return;
+      }
+      const img = pill.ownerDocument.createElement("img");
+      img.src = iconUrl;
+      img.className = cls;
+      img.alt = "";
+      pill.parentNode.insertBefore(img, pill);
+      pillIconMap.set(pill, img);
+    }
+
+    function removePillIcon(pill, pillIconMap) {
+      const img = pillIconMap.get(pill);
+      if (!img) return;
+      img.remove();
+      pillIconMap.delete(pill);
+    }
 
     // ── Pill decoration ───────────────────────────────────────────────────────
 

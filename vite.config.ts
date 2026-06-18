@@ -14,21 +14,15 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     rollupOptions: {
-      preserveEntrySignatures: "strict",
       input: {
         options: resolve(__dirname, "options.html"),
         composePopup: resolve(__dirname, "composePopup.html"),
         background: resolve(__dirname, "src/background/index.ts"),
-        // Compiled to dist/utils.js for use by the privileged experiment via
-        // ChromeUtils.importESModule. Must stay dependency-free at runtime.
-        utils: resolve(__dirname, "src/shared/forwardingAddress.ts"),
       },
       output: {
-        // Keep background.js and utils.js names predictable — referenced directly.
+        // Keep background.js name predictable — manifest.json references it directly.
         entryFileNames: (chunk) =>
-          chunk.name === "background" || chunk.name === "utils"
-            ? "[name].js"
-            : "assets/[name]-[hash].js",
+          chunk.name === "background" ? "[name].js" : "assets/[name]-[hash].js",
         chunkFileNames: "assets/[name]-[hash].js",
         assetFileNames: "assets/[name]-[hash][extname]",
       },
