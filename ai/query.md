@@ -982,3 +982,5 @@ In case they are a proxied one, I wanna have it display a different text: `alias
 3. I don't see any icons yet. I outlined them in the initial plan @ai/initial.md 
 4. seems unchanged and still an empty list.
 
+❯ write both of those approaches as separate functions so I can test both and see which one is better. Speaking of tests, write them as well.
+
