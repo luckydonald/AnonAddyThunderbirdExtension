@@ -1,3 +1,8 @@
+export declare function decoratePillViaAttributes(
+  pill: Element,
+  displayText: string | null | undefined,
+): boolean;
+
 export declare function decoratePillViaTextNode(
   pill: Element,
   displayText: string | null | undefined,

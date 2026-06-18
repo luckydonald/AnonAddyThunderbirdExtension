@@ -1,5 +1,6 @@
 import { parseForwardingAddress } from "../shared/forwardingAddress.js";
 import {
+  decoratePillViaAttributes,
   decoratePillViaTextNode,
   decoratePillViaCSSAdopted,
   upsertPillIcon,
@@ -120,14 +121,17 @@ function matchingAliasesForEmail(email: string): any[] {
 
       if (fwd) {
         const label = `${fwd.aliasEmail} → ${fwd.originalEmail}`;
+        decoratePillViaAttributes(pill, label);
         decoratePillViaTextNode(pill, label);
         decoratePillViaCSSAdopted(pill, label);
         upsertPillIcon(pill, pillIconMap, ICONS.addy, true);
       } else if (getAddyDomainSet().has(domain)) {
+        decoratePillViaAttributes(pill, null);
         decoratePillViaTextNode(pill, null);
         decoratePillViaCSSAdopted(pill, null);
         upsertPillIcon(pill, pillIconMap, ICONS.addy, false);
       } else {
+        decoratePillViaAttributes(pill, null);
         decoratePillViaTextNode(pill, null);
         decoratePillViaCSSAdopted(pill, null);
         removePillIcon(pill, pillIconMap);

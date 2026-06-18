@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
+  decoratePillViaAttributes,
   decoratePillViaTextNode,
   decoratePillViaCSSAdopted,
   upsertPillIcon,
@@ -11,6 +12,8 @@ import {
 function makePill(shadowHtml = "<label>original@raw.com</label>") {
   const el = document.createElement("div");
   el.setAttribute("emailAddress", "alias+user=example.com@anon.email");
+  el.setAttribute("fullAddress", "alias+user=example.com@anon.email");
+  el.setAttribute("label", "alias+user=example.com@anon.email");
   const shadow = el.attachShadow({ mode: "open" });
   shadow.innerHTML = shadowHtml;
   document.body.appendChild(el);
@@ -25,6 +28,36 @@ function makePillNoShadow() {
 
 afterEach(() => {
   document.body.innerHTML = "";
+});
+
+// ─── decoratePillViaAttributes ───────────────────────────────────────────────
+
+describe("decoratePillViaAttributes", () => {
+  it("updates the pill label without changing compose address attributes", () => {
+    const pill = makePill();
+    decoratePillViaAttributes(pill, "alias@anon.email → user@example.com");
+
+    expect(pill.getAttribute("label")).toBe(
+      "alias@anon.email → user@example.com",
+    );
+    expect(pill.getAttribute("emailAddress")).toBe(
+      "alias+user=example.com@anon.email",
+    );
+    expect(pill.getAttribute("fullAddress")).toBe(
+      "alias+user=example.com@anon.email",
+    );
+  });
+
+  it("restores the original label when called with null", () => {
+    const pill = makePill();
+    decoratePillViaAttributes(pill, "alias@anon.email → user@example.com");
+    decoratePillViaAttributes(pill, null);
+
+    expect(pill.getAttribute("label")).toBe(
+      "alias+user=example.com@anon.email",
+    );
+    expect(pill.dataset.addyOrigLabel).toBeUndefined();
+  });
 });
 
 // ─── decoratePillViaTextNode ──────────────────────────────────────────────────

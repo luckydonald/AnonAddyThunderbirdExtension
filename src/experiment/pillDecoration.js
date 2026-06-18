@@ -9,6 +9,34 @@ const LABEL_SELECTORS = ["label", ".pill-label", "span", "[role='option']"];
 const _adoptedSheets = new WeakMap();
 
 /**
+ * Approach 0: update the host element's display attributes.
+ *
+ * Thunderbird's mail-address-pill exposes the rendered text through the host
+ * label attribute in current compose windows. Keep this display-only: never
+ * mutate emailAddress/fullAddress, because those are the compose data.
+ *
+ * @param {Element} pill
+ * @param {string|null} displayText  null → restore original label
+ * @returns {boolean}
+ */
+export function decoratePillViaAttributes(pill, displayText) {
+  if (displayText === null || displayText === undefined) {
+    if ("addyOrigLabel" in pill.dataset) {
+      pill.setAttribute("label", pill.dataset.addyOrigLabel);
+      delete pill.dataset.addyOrigLabel;
+    }
+    return true;
+  }
+
+  if (!("addyOrigLabel" in pill.dataset)) {
+    pill.dataset.addyOrigLabel =
+      pill.getAttribute("label") || pill.getAttribute("emailAddress") || "";
+  }
+  pill.setAttribute("label", displayText);
+  return true;
+}
+
+/**
  * Approach A: directly mutate the text-bearing element inside the shadow root.
  *
  * @param {Element} pill
