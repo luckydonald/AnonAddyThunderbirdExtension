@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onBeforeUnmount, onMounted } from "vue";
 import LoadingSpinner from "./components/LoadingSpinner.vue";
 import NoRecipientsMessage from "./components/NoRecipientsMessage.vue";
 import RecipientCard from "./components/RecipientCard.vue";
@@ -12,6 +12,10 @@ import {
   buildForwardingAddress,
 } from "./utils.js";
 import { hasApplyableChanges } from "./applyState.js";
+import {
+  createPopupWindowTracker,
+  shouldCloseForRemovedTab,
+} from "./windowTracker.js";
 import type { Alias, DomainOptions } from "../api/types.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -54,6 +58,9 @@ const domainOptions = ref<DomainOptions>({
 const hostUrl = ref("https://app.addy.io");
 const tabId = ref(0);
 const allAliases = ref<Alias[]>([]);
+const childWindows = createPopupWindowTracker((windowId) =>
+  messenger.windows.remove(windowId),
+);
 
 const { t } = useI18n();
 
@@ -256,20 +263,21 @@ async function handleAddressUpdate(
   r.existingAliases = matchingAliases(allAliases.value, r.parsed.domain);
 }
 
-function openCreateWindow(
+async function openCreateWindow(
   recipientIdx: number,
   payload: { email: string; name: string },
-): void {
+): Promise<void> {
   if (popupState.value.kind !== "ready") return;
   const url =
     messenger.runtime.getURL("createAlias.html") +
     `?tabId=${tabId.value}&email=${encodeURIComponent(payload.email)}&name=${encodeURIComponent(payload.name)}`;
-  void messenger.windows.create({
+  const win = await messenger.windows.create({
     url,
     type: "popup",
     width: 520,
     height: 480,
   });
+  childWindows.remember(win.id);
 }
 
 async function handleDisable(
@@ -429,7 +437,17 @@ async function load(): Promise<void> {
 
 onMounted(async () => {
   await initTabId();
+  messenger.tabs.onRemoved.addListener((removedTabId) => {
+    if (shouldCloseForRemovedTab(removedTabId, tabId.value)) {
+      window.close();
+    }
+  });
+  window.addEventListener("beforeunload", closeChildWindows);
   await load();
+});
+
+onBeforeUnmount(() => {
+  closeChildWindows();
 });
 
 async function refresh(): Promise<void> {
@@ -442,6 +460,10 @@ function close() {
 
 function openSettings() {
   void messenger.runtime.openOptionsPage();
+}
+
+function closeChildWindows() {
+  void childWindows.closeAll();
 }
 </script>
 

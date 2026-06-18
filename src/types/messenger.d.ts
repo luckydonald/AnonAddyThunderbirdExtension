@@ -48,6 +48,9 @@ declare const messenger: {
       active?: boolean;
       type?: string;
     }): Promise<Array<{ id: number }>>;
+    onRemoved: {
+      addListener(callback: (tabId: number) => void): void;
+    };
   };
   windows: {
     create(createData: {
@@ -56,6 +59,7 @@ declare const messenger: {
       width?: number;
       height?: number;
     }): Promise<{ id: number }>;
+    remove(windowId: number): Promise<void>;
     getLastFocused(options?: {
       windowTypes?: string[];
     }): Promise<{ id: number; focused: boolean }>;

@@ -20,9 +20,11 @@ const messengerMock = {
   tabs: {
     getCurrent: vi.fn(),
     query: vi.fn(),
+    onRemoved: { addListener: vi.fn() },
   },
   windows: {
     create: vi.fn(),
+    remove: vi.fn(),
     getLastFocused: vi.fn(),
   },
   compose: {
