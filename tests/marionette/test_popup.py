@@ -174,6 +174,87 @@ class TestPopup:
             tb.switch_to_window(compose_handle)
             tb.execute_script("window.close();")
 
+    def test_popup_responsive_width(self, tb):
+        """Popup overlay must not produce horizontal scroll at narrow or wide widths.
+
+        Uses a deliberately long email address to stress word-breaking, checks
+        the popup at its default width, under a 320 px CSS constraint (narrow),
+        and verifies the format-choice pills are configured to wrap rather than
+        force a wide layout.
+        """
+        compose_handle = open_compose_window(tb)
+        # Long address stresses break-all / min-width: 0 on flex children
+        add_recipient(
+            tb, compose_handle,
+            "averylonglocalpart@quite-long.recipient-domain.example.com",
+        )
+
+        before = set(tb.chrome_window_handles)
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script(
+                "document.getElementById("
+                "'anonaddytb_luckydonald_de-composeAction-toolbarbutton').click();"
+            )
+        Wait(tb, timeout=10).until(
+            lambda _: len(set(tb.chrome_window_handles) - before) > 0
+        )
+        popup_handle = find_popup_handle(tb)
+        assert popup_handle is not None, "Extension popup did not open"
+        time.sleep(2)  # let Vue render
+
+        # Check 1: default rendered width — no horizontal overflow
+        default_check = popup_query(
+            tb, popup_handle,
+            "({ sw: content.document.body.scrollWidth, iw: content.innerWidth })",
+        )
+        dval = default_check.get("value", {})
+        assert dval.get("sw", 0) <= dval.get("iw", 1), (
+            f"Horizontal overflow at default width: "
+            f"scrollWidth={dval.get('sw')} innerWidth={dval.get('iw')}"
+        )
+
+        # Check 2: narrow constraint (320 px) — still no overflow
+        narrow_check = popup_query(
+            tb, popup_handle,
+            """(function() {
+                const popup = content.document.querySelector('.popup');
+                if (!popup) return { err: 'no .popup element' };
+                const saved = popup.style.cssText;
+                popup.style.maxWidth = '320px';
+                popup.style.width = '320px';
+                void popup.offsetWidth;  // flush layout
+                const overflows = popup.scrollWidth > 320;
+                popup.style.cssText = saved;
+                return { overflows, scrollWidth: popup.scrollWidth };
+            })()""",
+        )
+        nval = narrow_check.get("value", {})
+        assert not nval.get("overflows"), (
+            f"Horizontal overflow at 320 px constraint: "
+            f"scrollWidth={nval.get('scrollWidth')}"
+        )
+
+        # Check 3: format-choice pills must use flex-wrap: wrap
+        wrap_check = popup_query(
+            tb, popup_handle,
+            """(function() {
+                const pills = content.document.querySelector('.format-pills');
+                if (!pills) return { found: false };
+                const wrap = content.window.getComputedStyle(pills).flexWrap;
+                return { found: true, flexWrap: wrap };
+            })()""",
+        )
+        wval = wrap_check.get("value", {})
+        assert wval.get("found"), "No .format-pills element found in popup"
+        assert wval.get("flexWrap") == "wrap", (
+            f"format-pills is not wrapping: flexWrap={wval.get('flexWrap')!r}"
+        )
+
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script("window.close();")
+
     def test_apply_rewrites_to_field(self, tb):
         compose_handle = open_compose_window(tb)
         add_recipient(tb, compose_handle, RECIPIENT)
