@@ -944,3 +944,5 @@ onStartup() {
 
 ❯ it launched, but without mail account the `+ new mail` button seems disabled
 
+❯ now the `+ new Message` is disabled again, btw. Carry on.
+
