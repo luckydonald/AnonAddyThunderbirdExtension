@@ -970,3 +970,5 @@ In case they are a proxied one, I wanna have it display a different text: `alias
 
 ❯ Probably the search stuff should be a single func for both UI and Context Menu, and be shared and be properly unittested, too.
 
+❯ why pure js
+
