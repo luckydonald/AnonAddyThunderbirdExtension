@@ -946,3 +946,5 @@ onStartup() {
 
 ❯ now the `+ new Message` is disabled again, btw. Carry on.
 
+❯ HEY YOU JUST KILLED **MY** THUNDERBIRD, TOO!
+
