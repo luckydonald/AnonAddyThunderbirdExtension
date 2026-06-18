@@ -1,17 +1,29 @@
-"use strict";
+import { parseForwardingAddress } from "../shared/forwardingAddress.js";
+import {
+  decoratePillViaTextNode,
+  decoratePillViaCSSAdopted,
+  upsertPillIcon,
+  removePillIcon,
+} from "./pillDecoration.js";
 
-/* global ChromeUtils, Services, Ci */
-
-var { ExtensionCommon } = ChromeUtils.importESModule(
+// ChromeUtils, Services, Ci are privileged TB globals; see src/types/experiment.d.ts.
+const { ExtensionCommon } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionCommon.sys.mjs",
-);
+) as any;
 // setTimeout/clearTimeout are not in scope in privileged extension JS.
-var { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
-);
+) as any;
 
 // Alias and domain-option data pushed from the background after each cache refresh.
-let _cacheData = {
+let _cacheData: {
+  aliases: any[];
+  domainOptions: {
+    data: string[];
+    defaultAliasDomain: string;
+    defaultAliasFormat: string;
+  };
+} = {
   aliases: [],
   domainOptions: {
     data: [],
@@ -20,8 +32,10 @@ let _cacheData = {
   },
 };
 
-function getAddyDomainSet() {
-  return new Set((_cacheData.domainOptions?.data || []).map((d) => d.toLowerCase()));
+function getAddyDomainSet(): Set<string> {
+  return new Set(
+    (_cacheData.domainOptions?.data || []).map((d) => d.toLowerCase()),
+  );
 }
 
 const FORMAT_ITEMS = [
@@ -31,17 +45,19 @@ const FORMAT_ITEMS = [
   { value: "random_female_name", label: "Female name" },
   { value: "random_noun", label: "Noun" },
   { value: "custom", label: "Custom…" },
-];
+] as const;
 
-// Inline version of src/experiment/utils.js matchingAliasesForEmail.
-// Cannot import utils.js here — this file runs in a privileged TB context
-// that Vite does not bundle.  Keep in sync with src/shared/aliasSearch.ts.
-function matchingAliasesForEmail(email) {
+// Inline version of aliasSearch.ts matchingAliasesForEmail.
+// Keep in sync with src/shared/aliasSearch.ts.
+function matchingAliasesForEmail(email: string): any[] {
   const m = email.match(/@(.+)$/);
   if (!m) return [];
   const domain = m[1].toLowerCase();
   return (_cacheData.aliases || [])
-    .filter((a) => a.active && (a.description ?? "").toLowerCase().includes(domain))
+    .filter(
+      (a: any) =>
+        a.active && (a.description ?? "").toLowerCase().includes(domain),
+    )
     .slice(0, 20);
 }
 
@@ -49,112 +65,36 @@ function matchingAliasesForEmail(email) {
 //
 // Injects an "Use Addy alias for sending" submenu into the existing right-click
 // context menu on <mail-address-pill> elements in compose windows.
-this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
-  getAPI(context) {
-    let chipMenuFire = null;
+//
+// Compiled to IIFE by vite.experiment.config.ts. TB loads the experiment via
+// loadSubScript(url, sandbox): in that context globalThis IS the sandbox, so
+// assigning below registers the class where TB's experiment loader looks for it.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).AddressChipMenu = class extends (
+  (ExtensionCommon as any).ExtensionAPI
+) {
+  getAPI(context: any) {
+    let chipMenuFire: any = null;
     // Each value is { cleanup, doc, pillIconMap } so setCache can re-decorate.
-    const attached = new Map();
+    const attached = new Map<
+      any,
+      {
+        cleanup(): void;
+        doc: any;
+        pillIconMap: WeakMap<Element, HTMLImageElement>;
+      }
+    >();
 
     // Icon URLs — the Addy extension icon and built-in TB address-book icons.
     const ICON_ADDY = context.extension.baseURI.spec + "icon.svg";
     // chrome://messenger/skin icons available in all TB themes.
-    const ICON_EXISTING = "chrome://messenger/skin/addressbook/icons/addressbook.png";
+    const ICON_EXISTING =
+      "chrome://messenger/skin/addressbook/icons/addressbook.png";
     const ICON_NEW = "chrome://messenger/skin/icons/addcontact16.png";
-
-    // ── Pill decoration helpers ───────────────────────────────────────────────
-    // Mirrored from src/experiment/pillDecoration.js (which is the version
-    // covered by unit tests). ChromeUtils.importESModule cannot load
-    // moz-extension:// URLs into the chrome compartment, so these run inline.
-
-    // Selector list tried in order when looking for the text-bearing element
-    // inside a mail-address-pill shadow root. First match wins.
-    const LABEL_SELECTORS = ["label", ".pill-label", "span", "[role='option']"];
-
-    const _adoptedSheets = new WeakMap();
-
-    function parseForwardingAddress(email, addyDomainSet) {
-      const dm = email.match(/^(.+)@(.+)$/);
-      if (!dm) return null;
-      const [, localPart, domain] = dm;
-      if (!addyDomainSet.has(domain.toLowerCase())) return null;
-      const fw = localPart.match(/^(.+)\+(.+)=(.+)$/);
-      if (!fw) return null;
-      const [, aliasLocal, recipLocal, recipDomain] = fw;
-      return { aliasEmail: `${aliasLocal}@${domain}`, originalEmail: `${recipLocal}@${recipDomain}` };
-    }
-
-    function decoratePillViaTextNode(pill, displayText) {
-      const shadow = pill.shadowRoot;
-      if (!shadow) return false;
-      let labelEl = null;
-      for (const sel of LABEL_SELECTORS) {
-        labelEl = shadow.querySelector(sel);
-        if (labelEl) break;
-      }
-      if (!labelEl) return false;
-      if (displayText === null || displayText === undefined) {
-        if ("addyOrigText" in pill.dataset) {
-          labelEl.textContent = pill.dataset.addyOrigText;
-          delete pill.dataset.addyOrigText;
-        }
-        return true;
-      }
-      if (!("addyOrigText" in pill.dataset)) {
-        pill.dataset.addyOrigText = labelEl.textContent;
-      }
-      labelEl.textContent = displayText;
-      return true;
-    }
-
-    function decoratePillViaCSSAdopted(pill, displayText) {
-      const shadow = pill.shadowRoot;
-      if (!shadow) return false;
-      if (displayText === null || displayText === undefined) {
-        delete pill.dataset.addyLabel;
-        const existing = _adoptedSheets.get(shadow);
-        if (existing && Array.isArray(shadow.adoptedStyleSheets)) {
-          shadow.adoptedStyleSheets = shadow.adoptedStyleSheets.filter((s) => s !== existing);
-          _adoptedSheets.delete(shadow);
-        }
-        return true;
-      }
-      pill.dataset.addyLabel = displayText;
-      if (Array.isArray(shadow.adoptedStyleSheets) && !_adoptedSheets.has(shadow)) {
-        const sheet = new CSSStyleSheet();
-        sheet.replaceSync(`
-          :host::before { content: attr(data-addy-label); }
-          label, .pill-label, span { visibility: hidden; width: 0; overflow: hidden; }
-        `);
-        shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
-        _adoptedSheets.set(shadow, sheet);
-      }
-      return true;
-    }
-
-    function upsertPillIcon(pill, pillIconMap, iconUrl, proxied) {
-      const cls = proxied ? "addy-pill-icon addy-proxied" : "addy-pill-icon addy-aliased";
-      if (pillIconMap.has(pill)) {
-        pillIconMap.get(pill).className = cls;
-        return;
-      }
-      const img = pill.ownerDocument.createElement("img");
-      img.src = iconUrl;
-      img.className = cls;
-      img.alt = "";
-      pill.parentNode.insertBefore(img, pill);
-      pillIconMap.set(pill, img);
-    }
-
-    function removePillIcon(pill, pillIconMap) {
-      const img = pillIconMap.get(pill);
-      if (!img) return;
-      img.remove();
-      pillIconMap.delete(pill);
-    }
 
     // ── Pill decoration ───────────────────────────────────────────────────────
 
-    function injectAddyPillStyles(doc) {
+    function injectAddyPillStyles(doc: any): void {
       if (doc.getElementById("addy-pill-styles")) return;
       const style = doc.createElement("style");
       style.id = "addy-pill-styles";
@@ -173,7 +113,10 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       doc.head.appendChild(style);
     }
 
-    function decoratePill(pill, pillIconMap) {
+    function decoratePill(
+      pill: Element,
+      pillIconMap: WeakMap<Element, HTMLImageElement>,
+    ): void {
       const email = pill.getAttribute("emailAddress") || "";
       const fwd = parseForwardingAddress(email, getAddyDomainSet());
       const domain = email.match(/@(.+)$/)?.[1]?.toLowerCase() ?? "";
@@ -194,22 +137,33 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       }
     }
 
-    function decorateAllPills(doc, pillIconMap) {
-      doc.querySelectorAll("mail-address-pill").forEach((pill) => {
+    function decorateAllPills(
+      doc: any,
+      pillIconMap: WeakMap<Element, HTMLImageElement>,
+    ): void {
+      doc.querySelectorAll("mail-address-pill").forEach((pill: Element) => {
         decoratePill(pill, pillIconMap);
       });
     }
 
     // ── Context menu ──────────────────────────────────────────────────────────
 
-    function buildFormatItems(parentPopup, doc, win, email, displayName, fieldType, domain) {
+    function buildFormatItems(
+      parentPopup: any,
+      doc: any,
+      win: any,
+      email: string,
+      displayName: string,
+      fieldType: string,
+      domain: string,
+    ): void {
       for (const fmt of FORMAT_ITEMS) {
         const item = doc.createXULElement("menuitem");
         item.setAttribute("label", fmt.label);
         if (fmt.value === "custom") {
           item.addEventListener(
             "command",
-            (function (d) {
+            (function (d: string) {
               return () => {
                 const valueObj = { value: "" };
                 const ok = Services.prompt.prompt(
@@ -237,7 +191,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         } else {
           item.addEventListener(
             "command",
-            (function (f, d) {
+            (function (f: string, d: string) {
               return () => {
                 chipMenuFire &&
                   chipMenuFire.async({
@@ -257,11 +211,13 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       }
     }
 
-    function buildAddyMenu(doc, win, pill) {
+    function buildAddyMenu(doc: any, win: any, pill: Element): any {
       const email = pill.getAttribute("emailAddress") || "";
       const displayName = pill.getAttribute("displayName") || "";
       const addressRow = pill.closest(".address-row");
-      const fieldType = (addressRow?.dataset?.recipienttype || "to").toLowerCase();
+      const fieldType = (
+        (addressRow as any)?.dataset?.recipienttype || "to"
+      ).toLowerCase();
 
       const availableDomains = _cacheData.domainOptions?.data || [];
       const defaultDomain =
@@ -279,13 +235,20 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       // and crashes when triggerNode is not a pill (pill is null → pill.hasAttribute fails).
       // Stop all popupshowing events from menuPopup and its descendant popups from bubbling
       // up to Thunderbird's handler. The outer pill context menu is unaffected.
-      menuPopup.addEventListener("popupshowing", (e) => e.stopPropagation());
+      menuPopup.addEventListener("popupshowing", (e: Event) =>
+        e.stopPropagation(),
+      );
 
       // Direct click on the <menu> element itself (not on a submenu item) opens popup.
-      menu.addEventListener("click", (e) => {
+      menu.addEventListener("click", (e: Event) => {
         if (e.target === menu) {
           chipMenuFire &&
-            chipMenuFire.async({ email, displayName, fieldType, action: "open_popup" });
+            chipMenuFire.async({
+              email,
+              displayName,
+              fieldType,
+              action: "open_popup",
+            });
           e.preventDefault();
         }
       });
@@ -301,7 +264,12 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
       pickerItem.setAttribute("label", "Open alias picker…");
       pickerItem.addEventListener("command", () => {
         chipMenuFire &&
-          chipMenuFire.async({ email, displayName, fieldType, action: "open_popup" });
+          chipMenuFire.async({
+            email,
+            displayName,
+            fieldType,
+            action: "open_popup",
+          });
       });
       existingPopup.appendChild(pickerItem);
       existingPopup.appendChild(doc.createXULElement("menuseparator"));
@@ -313,11 +281,11 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         existingPopup.appendChild(noItem);
       } else if (existingAliases.length > 5) {
         // Group by alias domain when there are many
-        const domainGroups = new Map();
+        const domainGroups = new Map<string, any[]>();
         for (const alias of existingAliases) {
           const dm = alias.email.match(/@(.+)$/)?.[1] ?? "";
           if (!domainGroups.has(dm)) domainGroups.set(dm, []);
-          domainGroups.get(dm).push(alias);
+          domainGroups.get(dm)!.push(alias);
         }
 
         if (domainGroups.size > 1) {
@@ -330,7 +298,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
               item.setAttribute("label", alias.email);
               item.addEventListener(
                 "command",
-                (function (ae) {
+                (function (ae: string) {
                   return () =>
                     chipMenuFire &&
                     chipMenuFire.async({
@@ -354,7 +322,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
             item.setAttribute("label", alias.email);
             item.addEventListener(
               "command",
-              (function (ae) {
+              (function (ae: string) {
                 return () =>
                   chipMenuFire &&
                   chipMenuFire.async({
@@ -375,7 +343,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
           item.setAttribute("label", alias.email);
           item.addEventListener(
             "command",
-            (function (ae) {
+            (function (ae: string) {
               return () =>
                 chipMenuFire &&
                 chipMenuFire.async({
@@ -405,12 +373,28 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
           const dmMenu = doc.createXULElement("menu");
           dmMenu.setAttribute("label", `@${domain}`);
           const dmPopup = doc.createXULElement("menupopup");
-          buildFormatItems(dmPopup, doc, win, email, displayName, fieldType, domain);
+          buildFormatItems(
+            dmPopup,
+            doc,
+            win,
+            email,
+            displayName,
+            fieldType,
+            domain,
+          );
           dmMenu.appendChild(dmPopup);
           newPopup.appendChild(dmMenu);
         }
       } else {
-        buildFormatItems(newPopup, doc, win, email, displayName, fieldType, defaultDomain);
+        buildFormatItems(
+          newPopup,
+          doc,
+          win,
+          email,
+          displayName,
+          fieldType,
+          defaultDomain,
+        );
       }
 
       newMenu.appendChild(newPopup);
@@ -422,15 +406,15 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
 
     // ── Window attachment ─────────────────────────────────────────────────────
 
-    function attachToWindow(win) {
+    function attachToWindow(win: any): void {
       if (attached.has(win)) return;
       const doc = win.document;
-      const pillIconMap = new WeakMap();
+      const pillIconMap = new WeakMap<Element, HTMLImageElement>();
 
       injectAddyPillStyles(doc);
       decorateAllPills(doc, pillIconMap);
 
-      const observer = new win.MutationObserver((mutations) => {
+      const observer = new win.MutationObserver((mutations: any[]) => {
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
             if (node.tagName?.toLowerCase() === "mail-address-pill") {
@@ -459,22 +443,33 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         attributeFilter: ["emailaddress"],
       });
 
-      let pendingPill = null;
-      let pendingReset = null;
+      let pendingPill: Element | null = null;
+      let pendingReset: any = null;
 
-      function onContextMenu(e) {
+      function onContextMenu(e: Event): void {
         // composedPath() crosses shadow-DOM boundaries; closest() does not.
-        let pill = e.composedPath().find(
-          (el) => el.tagName && el.tagName.toLowerCase() === "mail-address-pill",
-        ) ?? null;
+        let pill =
+          (e as any)
+            .composedPath()
+            .find(
+              (el: any) =>
+                el.tagName && el.tagName.toLowerCase() === "mail-address-pill",
+            ) ?? null;
         // Fallback: in some chrome contexts composedPath may not surface the host.
-        if (!pill && e.target?.tagName?.toLowerCase() === "mail-address-pill") {
-          pill = e.target;
+        if (
+          !pill &&
+          (e.target as any)?.tagName?.toLowerCase() === "mail-address-pill"
+        ) {
+          pill = e.target as Element;
         }
         console.log(
           "AnonAddyTB contextmenu path:",
-          e.composedPath().map((el) => el.tagName).filter(Boolean),
-          "pill:", pill,
+          (e as any)
+            .composedPath()
+            .map((el: any) => el.tagName)
+            .filter(Boolean),
+          "pill:",
+          pill,
         );
         if (!pill) {
           pendingPill = null;
@@ -482,7 +477,9 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         }
         // Skip Reply-To pills — Addy alias sending doesn't apply there.
         const addressRow = pill.closest(".address-row");
-        const fieldType = (addressRow?.dataset?.recipienttype || "").toLowerCase();
+        const fieldType = (
+          (addressRow as any)?.dataset?.recipienttype || ""
+        ).toLowerCase();
         if (fieldType === "reply-to" || fieldType === "replyto") {
           pendingPill = null;
           return;
@@ -494,10 +491,15 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         }, 500);
       }
 
-      function onPopupShowing(e) {
+      function onPopupShowing(e: Event): void {
         if (!pendingPill) return;
-        const popup = e.target;
-        console.log("AnonAddyTB popupshowing tag:", popup.tagName, "triggerNode:", popup.triggerNode);
+        const popup = e.target as any;
+        console.log(
+          "AnonAddyTB popupshowing tag:",
+          popup.tagName,
+          "triggerNode:",
+          popup.triggerNode,
+        );
         if (popup.tagName.toLowerCase() !== "menupopup") return;
 
         // Guard against consuming pendingPill for unrelated menupopups (e.g.
@@ -509,7 +511,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
           const inPill =
             trigger === pendingPill ||
             pendingPill.contains(trigger) ||
-            trigger.getRootNode?.()?.host === pendingPill;
+            (trigger as any).getRootNode?.()?.host === pendingPill;
           if (!inPill) return; // not the pill's context menu — keep pendingPill
         }
 
@@ -527,7 +529,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         // popuphidden events that bubble up from child popups (e.g. the Addy
         // submenu closing).  { once: true } would be consumed by the first
         // bubbled child-popup event and never fire for the outer popup close.
-        popup.addEventListener("popuphidden", function onPopupHidden(e) {
+        popup.addEventListener("popuphidden", function onPopupHidden(e: Event) {
           if (e.target !== popup) return;
           popup.removeEventListener("popuphidden", onPopupHidden);
           sep.remove();
@@ -551,7 +553,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
     }
 
     const windowListener = {
-      onOpenWindow(xulWin) {
+      onOpenWindow(xulWin: any) {
         const win = xulWin
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIDOMWindow);
@@ -568,7 +570,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
           { once: true },
         );
       },
-      onCloseWindow(xulWin) {
+      onCloseWindow(xulWin: any) {
         const win = xulWin
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIDOMWindow);
@@ -582,7 +584,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
 
     return {
       AddressChipMenu: {
-        setCache(data) {
+        setCache(data: typeof _cacheData) {
           _cacheData = data;
           for (const { doc, pillIconMap } of attached.values()) {
             decorateAllPills(doc, pillIconMap);
@@ -592,7 +594,7 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         onChipMenuClicked: new ExtensionCommon.EventManager({
           context,
           name: "AddressChipMenu.onChipMenuClicked",
-          register(fire) {
+          register(fire: any) {
             chipMenuFire = fire;
 
             Services.wm.addListener(windowListener);

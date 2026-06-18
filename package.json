@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.experiment.config.ts",
     "typecheck": "vue-tsc --noEmit",
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
