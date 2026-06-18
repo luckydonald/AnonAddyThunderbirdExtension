@@ -330,14 +330,16 @@ this.AddressChipMenu = class extends ExtensionCommon.ExtensionAPI {
         popup.appendChild(sep);
         popup.appendChild(addyMenu);
 
-        popup.addEventListener(
-          "popuphidden",
-          () => {
-            sep.remove();
-            addyMenu.remove();
-          },
-          { once: true },
-        );
+        // Use a named handler (no { once: true }) so we can guard against
+        // popuphidden events that bubble up from child popups (e.g. the Addy
+        // submenu closing).  { once: true } would be consumed by the first
+        // bubbled child-popup event and never fire for the outer popup close.
+        popup.addEventListener("popuphidden", function onPopupHidden(e) {
+          if (e.target !== popup) return;
+          popup.removeEventListener("popuphidden", onPopupHidden);
+          sep.remove();
+          addyMenu.remove();
+        });
       }
 
       doc.addEventListener("contextmenu", onContextMenu, true);
