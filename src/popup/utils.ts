@@ -1,11 +1,8 @@
 import type { Alias } from "../api/types.js";
+import { aliasesForDomain } from "../shared/aliasSearch.js";
 
 export function matchingAliases(aliases: Alias[], domain: string): Alias[] {
-  const lower = domain.toLowerCase();
-  const matched = aliases.filter(
-    (a) => a.active && (a.description ?? "").toLowerCase().includes(lower),
-  );
-  return matched.slice(0, 10);
+  return aliasesForDomain(aliases, domain, 10);
 }
 
 export function parseForwardingAddress(

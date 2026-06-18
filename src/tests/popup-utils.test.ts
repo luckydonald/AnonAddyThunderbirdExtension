@@ -13,9 +13,11 @@ const fixtureAliases = aliases as Alias[];
 const addyDomainSet = new Set(domainOptions.data.map((d) => d.toLowerCase()));
 
 // ─── matchingAliases ──────────────────────────────────────────────────────────
+// Core behaviour is tested in alias-search.test.ts.
+// These tests verify the wrapper: correct domain is passed and limit is 10.
 
 describe("matchingAliases", () => {
-  it("returns aliases matching domain by description (case-insensitive)", () => {
+  it("delegates to aliasesForDomain and returns description-matched aliases", () => {
     const result = matchingAliases(fixtureAliases, "example.com");
     const ids = result.map((a) => a.id);
     expect(ids).toContain("a1");
@@ -23,22 +25,7 @@ describe("matchingAliases", () => {
     expect(ids).toContain("a3");
   });
 
-  it("excludes inactive aliases", () => {
-    const result = matchingAliases(fixtureAliases, "example.com");
-    expect(result.find((a) => a.id === "a4")).toBeUndefined();
-  });
-
-  it("excludes aliases with non-matching descriptions", () => {
-    const result = matchingAliases(fixtureAliases, "example.com");
-    expect(result.find((a) => a.id === "a5")).toBeUndefined();
-  });
-
-  it("is case-insensitive on both sides", () => {
-    const result = matchingAliases(fixtureAliases, "EXAMPLE.COM");
-    expect(result.map((a) => a.id)).toContain("a1");
-  });
-
-  it("caps results at 10", () => {
+  it("applies a cap of 10", () => {
     const many: Alias[] = Array.from({ length: 15 }, (_, i) => ({
       id: `m${i}`,
       local_part: `alias${i}`,
@@ -48,10 +35,6 @@ describe("matchingAliases", () => {
       description: `alias for example.com #${i}`,
     }));
     expect(matchingAliases(many, "example.com")).toHaveLength(10);
-  });
-
-  it("returns empty array when nothing matches", () => {
-    expect(matchingAliases(fixtureAliases, "no-match.io")).toHaveLength(0);
   });
 });
 

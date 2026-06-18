@@ -29,6 +29,9 @@ const FORMAT_ITEMS = [
   { value: "custom", label: "Custom…" },
 ];
 
+// Inline version of src/experiment/utils.js matchingAliasesForEmail.
+// Cannot import utils.js here — this file runs in a privileged TB context
+// that Vite does not bundle.  Keep in sync with src/shared/aliasSearch.ts.
 function matchingAliasesForEmail(email) {
   const m = email.match(/@(.+)$/);
   if (!m) return [];
