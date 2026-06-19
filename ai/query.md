@@ -1032,3 +1032,5 @@ The verification needs to be automated tests.
 
 › Ah, first document and commit the leanings from the unittest fix session.
 
+› Alright, test now that the "mail -> mail" label replacers don't end in actually (eventually) outgoing mail data.
+
