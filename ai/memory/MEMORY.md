@@ -9,3 +9,6 @@
 - [Vite entry splitting breaks popup](vite_entry_splitting_popup.md) — preserveEntrySignatures + extra Vite entry extracts shared code as external module, white-screens popup; keep popup self-contained
 - [.d.ts alongside .js for TypeScript imports](dts_alongside_js_typing.md) — add matching .d.ts to type a JS module without allowJs; bundler uses .js for content, .d.ts for types
 - [Unit and Marionette fix session](unittest_marionette_fix_session.md) — clean extension builds, active mail-window compose opening, storage/permission seeding, mock GET recording, NetUtil method ordering, CSP-safe popup frame scripts
+- [Thunderbird SMTP prefs for test capture](tb_smtp_prefs.md) — user.js pref names for outgoing SMTP; EHLO two-line response; DATA terminator; smtp_harness.py location
+- [lplp: don't reset past origin](feedback_lplp_reset_past_origin.md) — check `git log origin/<branch>..HEAD` before reset --soft; never reset commits already on origin
+- [ai-settings-sync hook recovery](feedback_ai_settings_sync_recovery.md) — `uv run --directory scripts/°base python -m ai.settings.sync --apply` fixes out-of-sync hook failures
