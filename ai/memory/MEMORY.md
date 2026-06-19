@@ -8,3 +8,4 @@
 - [Experiment IIFE build pattern](experiment_iife_build.md) — second Vite config compiles experiment to IIFE; globalThis=sandbox for class registration; export default is stripped by esbuild before Rollup sees it
 - [Vite entry splitting breaks popup](vite_entry_splitting_popup.md) — preserveEntrySignatures + extra Vite entry extracts shared code as external module, white-screens popup; keep popup self-contained
 - [.d.ts alongside .js for TypeScript imports](dts_alongside_js_typing.md) — add matching .d.ts to type a JS module without allowJs; bundler uses .js for content, .d.ts for types
+- [Unit and Marionette fix session](unittest_marionette_fix_session.md) — clean extension builds, active mail-window compose opening, storage/permission seeding, mock GET recording, NetUtil method ordering, CSP-safe popup frame scripts

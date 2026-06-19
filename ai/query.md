@@ -1028,3 +1028,7 @@ The verification needs to be automated tests.
 › Test Thunderbird/Marionette too
 › fix
 
+› For the case of "mail -> mail", make sure it's not something that will show up in outgoing email headers.
+
+› Ah, first document and commit the leanings from the unittest fix session.
+
