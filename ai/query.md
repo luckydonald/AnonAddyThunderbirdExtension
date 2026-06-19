@@ -1017,3 +1017,7 @@ The verification needs to be automated tests.
 
 › keep those included
 
+› The context menu shows "no existing aliases for this domain", but the UI version can find them properly and displays them. Why? Are they not updated?
+
+› Also the root-added menu still needs the Addy logo, and `Existing…` and `New…` are missing icons, too.
+

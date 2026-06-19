@@ -9,6 +9,7 @@ import {
 import { createMenuIconUrls } from "./menuIcons.js";
 import { createWindowAttachmentLifecycle } from "./windowAttachmentLifecycle.js";
 import { aliasesForContextMenuEmail } from "./aliasMatching.js";
+import { setXulIcon } from "./xulIcon.js";
 
 // ChromeUtils, Services, Ci are privileged TB globals; see src/types/experiment.d.ts.
 const { ExtensionCommon } = ChromeUtils.importESModule(
@@ -149,7 +150,7 @@ const FORMAT_ITEMS = [
         const item = doc.createXULElement("menuitem");
         item.setAttribute("label", fmt.label);
         const fmtIcon = ICONS.format[fmt.value];
-        if (fmtIcon) item.setAttribute("image", fmtIcon);
+        if (fmtIcon) setXulIcon(item, fmtIcon);
         if (fmt.value === "custom") {
           item.addEventListener(
             "command",
@@ -223,7 +224,7 @@ const FORMAT_ITEMS = [
       // Top-level menu entry — direct click opens popup, hover/arrow unfolds submenu.
       const menu = doc.createXULElement("menu");
       menu.setAttribute("label", "Use Addy alias for sending");
-      menu.setAttribute("image", ICONS.addy);
+      setXulIcon(menu, ICONS.addy);
       const menuPopup = doc.createXULElement("menupopup");
       // Thunderbird's onpopupshowing runs on all menupopup events in the compose window
       // and crashes when triggerNode is not a pill (pill is null → pill.hasAttribute fails).
@@ -250,13 +251,13 @@ const FORMAT_ITEMS = [
       // ── Existing… ▶ ──────────────────────────────────────────────────────────
       const existingMenu = doc.createXULElement("menu");
       existingMenu.setAttribute("label", "Existing…");
-      existingMenu.setAttribute("image", ICONS.existing);
+      setXulIcon(existingMenu, ICONS.existing);
       const existingPopup = doc.createXULElement("menupopup");
 
       // "Open alias picker…" is first in Existing; provides easy access to full GUI.
       const pickerItem = doc.createXULElement("menuitem");
       pickerItem.setAttribute("label", "Open alias picker…");
-      pickerItem.setAttribute("image", ICONS.picker);
+      setXulIcon(pickerItem, ICONS.picker);
       pickerItem.addEventListener("command", () => {
         chipMenuFire &&
           chipMenuFire.async({
@@ -287,12 +288,12 @@ const FORMAT_ITEMS = [
           for (const [dm, aliases] of domainGroups) {
             const dmMenu = doc.createXULElement("menu");
             dmMenu.setAttribute("label", `…@${dm}`);
-            dmMenu.setAttribute("image", ICONS.domain);
+            setXulIcon(dmMenu, ICONS.domain);
             const dmPopup = doc.createXULElement("menupopup");
             for (const alias of aliases) {
               const item = doc.createXULElement("menuitem");
               item.setAttribute("label", alias.email);
-              item.setAttribute("image", ICONS.alias);
+              setXulIcon(item, ICONS.alias);
               item.addEventListener(
                 "command",
                 (function (ae: string) {
@@ -317,7 +318,7 @@ const FORMAT_ITEMS = [
           for (const alias of existingAliases) {
             const item = doc.createXULElement("menuitem");
             item.setAttribute("label", alias.email);
-            item.setAttribute("image", ICONS.alias);
+            setXulIcon(item, ICONS.alias);
             item.addEventListener(
               "command",
               (function (ae: string) {
@@ -339,7 +340,7 @@ const FORMAT_ITEMS = [
         for (const alias of existingAliases) {
           const item = doc.createXULElement("menuitem");
           item.setAttribute("label", alias.email);
-          item.setAttribute("image", ICONS.alias);
+          setXulIcon(item, ICONS.alias);
           item.addEventListener(
             "command",
             (function (ae: string) {
@@ -364,14 +365,14 @@ const FORMAT_ITEMS = [
       // ── New… ▶ ───────────────────────────────────────────────────────────────
       const newMenu = doc.createXULElement("menu");
       newMenu.setAttribute("label", "New…");
-      newMenu.setAttribute("image", ICONS.newAlias);
+      setXulIcon(newMenu, ICONS.newAlias);
       const newPopup = doc.createXULElement("menupopup");
 
       if (availableDomains.length > 1) {
         for (const domain of availableDomains) {
           const dmMenu = doc.createXULElement("menu");
           dmMenu.setAttribute("label", `@${domain}`);
-          dmMenu.setAttribute("image", ICONS.domain);
+          setXulIcon(dmMenu, ICONS.domain);
           const dmPopup = doc.createXULElement("menupopup");
           buildFormatItems(
             dmPopup,
