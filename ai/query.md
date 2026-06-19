@@ -1034,3 +1034,5 @@ The verification needs to be automated tests.
 
 › Alright, test now that the "mail -> mail" label replacers don't end in actually (eventually) outgoing mail data.
 
+› Can you assert that in UI and dropdown mode, too?
+
