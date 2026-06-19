@@ -128,7 +128,11 @@ declare const messenger: {
           email: string;
           displayName: string;
           fieldType: string;
-          action: "open_popup" | "select_alias" | "create_alias";
+          action:
+            | "open_popup"
+            | "select_alias"
+            | "create_alias"
+            | "refresh_aliases";
           aliasEmail?: string;
           domain?: string;
           format?: string;

@@ -16,6 +16,10 @@ import {
   createPopupWindowTracker,
   shouldCloseForRemovedTab,
 } from "./windowTracker.js";
+import {
+  mergeAliasesIntoCache,
+  type AliasCache,
+} from "../shared/aliasCache.js";
 import type { Alias, DomainOptions } from "../api/types.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -41,11 +45,6 @@ type PopupState =
   | { kind: "no_settings" }
   | { kind: "no_recipients" }
   | { kind: "ready"; recipients: RecipientState[] };
-
-interface AliasCache {
-  aliases: Alias[];
-  fetchedAt: number;
-}
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -215,14 +214,13 @@ async function refreshAliasesInBackground(): Promise<void> {
         "aliases",
         { "filter[search]": domain, "filter[active]": "true" },
       );
-      for (const fresh of response.data) {
-        const idx = cache.aliases.findIndex((a) => a.id === fresh.id);
-        if (idx >= 0) cache.aliases[idx] = fresh;
-        else cache.aliases.push(fresh);
-      }
+      Object.assign(cache, mergeAliasesIntoCache(cache, response.data));
     }
 
     await messenger.storage.local.set({ aliasCache: cache });
+    void messenger.runtime
+      .sendMessage({ action: "alias_cache_updated" })
+      .catch(() => undefined);
     allAliases.value = cache.aliases;
 
     // If domain options are empty (first install / background hasn't run yet),
@@ -234,6 +232,9 @@ async function refreshAliasesInBackground(): Promise<void> {
       );
       domainOptions.value = fresh;
       await messenger.storage.local.set({ domainOptions: fresh });
+      void messenger.runtime
+        .sendMessage({ action: "alias_cache_updated" })
+        .catch(() => undefined);
     }
 
     if (popupState.value.kind !== "ready") return;

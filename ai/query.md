@@ -1021,3 +1021,5 @@ The verification needs to be automated tests.
 
 › Also the root-added menu still needs the Addy logo, and `Existing…` and `New…` are missing icons, too.
 
+› Make the menu refresh, too, like the UI, to not be stale. Also it and the UI should both fill back to the cache.
+

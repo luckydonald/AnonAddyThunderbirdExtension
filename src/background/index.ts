@@ -6,6 +6,11 @@ import type {
   CreateAliasBody,
   AliasFormat,
 } from "../api/types.js";
+import {
+  mergeAliasesIntoCache,
+  type AliasCache,
+} from "../shared/aliasCache.js";
+import { shouldSyncCacheToExperiment } from "./cacheSync.js";
 
 async function fetchDomainOptions(): Promise<void> {
   const result = await addyApiRequest<DomainOptions>("GET", "domain-options");
@@ -63,6 +68,22 @@ async function refreshCache(): Promise<void> {
   } catch {
     // Non-fatal — context menus will use stale data until next refresh.
   }
+}
+
+async function refreshAliasesForDomain(domain: string): Promise<void> {
+  const stored = await messenger.storage.local.get({
+    aliasCache: { aliases: [] as Alias[], fetchedAt: 0 },
+  });
+  const response = await addyApiRequest<{ data: Alias[] }>("GET", "aliases", {
+    "filter[search]": domain,
+    "filter[active]": "true",
+  });
+  const merged = mergeAliasesIntoCache(
+    stored.aliasCache as AliasCache,
+    response.data,
+  );
+  await messenger.storage.local.set({ aliasCache: merged });
+  await syncCacheToExperiment();
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -155,6 +176,15 @@ messenger.storage.onChanged.addListener(async (changes) => {
     } catch (e) {
       console.error("AnonAddyTB: cache refresh on settings change failed", e);
     }
+    return;
+  }
+
+  if (shouldSyncCacheToExperiment(changes)) {
+    try {
+      await syncCacheToExperiment();
+    } catch (e) {
+      console.error("AnonAddyTB: cache sync to experiment failed", e);
+    }
   }
 });
 
@@ -173,14 +203,32 @@ messenger.runtime.onInstalled.addListener(async ({ reason: _reason }) => {
 messenger.runtime.onMessage.addListener(async (rawMessage) => {
   const message = rawMessage as {
     action: string;
-    tabId: number;
-    email: string;
-    name: string;
-    domain: string;
-    format: string;
-    customPrefix: string;
+    tabId?: number;
+    email?: string;
+    name?: string;
+    domain?: string;
+    format?: string;
+    customPrefix?: string;
   };
+  if (message.action === "alias_cache_updated") {
+    await syncCacheToExperiment();
+    return { success: true };
+  }
+  if (message.action === "refresh_aliases_for_domain") {
+    if (!message.domain) return { success: false, error: "Missing domain" };
+    await refreshAliasesForDomain(message.domain);
+    return { success: true };
+  }
   if (message.action !== "create_alias_and_apply") return;
+  if (
+    message.tabId === undefined ||
+    !message.email ||
+    message.name === undefined ||
+    !message.domain ||
+    !message.format
+  ) {
+    return { success: false, error: "Missing create alias parameters" };
+  }
   try {
     const body: CreateAliasBody = {
       domain: message.domain,
@@ -243,6 +291,19 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
     } catch (e) {
       console.error(
         "AnonAddyTB: could not open alias window from chip menu",
+        e,
+      );
+    }
+    return;
+  }
+
+  if (action === "refresh_aliases") {
+    if (!info.domain) return;
+    try {
+      await refreshAliasesForDomain(info.domain);
+    } catch (e) {
+      console.error(
+        "AnonAddyTB: could not refresh aliases from context menu",
         e,
       );
     }

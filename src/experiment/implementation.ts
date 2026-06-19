@@ -8,7 +8,10 @@ import {
 } from "./pillDecoration.js";
 import { createMenuIconUrls } from "./menuIcons.js";
 import { createWindowAttachmentLifecycle } from "./windowAttachmentLifecycle.js";
-import { aliasesForContextMenuEmail } from "./aliasMatching.js";
+import {
+  aliasesForContextMenuEmail,
+  domainForContextMenuAliasLookup,
+} from "./aliasMatching.js";
 import { setXulIcon } from "./xulIcon.js";
 
 // ChromeUtils, Services, Ci are privileged TB globals; see src/types/experiment.d.ts.
@@ -75,6 +78,7 @@ const FORMAT_ITEMS = [
         pillIconMap: WeakMap<Element, HTMLImageElement>;
       }
     >();
+    const activeExistingMenuRenderers = new Set<() => void>();
 
     const ICONS = createMenuIconUrls(context.extension.baseURI.spec);
 
@@ -202,6 +206,57 @@ const FORMAT_ITEMS = [
       }
     }
 
+    function addOpenPickerItem(
+      existingPopup: any,
+      doc: any,
+      email: string,
+      displayName: string,
+      fieldType: string,
+    ): void {
+      const pickerItem = doc.createXULElement("menuitem");
+      pickerItem.setAttribute("label", "Open alias picker…");
+      setXulIcon(pickerItem, ICONS.picker);
+      pickerItem.addEventListener("command", () => {
+        chipMenuFire &&
+          chipMenuFire.async({
+            email,
+            displayName,
+            fieldType,
+            action: "open_popup",
+          });
+      });
+      existingPopup.appendChild(pickerItem);
+      existingPopup.appendChild(doc.createXULElement("menuseparator"));
+    }
+
+    function addExistingAliasItem(
+      parentPopup: any,
+      doc: any,
+      email: string,
+      displayName: string,
+      fieldType: string,
+      aliasEmail: string,
+    ): void {
+      const item = doc.createXULElement("menuitem");
+      item.setAttribute("label", aliasEmail);
+      setXulIcon(item, ICONS.alias);
+      item.addEventListener(
+        "command",
+        (function (ae: string) {
+          return () =>
+            chipMenuFire &&
+            chipMenuFire.async({
+              email,
+              displayName,
+              fieldType,
+              action: "select_alias",
+              aliasEmail: ae,
+            });
+        })(aliasEmail),
+      );
+      parentPopup.appendChild(item);
+    }
+
     function buildAddyMenu(doc: any, win: any, pill: Element): any {
       const email = pill.getAttribute("emailAddress") || "";
       const displayName = pill.getAttribute("displayName") || "";
@@ -215,8 +270,7 @@ const FORMAT_ITEMS = [
         _cacheData.domainOptions?.defaultAliasDomain ||
         availableDomains[0] ||
         "";
-      const existingAliases = aliasesForContextMenuEmail(
-        _cacheData.aliases,
+      const lookupDomain = domainForContextMenuAliasLookup(
         email,
         getAddyDomainSet(),
       );
@@ -254,110 +308,81 @@ const FORMAT_ITEMS = [
       setXulIcon(existingMenu, ICONS.existing);
       const existingPopup = doc.createXULElement("menupopup");
 
-      // "Open alias picker…" is first in Existing; provides easy access to full GUI.
-      const pickerItem = doc.createXULElement("menuitem");
-      pickerItem.setAttribute("label", "Open alias picker…");
-      setXulIcon(pickerItem, ICONS.picker);
-      pickerItem.addEventListener("command", () => {
+      const renderExistingItems = () => {
+        existingPopup.replaceChildren();
+        addOpenPickerItem(existingPopup, doc, email, displayName, fieldType);
+
+        const aliases = aliasesForContextMenuEmail(
+          _cacheData.aliases,
+          email,
+          getAddyDomainSet(),
+        );
+        if (aliases.length === 0) {
+          const noItem = doc.createXULElement("menuitem");
+          noItem.setAttribute("label", "No existing aliases for this domain");
+          noItem.setAttribute("disabled", "true");
+          existingPopup.appendChild(noItem);
+          return;
+        }
+
+        if (aliases.length > 5) {
+          const domainGroups = new Map<string, any[]>();
+          for (const alias of aliases) {
+            const dm = alias.email.match(/@(.+)$/)?.[1] ?? "";
+            if (!domainGroups.has(dm)) domainGroups.set(dm, []);
+            domainGroups.get(dm)!.push(alias);
+          }
+
+          if (domainGroups.size > 1) {
+            for (const [dm, groupAliases] of domainGroups) {
+              const dmMenu = doc.createXULElement("menu");
+              dmMenu.setAttribute("label", `…@${dm}`);
+              setXulIcon(dmMenu, ICONS.domain);
+              const dmPopup = doc.createXULElement("menupopup");
+              for (const alias of groupAliases) {
+                addExistingAliasItem(
+                  dmPopup,
+                  doc,
+                  email,
+                  displayName,
+                  fieldType,
+                  alias.email,
+                );
+              }
+              dmMenu.appendChild(dmPopup);
+              existingPopup.appendChild(dmMenu);
+            }
+            return;
+          }
+        }
+
+        for (const alias of aliases) {
+          addExistingAliasItem(
+            existingPopup,
+            doc,
+            email,
+            displayName,
+            fieldType,
+            alias.email,
+          );
+        }
+      };
+      renderExistingItems();
+      activeExistingMenuRenderers.add(renderExistingItems);
+      (menu as any)._addyCleanup = () => {
+        activeExistingMenuRenderers.delete(renderExistingItems);
+      };
+      existingPopup.addEventListener("popupshowing", () => {
+        if (!lookupDomain) return;
         chipMenuFire &&
           chipMenuFire.async({
             email,
             displayName,
             fieldType,
-            action: "open_popup",
+            action: "refresh_aliases",
+            domain: lookupDomain,
           });
       });
-      existingPopup.appendChild(pickerItem);
-      existingPopup.appendChild(doc.createXULElement("menuseparator"));
-
-      if (existingAliases.length === 0) {
-        const noItem = doc.createXULElement("menuitem");
-        noItem.setAttribute("label", "No existing aliases for this domain");
-        noItem.setAttribute("disabled", "true");
-        existingPopup.appendChild(noItem);
-      } else if (existingAliases.length > 5) {
-        // Group by alias domain when there are many
-        const domainGroups = new Map<string, any[]>();
-        for (const alias of existingAliases) {
-          const dm = alias.email.match(/@(.+)$/)?.[1] ?? "";
-          if (!domainGroups.has(dm)) domainGroups.set(dm, []);
-          domainGroups.get(dm)!.push(alias);
-        }
-
-        if (domainGroups.size > 1) {
-          for (const [dm, aliases] of domainGroups) {
-            const dmMenu = doc.createXULElement("menu");
-            dmMenu.setAttribute("label", `…@${dm}`);
-            setXulIcon(dmMenu, ICONS.domain);
-            const dmPopup = doc.createXULElement("menupopup");
-            for (const alias of aliases) {
-              const item = doc.createXULElement("menuitem");
-              item.setAttribute("label", alias.email);
-              setXulIcon(item, ICONS.alias);
-              item.addEventListener(
-                "command",
-                (function (ae: string) {
-                  return () =>
-                    chipMenuFire &&
-                    chipMenuFire.async({
-                      email,
-                      displayName,
-                      fieldType,
-                      action: "select_alias",
-                      aliasEmail: ae,
-                    });
-                })(alias.email),
-              );
-              dmPopup.appendChild(item);
-            }
-            dmMenu.appendChild(dmPopup);
-            existingPopup.appendChild(dmMenu);
-          }
-        } else {
-          // Same domain, flat list
-          for (const alias of existingAliases) {
-            const item = doc.createXULElement("menuitem");
-            item.setAttribute("label", alias.email);
-            setXulIcon(item, ICONS.alias);
-            item.addEventListener(
-              "command",
-              (function (ae: string) {
-                return () =>
-                  chipMenuFire &&
-                  chipMenuFire.async({
-                    email,
-                    displayName,
-                    fieldType,
-                    action: "select_alias",
-                    aliasEmail: ae,
-                  });
-              })(alias.email),
-            );
-            existingPopup.appendChild(item);
-          }
-        }
-      } else {
-        for (const alias of existingAliases) {
-          const item = doc.createXULElement("menuitem");
-          item.setAttribute("label", alias.email);
-          setXulIcon(item, ICONS.alias);
-          item.addEventListener(
-            "command",
-            (function (ae: string) {
-              return () =>
-                chipMenuFire &&
-                chipMenuFire.async({
-                  email,
-                  displayName,
-                  fieldType,
-                  action: "select_alias",
-                  aliasEmail: ae,
-                });
-            })(alias.email),
-          );
-          existingPopup.appendChild(item);
-        }
-      }
 
       existingMenu.appendChild(existingPopup);
       menuPopup.appendChild(existingMenu);
@@ -533,6 +558,7 @@ const FORMAT_ITEMS = [
         popup.addEventListener("popuphidden", function onPopupHidden(e: Event) {
           if (e.target !== popup) return;
           popup.removeEventListener("popuphidden", onPopupHidden);
+          (addyMenu as any)._addyCleanup?.();
           sep.remove();
           addyMenu.remove();
         });
@@ -610,6 +636,7 @@ const FORMAT_ITEMS = [
         setCache(data: typeof _cacheData) {
           _cacheData = data;
           lifecycle.ensureAttached();
+          activeExistingMenuRenderers.forEach((render) => render());
           for (const { doc, pillIconMap } of attached.values()) {
             decorateAllPills(doc, pillIconMap);
           }
