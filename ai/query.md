@@ -1025,3 +1025,5 @@ The verification needs to be automated tests.
 
 › did ya add the python ui test too?
 
+› Test Thunderbird/Marionette too
+
