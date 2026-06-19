@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   decoratePillViaAttributes,
   decoratePillViaTextNode,
@@ -57,6 +57,22 @@ describe("decoratePillViaAttributes", () => {
       "alias+user=example.com@anon.email",
     );
     expect(pill.dataset.addyOrigLabel).toBeUndefined();
+  });
+
+  it("keeps outgoing compose address attributes intact after any label replacement", () => {
+    const pill = makePill("<label>mail -> mail</label>");
+    const originalEmail = pill.getAttribute("emailAddress");
+    const originalFullAddress = pill.getAttribute("fullAddress");
+
+    decoratePillViaAttributes(pill, "mail -> mail");
+    decoratePillViaTextNode(pill, "mail -> mail");
+    decoratePillViaCSSAdopted(pill, "mail -> mail");
+    decoratePillViaAttributes(pill, null);
+    decoratePillViaTextNode(pill, null);
+    decoratePillViaCSSAdopted(pill, null);
+
+    expect(pill.getAttribute("emailAddress")).toBe(originalEmail);
+    expect(pill.getAttribute("fullAddress")).toBe(originalFullAddress);
   });
 });
 
