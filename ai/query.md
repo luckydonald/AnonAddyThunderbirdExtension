@@ -1054,3 +1054,5 @@ I've also asserted the "mail → mail" pills not leaking data via their attribut
 
 ❯ That's from the rebase. But this query is adding another commit now, lol.
 
+❯ Any new knowledge to record?
+
