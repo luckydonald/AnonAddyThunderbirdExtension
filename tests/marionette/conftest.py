@@ -97,7 +97,10 @@ def mock_server_port():
 
 @pytest.fixture(scope="session")
 def tb(mock_server_port, tmp_path_factory):
-    # Build the extension
+    # Build the extension from a clean dist tree; the Makefile target depends on
+    # the dist/ directory timestamp, so plain "make" can otherwise reuse stale
+    # experiment JavaScript after src/experiment changes.
+    subprocess.run(["make", "clean"], cwd=REPO_ROOT, check=True, capture_output=True)
     subprocess.run(["make"], cwd=REPO_ROOT, check=True, capture_output=True)
 
     profile_dir = tmp_path_factory.mktemp("tb-profile")
@@ -185,7 +188,25 @@ def tb(mock_server_port, tmp_path_factory):
                     if (!policy) return "no policy";
                     const principal = ExtensionStorageIDB.getStoragePrincipal(policy.extension);
                     const db = await ExtensionStorageIDB.open(principal);
-                    await db.set({ options: { hostUrl: arguments[1], apiKey: "test-key" } });
+                    await db.set({
+                        options: { hostUrl: arguments[1], apiKey: "test-key" },
+                        aliasCache: {
+                            aliases: [
+                                { id: "a1", email: "shop@anonaddy.me", active: true,
+                                  description: "Shopping alias for example.com" },
+                                { id: "a2", email: "news@anonaddy.me", active: true,
+                                  description: "Newsletter alias for example.com" },
+                                { id: "a3", email: "work@anon.email", active: true,
+                                  description: "Work alias for example.com" }
+                            ],
+                            fetchedAt: Date.now()
+                        },
+                        domainOptions: {
+                            data: ["anonaddy.me", "anon.email"],
+                            defaultAliasDomain: "anonaddy.me",
+                            defaultAliasFormat: "random_characters"
+                        },
+                    });
                     const check = await db.get(["options"]);
                     return JSON.stringify(check);
                 })();
@@ -196,6 +217,90 @@ def tb(mock_server_port, tmp_path_factory):
     except Exception as e:
         # Non-fatal: tests that need storage will fail with a clear message
         print(f"Warning: could not inject extension storage: {e}")
+
+    if os.environ.get("ADDY_SKIP_PERMISSION_INJECTION") == "1":
+        print("Permission injection skipped by ADDY_SKIP_PERMISSION_INJECTION")
+    else:
+        try:
+            with client.using_context("chrome"):
+                result = client.execute_script(
+                    """
+                    return (async () => {
+                        const { ExtensionPermissions } = ChromeUtils.importESModule(
+                            "resource://gre/modules/ExtensionPermissions.sys.mjs"
+                        );
+                        const policy = WebExtensionPolicy.getByID(arguments[0]);
+                        if (!policy) return "no policy";
+                        await ExtensionPermissions.add(policy.extension.id, {
+                            origins: [arguments[1] + "/*"],
+                            permissions: [],
+                        });
+                        return "ok";
+                    })();
+                    """,
+                    script_args=[EXT_ID, host_url],
+                )
+            print(f"Permission injection result: {result}")
+        except Exception as e:
+            print(f"Warning: could not inject extension host permission: {e}")
+
+    try:
+        with client.using_context("chrome"):
+            result = client.execute_script(
+                """
+                return (async () => {
+                    const policy = WebExtensionPolicy.getByID(arguments[0]);
+                    if (!policy) return "no policy";
+                    if (policy.extension.wakeupBackground) {
+                        await policy.extension.wakeupBackground();
+                        return "ok";
+                    }
+                    return "no wakeupBackground";
+                })();
+                """,
+                script_args=[EXT_ID],
+            )
+        print(f"Background wake result: {result}")
+    except Exception as e:
+        print(f"Warning: could not wake extension background: {e}")
+
+    if os.environ.get("ADDY_DEBUG_EXTENSION_SHAPE") == "1":
+        with client.using_context("chrome"):
+            result = client.execute_script(
+                """
+                const policy = WebExtensionPolicy.getByID(arguments[0]);
+                const extension = policy?.extension;
+                const background = extension?.backgroundContext;
+                return {
+                    extensionKeys: extension ? Object.keys(extension).sort() : null,
+                    backgroundKeys: background ? Object.keys(background).sort() : null,
+                    apiManagerKeys: extension?.apiManager
+                        ? Object.keys(extension.apiManager).sort()
+                        : null,
+                    globalKeys: extension?.apiManager?.global
+                        ? Object.keys(extension.apiManager.global).sort()
+                        : null,
+                    globalMessengerKeys: extension?.apiManager?.global?.messenger
+                        ? Object.keys(extension.apiManager.global.messenger).sort()
+                        : null,
+                    globalBrowserKeys: extension?.apiManager?.global?.browser
+                        ? Object.keys(extension.apiManager.global.browser).sort()
+                        : null,
+                    globalType: typeof extension?.apiManager?.global,
+                    addressChipMenuType:
+                        typeof extension?.apiManager?.global?.messenger?.AddressChipMenu,
+                    browserType: typeof background?.cloneScope?.browser,
+                    messengerType: typeof background?.cloneScope?.messenger,
+                    sandboxBrowserType: typeof background?.sandbox?.browser,
+                    sandboxMessengerType: typeof background?.sandbox?.messenger,
+                    jsonSandboxKeys: background?.jsonSandbox
+                        ? Object.keys(background.jsonSandbox).sort()
+                        : null,
+                };
+                """,
+                script_args=[EXT_ID],
+            )
+        print(f"Extension shape: {json.dumps(result, sort_keys=True)}")
 
     yield client
 

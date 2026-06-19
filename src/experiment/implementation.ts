@@ -18,9 +18,15 @@ import { setXulIcon } from "./xulIcon.js";
 const { ExtensionCommon } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionCommon.sys.mjs",
 ) as any;
+const { ExtensionStorageIDB } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionStorageIDB.sys.mjs",
+) as any;
 // setTimeout/clearTimeout are not in scope in privileged extension JS.
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
+) as any;
+const { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs",
 ) as any;
 
 // Alias and domain-option data pushed from the background after each cache refresh.
@@ -39,11 +45,55 @@ let _cacheData: {
     defaultAliasFormat: "random_characters",
   },
 };
+let chipMenuFire: any = null;
 
 function getAddyDomainSet(): Set<string> {
   return new Set(
     (_cacheData.domainOptions?.data || []).map((d) => d.toLowerCase()),
   );
+}
+
+function fetchJson(
+  method: string,
+  url: string,
+  headers: Record<string, string>,
+  body: string | null = null,
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const channel = NetUtil.newChannel({
+      uri: url,
+      loadUsingSystemPrincipal: true,
+    }).QueryInterface(Ci.nsIHttpChannel);
+    for (const [key, value] of Object.entries(headers)) {
+      channel.setRequestHeader(key, value, false);
+    }
+    if (body !== null) {
+      const stream = Components.classes[
+        "@mozilla.org/io/string-input-stream;1"
+      ].createInstance(Ci.nsIStringInputStream);
+      stream.setByteStringData(body);
+      channel
+        .QueryInterface(Ci.nsIUploadChannel)
+        .setUploadStream(stream, "application/json", -1);
+    }
+    channel.requestMethod = method;
+    NetUtil.asyncFetch(channel, (inputStream: any, status: any) => {
+      if (!Components.isSuccessCode(status)) {
+        reject(new Error(`HTTP fetch failed: ${status}`));
+        return;
+      }
+      const text = NetUtil.readInputStreamToString(
+        inputStream,
+        inputStream.available(),
+      );
+      const httpStatus = channel.responseStatus;
+      if (httpStatus < 200 || httpStatus >= 300) {
+        reject(new Error(`HTTP ${httpStatus}: ${text}`));
+        return;
+      }
+      resolve(JSON.parse(text));
+    });
+  });
 }
 
 const FORMAT_ITEMS = [
@@ -68,7 +118,6 @@ const FORMAT_ITEMS = [
   (ExtensionCommon as any).ExtensionAPI
 ) {
   getAPI(context: any) {
-    let chipMenuFire: any = null;
     // Each value is { cleanup, doc, pillIconMap } so setCache can re-decorate.
     const attached = new Map<
       any,
@@ -81,6 +130,120 @@ const FORMAT_ITEMS = [
     const activeExistingMenuRenderers = new Set<() => void>();
 
     const ICONS = createMenuIconUrls(context.extension.baseURI.spec);
+
+    async function refreshAliasesForDomainInExperiment(
+      domain: string,
+    ): Promise<void> {
+      const principal = ExtensionStorageIDB.getStoragePrincipal(
+        context.extension,
+      );
+      const db = await ExtensionStorageIDB.open(principal);
+      const storage = await db.get(["options", "aliasCache", "domainOptions"]);
+      const options = (storage.options ?? {}) as {
+        hostUrl?: string | null;
+        apiKey?: string;
+      };
+      const hostUrl = options.hostUrl || "https://app.addy.io";
+      if (!options.apiKey) throw new Error("No API key configured");
+
+      const params = `filter%5Bsearch%5D=${encodeURIComponent(domain)}&filter%5Bactive%5D=true`;
+      const response = await fetchJson(
+        "GET",
+        `${hostUrl}/api/v1/aliases?${params}`,
+        {
+          Authorization: `Bearer ${options.apiKey}`,
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      );
+
+      const storedCache = storage.aliasCache ?? { aliases: [], fetchedAt: 0 };
+      const aliases = [...(storedCache.aliases ?? [])];
+      for (const fresh of response.data ?? []) {
+        const index = aliases.findIndex((alias: any) => alias.id === fresh.id);
+        if (index >= 0) aliases[index] = fresh;
+        else aliases.push(fresh);
+      }
+
+      const aliasCache = { aliases, fetchedAt: Date.now() };
+      await db.set({ aliasCache });
+      _cacheData = {
+        aliases,
+        domainOptions: storage.domainOptions ?? _cacheData.domainOptions,
+      };
+      activeExistingMenuRenderers.forEach((render) => render());
+      for (const { doc, pillIconMap } of attached.values()) {
+        decorateAllPills(doc, pillIconMap);
+      }
+    }
+
+    async function createAliasInExperiment(body: any): Promise<any> {
+      const principal = ExtensionStorageIDB.getStoragePrincipal(
+        context.extension,
+      );
+      const db = await ExtensionStorageIDB.open(principal);
+      const storage = await db.get(["options", "aliasCache", "domainOptions"]);
+      const options = (storage.options ?? {}) as {
+        hostUrl?: string | null;
+        apiKey?: string;
+      };
+      const hostUrl = options.hostUrl || "https://app.addy.io";
+      if (!options.apiKey) throw new Error("No API key configured");
+
+      const response = await fetchJson(
+        "POST",
+        `${hostUrl}/api/v1/aliases`,
+        {
+          Authorization: `Bearer ${options.apiKey}`,
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        JSON.stringify(body),
+      );
+      const alias = response.data;
+      const storedCache = storage.aliasCache ?? { aliases: [], fetchedAt: 0 };
+      const aliases = [...(storedCache.aliases ?? [])];
+      if (alias) {
+        const index = aliases.findIndex((item: any) => item.id === alias.id);
+        if (index >= 0) aliases[index] = alias;
+        else aliases.push(alias);
+      }
+      const aliasCache = { aliases, fetchedAt: Date.now() };
+      await db.set({ aliasCache });
+      _cacheData = {
+        aliases,
+        domainOptions: storage.domainOptions ?? _cacheData.domainOptions,
+      };
+      activeExistingMenuRenderers.forEach((render) => render());
+      return alias;
+    }
+
+    function fireChipMenuAction(info: Record<string, unknown>): void {
+      const wakeAndRetry = () => {
+        Promise.resolve(context.extension.wakeupBackground?.())
+          .then(() => {
+            chipMenuFire && chipMenuFire.async(info);
+          })
+          .catch((e) => {
+            console.error("AnonAddyTB: could not wake chip menu listener", e);
+          });
+      };
+
+      if (!chipMenuFire) {
+        wakeAndRetry();
+        return;
+      }
+      try {
+        const result = chipMenuFire.sync(info);
+        Promise.resolve(result).catch((e) => {
+          console.error("AnonAddyTB: chip menu action rejected", e);
+          wakeAndRetry();
+        });
+      } catch (e) {
+        console.error("AnonAddyTB: could not dispatch chip menu action", e);
+        wakeAndRetry();
+      }
+    }
 
     // ── Pill decoration ───────────────────────────────────────────────────────
 
@@ -156,49 +319,74 @@ const FORMAT_ITEMS = [
         const fmtIcon = ICONS.format[fmt.value];
         if (fmtIcon) setXulIcon(item, fmtIcon);
         if (fmt.value === "custom") {
+          const createCustomAlias = (d: string) => {
+            const valueObj = { value: "" };
+            const ok = Services.prompt.prompt(
+              win,
+              "Custom alias prefix",
+              `Prefix for new alias on @${d}:`,
+              valueObj,
+              null,
+              { value: false },
+            );
+            if (!ok || !valueObj.value.trim()) return;
+            fireChipMenuAction({
+              email,
+              displayName,
+              fieldType,
+              action: "create_alias",
+              domain: d,
+              format: "custom",
+              customPrefix: valueObj.value.trim(),
+            });
+            createAliasInExperiment({
+              domain: d,
+              description: `Created by AnonAddyTB for sending to ${email}`,
+              format: "custom",
+              local_part: valueObj.value.trim(),
+            }).catch((e) => {
+              item.setAttribute(
+                "data-addy-create-error",
+                e instanceof Error ? e.message : String(e),
+              );
+              console.error("AnonAddyTB: could not create alias in menu", e);
+            });
+          };
+          (item as any)._addyRunCommand = () => createCustomAlias(domain);
           item.addEventListener(
             "command",
             (function (d: string) {
-              return () => {
-                const valueObj = { value: "" };
-                const ok = Services.prompt.prompt(
-                  win,
-                  "Custom alias prefix",
-                  `Prefix for new alias on @${d}:`,
-                  valueObj,
-                  null,
-                  { value: false },
-                );
-                if (!ok || !valueObj.value.trim()) return;
-                chipMenuFire &&
-                  chipMenuFire.async({
-                    email,
-                    displayName,
-                    fieldType,
-                    action: "create_alias",
-                    domain: d,
-                    format: "custom",
-                    customPrefix: valueObj.value.trim(),
-                  });
-              };
+              return () => createCustomAlias(d);
             })(domain),
           );
         } else {
+          const createAlias = (f: string, d: string) => {
+            fireChipMenuAction({
+              email,
+              displayName,
+              fieldType,
+              action: "create_alias",
+              domain: d,
+              format: f,
+              customPrefix: "",
+            });
+            createAliasInExperiment({
+              domain: d,
+              description: `Created by AnonAddyTB for sending to ${email}`,
+              format: f,
+            }).catch((e) => {
+              item.setAttribute(
+                "data-addy-create-error",
+                e instanceof Error ? e.message : String(e),
+              );
+              console.error("AnonAddyTB: could not create alias in menu", e);
+            });
+          };
+          (item as any)._addyRunCommand = () => createAlias(fmt.value, domain);
           item.addEventListener(
             "command",
             (function (f: string, d: string) {
-              return () => {
-                chipMenuFire &&
-                  chipMenuFire.async({
-                    email,
-                    displayName,
-                    fieldType,
-                    action: "create_alias",
-                    domain: d,
-                    format: f,
-                    customPrefix: "",
-                  });
-              };
+              return () => createAlias(f, d);
             })(fmt.value, domain),
           );
         }
@@ -217,13 +405,12 @@ const FORMAT_ITEMS = [
       pickerItem.setAttribute("label", "Open alias picker…");
       setXulIcon(pickerItem, ICONS.picker);
       pickerItem.addEventListener("command", () => {
-        chipMenuFire &&
-          chipMenuFire.async({
-            email,
-            displayName,
-            fieldType,
-            action: "open_popup",
-          });
+        fireChipMenuAction({
+          email,
+          displayName,
+          fieldType,
+          action: "open_popup",
+        });
       });
       existingPopup.appendChild(pickerItem);
       existingPopup.appendChild(doc.createXULElement("menuseparator"));
@@ -244,8 +431,7 @@ const FORMAT_ITEMS = [
         "command",
         (function (ae: string) {
           return () =>
-            chipMenuFire &&
-            chipMenuFire.async({
+            fireChipMenuAction({
               email,
               displayName,
               fieldType,
@@ -291,13 +477,12 @@ const FORMAT_ITEMS = [
       // Direct click on the <menu> element itself (not on a submenu item) opens popup.
       menu.addEventListener("click", (e: Event) => {
         if (e.target === menu) {
-          chipMenuFire &&
-            chipMenuFire.async({
-              email,
-              displayName,
-              fieldType,
-              action: "open_popup",
-            });
+          fireChipMenuAction({
+            email,
+            displayName,
+            fieldType,
+            action: "open_popup",
+          });
           e.preventDefault();
         }
       });
@@ -372,17 +557,22 @@ const FORMAT_ITEMS = [
       (menu as any)._addyCleanup = () => {
         activeExistingMenuRenderers.delete(renderExistingItems);
       };
-      existingPopup.addEventListener("popupshowing", () => {
+      const refreshExistingAliases = () => {
         if (!lookupDomain) return;
-        chipMenuFire &&
-          chipMenuFire.async({
-            email,
-            displayName,
-            fieldType,
-            action: "refresh_aliases",
-            domain: lookupDomain,
+        fireChipMenuAction({
+          email,
+          displayName,
+          fieldType,
+          action: "refresh_aliases",
+          domain: lookupDomain,
+        });
+        refreshAliasesForDomainInExperiment(lookupDomain)
+          .catch((e) => {
+            console.error("AnonAddyTB: could not refresh aliases in menu", e);
           });
-      });
+      };
+      existingPopup.addEventListener("popupshowing", refreshExistingAliases);
+      refreshExistingAliases();
 
       existingMenu.appendChild(existingPopup);
       menuPopup.appendChild(existingMenu);
@@ -488,15 +678,6 @@ const FORMAT_ITEMS = [
         ) {
           pill = e.target as Element;
         }
-        console.log(
-          "AnonAddyTB contextmenu path:",
-          (e as any)
-            .composedPath()
-            .map((el: any) => el.tagName)
-            .filter(Boolean),
-          "pill:",
-          pill,
-        );
         if (!pill) {
           pendingPill = null;
           return;
@@ -520,12 +701,6 @@ const FORMAT_ITEMS = [
       function onPopupShowing(e: Event): void {
         if (!pendingPill) return;
         const popup = e.target as any;
-        console.log(
-          "AnonAddyTB popupshowing tag:",
-          popup.tagName,
-          "triggerNode:",
-          popup.triggerNode,
-        );
         if (popup.tagName.toLowerCase() !== "menupopup") return;
 
         // Guard against consuming pendingPill for unrelated menupopups (e.g.
@@ -650,7 +825,6 @@ const FORMAT_ITEMS = [
             lifecycle.ensureAttached();
 
             return () => {
-              chipMenuFire = null;
               lifecycle.releaseEventListener();
             };
           },

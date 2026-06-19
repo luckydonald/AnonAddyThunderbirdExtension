@@ -1,6 +1,6 @@
 """
 Minimal HTTP server that mimics the addy.io API for Marionette tests.
-Serves fixture JSON from tests/fixtures/ and records mutating requests.
+Serves fixture JSON from tests/fixtures/ and records API requests.
 """
 
 import json
@@ -20,6 +20,7 @@ class _Handler(BaseHTTPRequestHandler):
     recorded: list = []
 
     def do_GET(self):
+        _Handler.recorded.append(("GET", self.path, {}))
         path = self.path.split("?")[0]
         if path == "/api/v1/domain-options":
             self._respond(200, _load("domain-options.json"))

@@ -24,28 +24,116 @@ ALIAS_EMAIL = "shop@anonaddy.me"
 EXPECTED_TO_FRAGMENT = "shop+"
 
 
+def switch_to_main_window(client):
+    """Switch to Thunderbird's main 3pane chrome window and mail tab."""
+    with client.using_context("chrome"):
+        for handle in client.chrome_window_handles:
+            client.switch_to_window(handle)
+            window_type = client.execute_script(
+                "return document.documentElement.getAttribute('windowtype');"
+            )
+            if window_type == "mail:3pane":
+                client.execute_script(
+                    """
+                    const tabmail = document.getElementById("tabmail");
+                    const tabs = tabmail?.tabInfo || [];
+                    const mailTab = tabs.find((tab) =>
+                        ["folder", "mail3PaneTab"].includes(tab.mode?.name)
+                    );
+                    if (mailTab) tabmail.switchToTab(mailTab);
+                    """
+                )
+                return handle
+    raise RuntimeError("No Thunderbird main 3pane window found")
+
+
 def open_compose_window(client):
     """Open a new compose window using TB's native API and return its chrome handle."""
-    before = set(client.chrome_window_handles)
+    switch_to_main_window(client)
+    before = set(handles_by_window_type(client, "msgcompose"))
+    switch_to_main_window(client)
     with client.using_context("chrome"):
         client.execute_script(
-            "Services.wm.getMostRecentWindow('mail:3pane').MsgNewMessage(null);"
+            """
+            const win = window;
+            win.focus();
+            win.MsgNewMessage(null);
+            """
         )
-    Wait(client, timeout=15).until(
-        lambda _: len(set(client.chrome_window_handles) - before) > 0
-    )
-    return (set(client.chrome_window_handles) - before).pop()
+    try:
+        new_handles = Wait(client, timeout=5).until(
+            lambda _: set(handles_by_window_type(client, "msgcompose")) - before
+        )
+    except Exception:
+        with client.using_context("chrome"):
+            client.execute_script(
+                """
+                const win = window;
+                win.focus();
+                if (typeof win.goDoCommand === "function") {
+                    win.goDoCommand("cmd_newMessage");
+                    return;
+                }
+                const controller =
+                    win.document.commandDispatcher.getControllerForCommand("cmd_newMessage");
+                if (!controller) throw new Error("No cmd_newMessage controller");
+                controller.doCommand("cmd_newMessage");
+                """
+            )
+        new_handles = Wait(client, timeout=15).until(
+            lambda _: set(handles_by_window_type(client, "msgcompose")) - before
+        )
+    return new_handles.pop()
+
+
+def handles_by_window_type(client, window_type: str):
+    """Return chrome handles whose documentElement windowtype matches."""
+    handles = []
+    with client.using_context("chrome"):
+        for handle in client.chrome_window_handles:
+            try:
+                client.switch_to_window(handle)
+                current = client.execute_script(
+                    "return document.documentElement.getAttribute('windowtype');"
+                )
+            except Exception:
+                continue
+            if current == window_type:
+                handles.append(handle)
+    return handles
 
 
 def add_recipient(client, compose_handle, email):
     """Type a recipient into the compose window's To: field to create a pill."""
     client.switch_to_window(compose_handle)
     with client.using_context("chrome"):
-        field = client.find_element(By.ID, "toAddrInput")
+        Wait(client, timeout=10).until(
+            lambda _: client.execute_script(
+                """
+                return !!document.getElementById("toAddrInput") ||
+                    !!document.querySelector("mail-address-row input");
+                """
+            )
+        )
+        field = client.find_element(By.CSS_SELECTOR, "#toAddrInput, mail-address-row input")
         field.click()
         field.send_keys(email)
         field.send_keys(Keys.RETURN)
-    time.sleep(0.5)
+        Wait(client, timeout=10).until(
+            lambda _: client.execute_script(
+                """
+                const expected = arguments[0].toLowerCase();
+                return [...document.querySelectorAll("mail-address-pill")]
+                    .some((pill) =>
+                        ((pill.getAttribute("emailAddress") ||
+                          pill.getAttribute("fullAddress") ||
+                          pill.textContent || "").toLowerCase()).includes(expected)
+                    );
+                """,
+                script_args=[email],
+            )
+        )
+    time.sleep(0.2)
 
 
 def find_popup_handle(client):
@@ -80,22 +168,19 @@ def popup_query(client, popup_handle, js_expr):
                     resolve(msg.data);
                 };
                 mm.addMessageListener(topic, listener);
-                const code = arguments[0].replace("__TOPIC__", topic);
-                mm.loadFrameScript("data:text/javascript," + encodeURIComponent(code), false);
+                mm.loadFrameScript(
+                    "data:text/javascript," + encodeURIComponent(
+                        `try {
+                            var result = (${arguments[0]});
+                            sendAsyncMessage("${topic}", { value: result });
+                        } catch(e) {
+                            sendAsyncMessage("${topic}", { err: String(e) });
+                        }`
+                    ), false);
                 setTimeout(() => resolve({ timeout: true }), 5000);
             });
             """,
-            script_args=[
-                f"""
-                try {{
-                    const result = eval({json.dumps(js_expr)});
-                    sendAsyncMessage("__TOPIC__", {{ value: result instanceof Promise
-                        ? await result : result }});
-                }} catch(e) {{
-                    sendAsyncMessage("__TOPIC__", {{ err: String(e) }});
-                }}
-                """
-            ],
+            script_args=[js_expr],
         )
 
 
@@ -117,7 +202,18 @@ def popup_click(client, popup_handle, selector):
                 mm.loadFrameScript(
                     "data:text/javascript," + encodeURIComponent(
                         `var el = content.document.querySelector(${JSON.stringify(arguments[0])});
-                        if (el) { el.click(); sendAsyncMessage("${topic}", { clicked: true }); }
+                        if (el) {
+                            if (el instanceof content.HTMLInputElement &&
+                                (el.type === "radio" || el.type === "checkbox")) {
+                                el.checked = true;
+                                el.dispatchEvent(new content.Event("input", { bubbles: true }));
+                                el.dispatchEvent(new content.Event("change", { bubbles: true }));
+                                sendAsyncMessage("${topic}", { clicked: true });
+                            } else {
+                                el.click();
+                                sendAsyncMessage("${topic}", { clicked: true });
+                            }
+                        }
                         else sendAsyncMessage("${topic}", { err: "not found: " + ${JSON.stringify(arguments[0])} });`
                     ), false);
                 setTimeout(() => resolve({ timeout: true }), 5000);
@@ -156,17 +252,17 @@ class TestPopup:
         # Query recipient card count via frameScript
         result = popup_query(
             tb, popup_handle,
-            "content.document.querySelectorAll('.recipient-card').length"
+            "content.document.querySelectorAll('.card').length"
         )
         assert result.get("value", 0) >= 1, f"No recipient cards in popup: {result}"
 
         # Check card shows the domain
-        card_text = popup_query(
+        card_address = popup_query(
             tb, popup_handle,
-            "content.document.querySelector('.recipient-card')?.textContent || ''"
+            "content.document.querySelector('.card__address-input')?.value || ''"
         )
-        assert "example.com" in (card_text.get("value") or "").lower(), (
-            f"Recipient domain not shown in card: {card_text}"
+        assert "example.com" in (card_address.get("value") or "").lower(), (
+            f"Recipient domain not shown in card address: {card_address}"
         )
 
         # Close compose
@@ -279,12 +375,24 @@ class TestPopup:
         # Select the alias radio/option for ALIAS_EMAIL via frameScript
         select_result = popup_click(
             tb, popup_handle,
-            f"input[value='{ALIAS_EMAIL}'], label:has(input[value='{ALIAS_EMAIL}'])"
+            f"input[value='{ALIAS_EMAIL}']"
         )
+        assert select_result.get("clicked"), f"Could not select alias: {select_result}"
         time.sleep(0.3)
+        selection_state = popup_query(
+            tb,
+            popup_handle,
+            f"""({{
+                checked: content.document.querySelector("input[value='{ALIAS_EMAIL}']")?.checked,
+                applyDisabled: content.document.querySelector(".footer__actions button.primary")?.disabled,
+            }})""",
+        )
+        assert selection_state.get("value", {}).get("checked"), selection_state
+        assert not selection_state.get("value", {}).get("applyDisabled"), selection_state
 
         # Click Apply button
-        apply_result = popup_click(tb, popup_handle, "button.apply-btn, [data-action='apply']")
+        apply_result = popup_click(tb, popup_handle, ".footer__actions button.primary")
+        assert apply_result.get("clicked"), f"Could not click Apply: {apply_result}"
         time.sleep(1.5)
 
         # Verify compose To: field was rewritten
@@ -294,7 +402,11 @@ class TestPopup:
                 """
                 return Array.from(
                     document.querySelectorAll("mail-address-pill")
-                ).map(p => p.getAttribute("fulladdress") || p.textContent);
+                ).map(p =>
+                    p.getAttribute("emailAddress") ||
+                    p.getAttribute("fullAddress") ||
+                    p.textContent
+                );
                 """
             )
         assert any(EXPECTED_TO_FRAGMENT in addr for addr in (to_pills or [])), (
