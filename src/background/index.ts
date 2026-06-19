@@ -164,7 +164,7 @@ messenger.alarms.onAlarm.addListener(async (alarm) => {
     try {
       await refreshCache();
     } catch (e) {
-      console.error("AnonAddyTB: cache refresh failed", e);
+      console.error("AddyTB: cache refresh failed", e);
     }
   }
 });
@@ -174,7 +174,7 @@ messenger.storage.onChanged.addListener(async (changes) => {
     try {
       await refreshCache();
     } catch (e) {
-      console.error("AnonAddyTB: cache refresh on settings change failed", e);
+      console.error("AddyTB: cache refresh on settings change failed", e);
     }
     return;
   }
@@ -183,7 +183,7 @@ messenger.storage.onChanged.addListener(async (changes) => {
     try {
       await syncCacheToExperiment();
     } catch (e) {
-      console.error("AnonAddyTB: cache sync to experiment failed", e);
+      console.error("AddyTB: cache sync to experiment failed", e);
     }
   }
 });
@@ -195,7 +195,7 @@ messenger.runtime.onInstalled.addListener(async ({ reason: _reason }) => {
   try {
     await refreshCache();
   } catch (e) {
-    console.error("AnonAddyTB: initial cache refresh failed", e);
+    console.error("AddyTB: initial cache refresh failed", e);
   }
 });
 
@@ -232,7 +232,7 @@ messenger.runtime.onMessage.addListener(async (rawMessage) => {
   try {
     const body: CreateAliasBody = {
       domain: message.domain,
-      description: `Created by AnonAddyTB for sending to ${message.email}`,
+      description: `Created by AddyTB for sending to ${message.email}`,
       format: message.format as AliasFormat,
     };
     if (message.format === "custom" && message.customPrefix?.trim()) {
@@ -266,7 +266,7 @@ messenger.composeAction.onClicked.addListener(async (tab) => {
   try {
     await openAliasWindow(tab.id);
   } catch (e) {
-    console.error("AnonAddyTB: could not open alias window", e);
+    console.error("AddyTB: could not open alias window", e);
   }
 });
 
@@ -286,11 +286,11 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
         }
       }
       console.error(
-        "AnonAddyTB: could not find compose tab for chip menu click",
+        "AddyTB: could not find compose tab for chip menu click",
       );
     } catch (e) {
       console.error(
-        "AnonAddyTB: could not open alias window from chip menu",
+        "AddyTB: could not open alias window from chip menu",
         e,
       );
     }
@@ -303,7 +303,7 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
       await refreshAliasesForDomain(info.domain);
     } catch (e) {
       console.error(
-        "AnonAddyTB: could not refresh aliases from context menu",
+        "AddyTB: could not refresh aliases from context menu",
         e,
       );
     }
@@ -313,7 +313,7 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
   const tabId = await findComposeTabId();
   if (tabId === null) {
     console.error(
-      "AnonAddyTB: could not find compose tab for chip action",
+      "AddyTB: could not find compose tab for chip action",
       action,
     );
     return;
@@ -329,7 +329,7 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
         info.aliasEmail,
       );
     } catch (e) {
-      console.error("AnonAddyTB: could not apply alias from context menu", e);
+      console.error("AddyTB: could not apply alias from context menu", e);
     }
     return;
   }
@@ -339,7 +339,7 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
     try {
       const body: CreateAliasBody = {
         domain: info.domain,
-        description: `Created by AnonAddyTB for sending to ${info.email}`,
+        description: `Created by AddyTB for sending to ${info.email}`,
         format: info.format as AliasFormat,
       };
       if (info.format === "custom" && info.customPrefix?.trim()) {
@@ -361,7 +361,7 @@ messenger.AddressChipMenu.onChipMenuClicked.addListener(async (info) => {
       // Refresh cache in the background so the new alias shows up next time.
       refreshCache().catch(() => {});
     } catch (e) {
-      console.error("AnonAddyTB: could not create alias from context menu", e);
+      console.error("AddyTB: could not create alias from context menu", e);
     }
   }
 });

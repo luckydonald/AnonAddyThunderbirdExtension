@@ -1056,3 +1056,7 @@ I've also asserted the "mail → mail" pills not leaking data via their attribut
 
 ❯ Any new knowledge to record?
 
+❯ Rename all mentions of `AnonAddyTB@luckydonald.de` with `AddyTB@luckydonald.de` and just `Addy for Thunderbird` for full length names. Adapt the readme to show that we forked from there, and added all the features we did (refer to @ai/query.md for the log of what we did - best summarize that in a subagent). Also adapt the zip release name, etc.
+
+❯ First commit via lplp style. Ah, also all other leftover plugin names which can be found, obviously.
+

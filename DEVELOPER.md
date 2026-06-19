@@ -13,10 +13,10 @@ submitted alongside XPI uploads to ATN following the source submission policy.
 
 ```bash
 npm ci    # install exact versions from package-lock.json (first time or after updates)
-make      # runs npm run build, copies static assets into dist/, zips to AnonAddyTB.xpi
+make      # runs npm run build, copies static assets into dist/, zips to AddyTB.xpi
 ```
 
-The resulting `AnonAddyTB.xpi` is the file to install or submit.
+The resulting `AddyTB.xpi` is the file to install or submit.
 
 ## Development commands
 
@@ -27,7 +27,7 @@ npm run prettier:check  # check code formatting
 npm run prettier:write  # auto-format all files
 npm test                # run Vitest unit tests (one-shot)
 npm run test:watch      # run Vitest in watch mode
-make clean              # remove AnonAddyTB.xpi and dist/
+make clean              # remove AddyTB.xpi and dist/
 ```
 
 ## Testing
@@ -88,10 +88,10 @@ See `tests/marionette/README.md` for mock server endpoint details.
 ## Source archive for ATN submission
 
 The source archive must contain only source files — no `node_modules/`, `dist/`, or
-`AnonAddyTB.xpi`. Use git archive or equivalent:
+`AddyTB.xpi`. Use git archive or equivalent:
 
 ```bash
-git archive HEAD --format=zip -o AnonAddyTB-src.zip
+git archive HEAD --format=zip -o AddyTB-src.zip
 ```
 
 Reviewers should be able to run `npm ci && make` to reproduce the exact XPI.

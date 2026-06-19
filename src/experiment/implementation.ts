@@ -225,7 +225,7 @@ const FORMAT_ITEMS = [
             chipMenuFire && chipMenuFire.async(info);
           })
           .catch((e) => {
-            console.error("AnonAddyTB: could not wake chip menu listener", e);
+            console.error("AddyTB: could not wake chip menu listener", e);
           });
       };
 
@@ -236,11 +236,11 @@ const FORMAT_ITEMS = [
       try {
         const result = chipMenuFire.sync(info);
         Promise.resolve(result).catch((e) => {
-          console.error("AnonAddyTB: chip menu action rejected", e);
+          console.error("AddyTB: chip menu action rejected", e);
           wakeAndRetry();
         });
       } catch (e) {
-        console.error("AnonAddyTB: could not dispatch chip menu action", e);
+        console.error("AddyTB: could not dispatch chip menu action", e);
         wakeAndRetry();
       }
     }
@@ -341,7 +341,7 @@ const FORMAT_ITEMS = [
             });
             createAliasInExperiment({
               domain: d,
-              description: `Created by AnonAddyTB for sending to ${email}`,
+              description: `Created by AddyTB for sending to ${email}`,
               format: "custom",
               local_part: valueObj.value.trim(),
             }).catch((e) => {
@@ -349,7 +349,7 @@ const FORMAT_ITEMS = [
                 "data-addy-create-error",
                 e instanceof Error ? e.message : String(e),
               );
-              console.error("AnonAddyTB: could not create alias in menu", e);
+              console.error("AddyTB: could not create alias in menu", e);
             });
           };
           (item as any)._addyRunCommand = () => createCustomAlias(domain);
@@ -372,14 +372,14 @@ const FORMAT_ITEMS = [
             });
             createAliasInExperiment({
               domain: d,
-              description: `Created by AnonAddyTB for sending to ${email}`,
+              description: `Created by AddyTB for sending to ${email}`,
               format: f,
             }).catch((e) => {
               item.setAttribute(
                 "data-addy-create-error",
                 e instanceof Error ? e.message : String(e),
               );
-              console.error("AnonAddyTB: could not create alias in menu", e);
+              console.error("AddyTB: could not create alias in menu", e);
             });
           };
           (item as any)._addyRunCommand = () => createAlias(fmt.value, domain);
@@ -568,7 +568,7 @@ const FORMAT_ITEMS = [
         });
         refreshAliasesForDomainInExperiment(lookupDomain)
           .catch((e) => {
-            console.error("AnonAddyTB: could not refresh aliases in menu", e);
+            console.error("AddyTB: could not refresh aliases in menu", e);
           });
       };
       existingPopup.addEventListener("popupshowing", refreshExistingAliases);

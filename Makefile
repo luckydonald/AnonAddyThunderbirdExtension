@@ -1,4 +1,4 @@
-target = AnonAddyTB.xpi
+target = AddyTB.xpi
 static_files = icon.svg manifest.json LICENSE.txt
 
 $(target): dist/

@@ -37,15 +37,15 @@ async function loadFromStorage() {
 
   const all = await messenger.permissions.getAll();
   console.log(
-    "AnonAddyTB: permissions.getAll() on load:",
+    "AddyTB: permissions.getAll() on load:",
     JSON.stringify(all, null, 2),
   );
 
   messenger.permissions.onAdded.addListener((added) => {
-    console.log("AnonAddyTB: permissions.onAdded:", JSON.stringify(added));
+    console.log("AddyTB: permissions.onAdded:", JSON.stringify(added));
   });
   messenger.permissions.onRemoved.addListener((removed) => {
-    console.log("AnonAddyTB: permissions.onRemoved:", JSON.stringify(removed));
+    console.log("AddyTB: permissions.onRemoved:", JSON.stringify(removed));
   });
 }
 
@@ -72,31 +72,31 @@ async function save() {
   let permissionJustGranted = false;
   if (url) {
     const origin = `${url}/`;
-    console.log("AnonAddyTB: checking permission for origin:", origin);
+    console.log("AddyTB: checking permission for origin:", origin);
     const alreadyGranted = await messenger.permissions.contains({
       origins: [origin],
     });
-    console.log("AnonAddyTB: permissions.contains():", alreadyGranted);
+    console.log("AddyTB: permissions.contains():", alreadyGranted);
     if (!alreadyGranted) {
       let granted = false;
       try {
-        console.log("AnonAddyTB: messenger.permissions.request()", {
+        console.log("AddyTB: messenger.permissions.request()", {
           origins: [origin],
         });
         granted = await messenger.permissions.request({ origins: [origin] });
-        console.log("AnonAddyTB: no error in messenger.permissions.request.", {
+        console.log("AddyTB: no error in messenger.permissions.request.", {
           origins: [origin],
           granted,
         });
       } catch (e) {
-        console.warn("AnonAddyTB: error in messenger.permissions.request:", e, {
+        console.warn("AddyTB: error in messenger.permissions.request:", e, {
           origins: [origin],
         });
       }
-      console.log("AnonAddyTB: permissions.request() result:", granted);
+      console.log("AddyTB: permissions.request() result:", granted);
       const allAfter = await messenger.permissions.getAll();
       console.log(
-        "AnonAddyTB: permissions.getAll() after request:",
+        "AddyTB: permissions.getAll() after request:",
         JSON.stringify(allAfter, null, 2),
       );
       if (granted) {
@@ -110,15 +110,15 @@ async function save() {
 
   // Also fire an actual API request; this may trigger Thunderbird's native
   // host-permission prompt even when permissions.request() silently fails.
-  console.log("AnonAddyTB: testing API request (GET domain-options)...");
+  console.log("AddyTB: testing API request (GET domain-options)...");
   try {
     const result = await addyApiRequest("GET", "domain-options");
-    console.log("AnonAddyTB: API test succeeded:", JSON.stringify(result));
+    console.log("AddyTB: API test succeeded:", JSON.stringify(result));
     saveStatus.value = permissionJustGranted
       ? { kind: "permission_granted", hostUrl: url }
       : { kind: "success" };
   } catch (e) {
-    console.warn("AnonAddyTB: API test failed:", e);
+    console.warn("AddyTB: API test failed:", e);
     // Keep permission_denied if already set; otherwise surface the API error.
     if (saveStatus.value.kind !== "permission_denied") {
       saveStatus.value = { kind: "error", message: String(e) };

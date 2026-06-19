@@ -297,7 +297,7 @@ async function handleDisable(
       if (r.selectedAlias === a.email) r.selectedAlias = null;
     }
   } catch (e) {
-    console.error("AnonAddyTB: alias disable failed", e);
+    console.error("AddyTB: alias disable failed", e);
   }
 }
 
@@ -315,7 +315,7 @@ async function handleRestore(
       r.selectedAlias = a.email;
     }
   } catch (e) {
-    console.error("AnonAddyTB: alias restore failed", e);
+    console.error("AddyTB: alias restore failed", e);
   }
 }
 
@@ -334,7 +334,7 @@ async function handleDelete(
       r.existingAliases.splice(idx, 1);
     }
   } catch (e) {
-    console.error("AnonAddyTB: alias delete failed", e);
+    console.error("AddyTB: alias delete failed", e);
   }
 }
 
@@ -429,7 +429,7 @@ async function load(): Promise<void> {
   try {
     await buildRecipients(cache.aliases);
   } catch (e) {
-    console.error("AnonAddyTB: failed to read compose details", e);
+    console.error("AddyTB: failed to read compose details", e);
     popupState.value = { kind: "no_recipients" };
     return;
   }

@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A Thunderbird extension (Manifest V3) that integrates [addy.io](https://addy.io/) / AnonAddy into the Thunderbird compose window. It adds an "Addy" button to the compose toolbar that lets users replace recipient addresses with their corresponding AnonAddy aliases before sending.
+**Addy for Thunderbird** — a Thunderbird extension (Manifest V3) that integrates [addy.io](https://addy.io/) (or a self-hosted AnonAddy server) into the Thunderbird compose window. It adds an "Addy" button to the compose toolbar that lets users replace recipient addresses with their corresponding Addy aliases before sending. Fork of [jikamens/AnonAddyTB](https://github.com/jikamens/AnonAddyTB).
 
 ## Build
 
 ```bash
 npm install       # install dev dependencies (first time only)
-make              # npm run build → dist/ → AnonAddyTB.xpi
+make              # npm run build → dist/ → AddyTB.xpi
 make clean        # remove built artifact and dist/
 ```
 
