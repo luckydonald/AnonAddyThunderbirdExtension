@@ -5,7 +5,7 @@
 
 ## About this fork
 
-This is a fork of [jikamens/AnonAddyTB][upstream] by Jonathan Kamens, which
+This is a fork of [jikamens/AnonAddyTB][upstream] written by Jonathan Kamens, which
 provides the original integration of [addy.io][addyio] / [AnonAddy][anonaddy]
 into Thunderbird. The upstream extension is also available on
 [addons.thunderbird.net][atn].
@@ -19,7 +19,7 @@ list.
 Maintainer of this fork: Lucky Lucy
 
 Copyright &copy; 2025 Jonathan Kamens (original). Modifications copyright
-&copy; 2025 Lucky Lucy. Released under the terms of the Mozilla Public
+&copy; 2026 Lucky Lucy. Released under the terms of the Mozilla Public
 License, v. 2.0. Full text of the MPL can be found in
 [LICENSE.txt](LICENSE.txt).
 
@@ -61,15 +61,12 @@ server when you save.
 
 ### UI / UX
 
-- **Dedicated popup window** — the alias selector opens as its own window (not a cramped inline compose toolbar popup), with proper sizing and no accidental scrollbars
-- **Right-click context menu on address pills** — right-clicking any To/Cc/Bcc address pill shows an "Addy" submenu with icons, merging into Thunderbird's existing pill context menu (not replacing it); Reply-To is excluded
-- **Context menu structure** — submenu offers "Existing…" (pick a known alias) and "New…" (create a new alias) directly from the pill
-- **Addy icon on address pills** — proxied (aliased) addresses show a coloured Addy icon; non-proxied addresses show a greyscale one
+- **Dedicated popup window** — the alias selector opens as its own window (not a cramped inline compose toolbar popup), with proper sizing
+- **Right-click context menu on address pills** — right-clicking any To/Cc/Bcc address pill shows an "Addy" submenu with icons, merging into Thunderbird's existing pill context menu; Reply-To is excluded
+  - submenu offers "Existing…" (pick a known alias) and "New…" (create a new alias) directly from the address
 - **Human-readable pill display for aliased addresses** — a forwarding address like `alias+them=their-host.com@anon.email` is displayed as `alias@anon.email → them@their-host.com`
-- **"Send … from:" wording** — clarified label (was "Replace … with:")
 - **Sends via / Sends as** — each alias card shows both the internal forwarding address (_Sends via_) and the outward-facing alias address the recipient sees (_Sends as_)
 - **Typeahead domain dropdown** — the domain selector in "Create new alias" is a typeahead input; IDN (`xn--…`) domains show both their Punycode and Unicode forms
-- **"+ New Alias" sub-window** — alias creation lives in its own child window opened by a button, keeping the main popup uncluttered
 - **Alias creation merged into selection list** — a newly created alias is immediately added to the radio-button list; you can disable/delete it or deselect it without re-opening anything
 - **Unambiguous Disable / Delete labels** — buttons are clearly labelled as acting on the alias on the Addy server, not on the current compose session
 - **"Don't replace" restores original address** — selecting "Don't replace" on an already-aliased recipient reverts it; the Apply button is enabled for that action
