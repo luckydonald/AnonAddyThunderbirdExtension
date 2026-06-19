@@ -435,3 +435,78 @@ class TestChipMenu:
         with tb.using_context("chrome"):
             tb.switch_to_window(compose_handle)
             tb.execute_script("window.close();")
+
+    def test_existing_aliases_refresh_when_cache_is_stale(self, tb):
+        """Opening Existing… refreshes aliases for the pill domain and rerenders.
+
+        Regression: the full popup refreshed aliases from the API, but the
+        context menu only used the experiment's stale in-memory cache and kept
+        showing "No existing aliases for this domain".
+        """
+        from conftest import EXT_ID
+
+        with tb.using_context("chrome"):
+            inject_result = tb.execute_script(
+                """
+                return (async () => {
+                    const { ExtensionStorageIDB } = ChromeUtils.importESModule(
+                        "resource://gre/modules/ExtensionStorageIDB.sys.mjs"
+                    );
+                    const policy = WebExtensionPolicy.getByID(arguments[0]);
+                    if (!policy) return "no policy";
+                    const principal = ExtensionStorageIDB.getStoragePrincipal(policy.extension);
+                    const db = await ExtensionStorageIDB.open(principal);
+                    await db.set({
+                        aliasCache: { aliases: [], fetchedAt: 0 },
+                        domainOptions: {
+                            data: ["anonaddy.me", "anon.email"],
+                            defaultAliasDomain: "anonaddy.me",
+                            defaultAliasFormat: "random_characters"
+                        }
+                    });
+
+                    const api = policy.extension.apiManager.global.messenger;
+                    api.AddressChipMenu.setCache({
+                        aliases: [],
+                        domainOptions: {
+                            data: ["anonaddy.me", "anon.email"],
+                            defaultAliasDomain: "anonaddy.me",
+                            defaultAliasFormat: "random_characters"
+                        }
+                    });
+                    return "ok";
+                })();
+                """,
+                script_args=[EXT_ID],
+            )
+        assert inject_result == "ok", f"Storage injection failed: {inject_result}"
+
+        compose_handle = open_compose_with_recipient(tb, RECIPIENT)
+        right_click_first_pill(tb)
+
+        opened = open_submenu(tb, "addy")
+        assert opened, "Could not open Addy menu"
+
+        opened2 = open_submenu(tb, "existing")
+        assert opened2, "Could not open Existing submenu"
+
+        def alias_labels_present(_):
+            with tb.using_context("chrome"):
+                labels = tb.execute_script(
+                    """
+                    return [...document.querySelectorAll("menuitem")]
+                        .map((it) => it.getAttribute("label") || "")
+                        .filter((label) =>
+                            label.includes("@anonaddy.me") ||
+                            label.includes("@anon.email")
+                        );
+                    """
+                )
+            return labels if ALIAS_EMAIL in labels else False
+
+        alias_labels = Wait(tb, timeout=10).until(alias_labels_present)
+        assert ALIAS_EMAIL in alias_labels
+
+        with tb.using_context("chrome"):
+            tb.switch_to_window(compose_handle)
+            tb.execute_script("window.close();")

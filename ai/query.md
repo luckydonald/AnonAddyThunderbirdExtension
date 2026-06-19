@@ -1023,3 +1023,5 @@ The verification needs to be automated tests.
 
 › Make the menu refresh, too, like the UI, to not be stale. Also it and the UI should both fill back to the cache.
 
+› did ya add the python ui test too?
+
