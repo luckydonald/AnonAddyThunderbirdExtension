@@ -136,6 +136,24 @@ def add_recipient(client, compose_handle, email):
     time.sleep(0.2)
 
 
+def compose_pill_attrs(client, compose_handle):
+    """Return the visible compose pill's outgoing-address attributes."""
+    client.switch_to_window(compose_handle)
+    with client.using_context("chrome"):
+        return client.execute_script(
+            """
+            const pill = document.querySelector("mail-address-pill");
+            if (!pill) return null;
+            return {
+                emailAddress: pill.getAttribute("emailAddress") || "",
+                fullAddress: pill.getAttribute("fullAddress") || "",
+                label: pill.getAttribute("label") || "",
+                text: pill.textContent || "",
+            };
+            """
+        )
+
+
 def find_popup_handle(client):
     """Return the chrome handle for the extension popup window, if open."""
     with client.using_context("chrome"):
@@ -354,6 +372,9 @@ class TestPopup:
     def test_apply_rewrites_to_field(self, tb):
         compose_handle = open_compose_window(tb)
         add_recipient(tb, compose_handle, RECIPIENT)
+        original_attrs = compose_pill_attrs(tb, compose_handle)
+        assert original_attrs["emailAddress"] == RECIPIENT
+        assert original_attrs["fullAddress"] == RECIPIENT
 
         before = set(tb.chrome_window_handles)
         with tb.using_context("chrome"):
@@ -379,6 +400,9 @@ class TestPopup:
         )
         assert select_result.get("clicked"), f"Could not select alias: {select_result}"
         time.sleep(0.3)
+        after_select_attrs = compose_pill_attrs(tb, compose_handle)
+        assert after_select_attrs["emailAddress"] == RECIPIENT
+        assert after_select_attrs["fullAddress"] == RECIPIENT
         selection_state = popup_query(
             tb,
             popup_handle,

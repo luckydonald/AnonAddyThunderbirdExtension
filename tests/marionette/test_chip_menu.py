@@ -141,6 +141,24 @@ def open_compose_with_recipient(client, recipient: str):
     return new_handle
 
 
+def compose_pill_attrs(client, compose_handle):
+    """Return the visible compose pill's outgoing-address attributes."""
+    client.switch_to_window(compose_handle)
+    with client.using_context("chrome"):
+        return client.execute_script(
+            """
+            const pill = document.querySelector("mail-address-pill");
+            if (!pill) return null;
+            return {
+                emailAddress: pill.getAttribute("emailAddress") || "",
+                fullAddress: pill.getAttribute("fullAddress") || "",
+                label: pill.getAttribute("label") || "",
+                text: pill.textContent || "",
+            };
+            """
+        )
+
+
 def handles_by_window_type(client, window_type: str):
     """Return chrome handles whose documentElement windowtype matches."""
     handles = []
@@ -403,6 +421,10 @@ class TestChipMenu:
         mock_server_mod._Handler.recorded.clear()
         compose_handle = open_compose_with_recipient(tb, RECIPIENT)
         try:
+            original_attrs = compose_pill_attrs(tb, compose_handle)
+            assert original_attrs["emailAddress"] == RECIPIENT
+            assert original_attrs["fullAddress"] == RECIPIENT
+
             right_click_first_pill(tb)
 
             # Open the Addy sub-menu (parent item)
@@ -413,6 +435,9 @@ class TestChipMenu:
             opened2 = open_submenu(tb, "existing")
             assert opened2, "Could not open Existing submenu"
             wait_for_alias_label(tb, ALIAS_EMAIL)
+            after_menu_attrs = compose_pill_attrs(tb, compose_handle)
+            assert after_menu_attrs["emailAddress"] == RECIPIENT
+            assert after_menu_attrs["fullAddress"] == RECIPIENT
 
             # Click the alias entry
             clicked = click_menu_item(tb, ALIAS_EMAIL)
