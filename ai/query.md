@@ -1060,3 +1060,14 @@ I've also asserted the "mail → mail" pills not leaking data via their attribut
 
 ❯ First commit via lplp style. Ah, also all other leftover plugin names which can be found, obviously.
 
+❯ Write a automatic test for _- **Addy icon on address pills** — proxied (aliased) addresses show a colored Addy icon; non-proxied addresses show a greyscale one_, this is not yet implemented it seems.
+
+❯ Task Notification:
+> - Task `a6b3737b13b9c067c` <kbd>completed</kbd>
+> - Tool `toolu_019n4oX17gvdH8FfwooNbPuL`
+> - > Agent "Explore pill icon implementation and tests" came to rest
+> - [Query (`0` chars, `0 B`)](agents/005.a6b3737b13b9c067c/prompt.md)
+> - [Answer (`8098` chars, `8 KB`)](agents/005.a6b3737b13b9c067c/result.md)
+> - [Raw log (`399769` chars, `395 KB`)](/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/1abb04fc-3d31-4211-91c7-489aa39ff26d/tasks/a6b3737b13b9c067c.output)
+> - `43` tools, `58851` tokens, `1.10222 s`
+

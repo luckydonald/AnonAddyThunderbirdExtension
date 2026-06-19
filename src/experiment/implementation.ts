@@ -1,4 +1,4 @@
-import { parseForwardingAddress } from "../shared/forwardingAddress.js";
+import { computePillDecoration } from "./pillDecorationDecision.js";
 import {
   decoratePillViaAttributes,
   decoratePillViaTextNode,
@@ -271,25 +271,21 @@ const FORMAT_ITEMS = [
       pillIconMap: WeakMap<Element, HTMLImageElement>,
     ): void {
       const email = pill.getAttribute("emailAddress") || "";
-      const fwd = parseForwardingAddress(email, getAddyDomainSet());
-      const domain = email.match(/@(.+)$/)?.[1]?.toLowerCase() ?? "";
+      const state = computePillDecoration(email, getAddyDomainSet());
 
-      if (fwd) {
-        const label = `${fwd.aliasEmail} → ${fwd.originalEmail}`;
-        decoratePillViaAttributes(pill, label);
-        decoratePillViaTextNode(pill, label);
-        decoratePillViaCSSAdopted(pill, label);
-        upsertPillIcon(pill, pillIconMap, ICONS.addy, true);
-      } else if (getAddyDomainSet().has(domain)) {
-        decoratePillViaAttributes(pill, null);
-        decoratePillViaTextNode(pill, null);
-        decoratePillViaCSSAdopted(pill, null);
-        upsertPillIcon(pill, pillIconMap, ICONS.addy, false);
-      } else {
-        decoratePillViaAttributes(pill, null);
-        decoratePillViaTextNode(pill, null);
-        decoratePillViaCSSAdopted(pill, null);
+      decoratePillViaAttributes(pill, state.label);
+      decoratePillViaTextNode(pill, state.label);
+      decoratePillViaCSSAdopted(pill, state.label);
+
+      if (state.icon === "none") {
         removePillIcon(pill, pillIconMap);
+      } else {
+        upsertPillIcon(
+          pill,
+          pillIconMap,
+          ICONS.addy,
+          state.icon === "proxied",
+        );
       }
     }
 
