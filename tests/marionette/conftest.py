@@ -27,6 +27,7 @@ import pytest
 from marionette_driver.marionette import Marionette
 
 import mock_server as mock_server_mod
+import smtp_harness
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 XPI_PATH = REPO_ROOT / "AnonAddyTB.xpi"
@@ -96,7 +97,15 @@ def mock_server_port():
 
 
 @pytest.fixture(scope="session")
-def tb(mock_server_port, tmp_path_factory):
+def smtp_server():
+    server = smtp_harness.SMTPCaptureServer()
+    server.start()
+    yield server
+    server.shutdown()
+
+
+@pytest.fixture(scope="session")
+def tb(mock_server_port, smtp_server, tmp_path_factory):
     # Build the extension from a clean dist tree; the Makefile target depends on
     # the dist/ directory timestamp, so plain "make" can otherwise reuse stale
     # experiment JavaScript after src/experiment changes.
@@ -144,6 +153,17 @@ def tb(mock_server_port, tmp_path_factory):
         'user_pref("mail.identity.id1.fullName", "Test User");\n'
         'user_pref("mail.identity.id1.useremail", "test@example.com");\n'
         'user_pref("mail.identity.id1.valid", true);\n'
+        # Outgoing SMTP server pointing at the test capture harness
+        'user_pref("mail.smtpservers", "smtp1");\n'
+        'user_pref("mail.smtp.defaultserver", "smtp1");\n'
+        'user_pref("mail.smtpserver.smtp1.hostname", "127.0.0.1");\n'
+        + f'user_pref("mail.smtpserver.smtp1.port", {smtp_server.port});\n'
+        + 'user_pref("mail.smtpserver.smtp1.authMethod", 0);\n'
+        'user_pref("mail.smtpserver.smtp1.auth_method", 0);\n'
+        'user_pref("mail.smtpserver.smtp1.socketType", 0);\n'
+        'user_pref("mail.smtpserver.smtp1.try_ssl", 0);\n'
+        'user_pref("mail.smtpserver.smtp1.description", "Test SMTP Capture");\n'
+        'user_pref("mail.identity.id1.smtpServer", "smtp1");\n'
     )
 
     launch_cmd, launch_env = _build_launch_cmd(profile_dir)

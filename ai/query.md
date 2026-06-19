@@ -1036,3 +1036,21 @@ The verification needs to be automated tests.
 
 › Can you assert that in UI and dropdown mode, too?
 
+› can we somehow capture and test the **actual** outgoing email headers?
+
+› If you need a SMTP harness, go for it.
+
+❯ In the meantime I've fixed the tests, UI and dropdown.
+I've also asserted the "mail → mail" pills not leaking data via their attributes - however I want to make sure the replacements don't end in actually (eventually) outgoing mail data.
+
+❯ Task Notification:
+> - Task `ac05aadeb7aee5efb`: <kbd>completed</kbd>
+> - > Agent "Implement SMTP harness + outgoing mail tests" came to rest
+> - [Query (`7767` chars, 7.64 KB)](agents/004.ac05aadeb7aee5efb/prompt.md)
+> - [Answer (`684` chars, 690 B)](agents/004.ac05aadeb7aee5efb/result.md)
+> - [Raw log (`299 KB`)](/tmp/claude-1000/-home-user-git-luckydonald-AnonAddyThunderbirdExtension/db88cfaf-a517-456a-8851-0c020b754dc2/tasks/ac05aadeb7aee5efb.output)
+
+❯ did you run the tests and commited with lplp style?
+
+❯ That's from the rebase. But this query is adding another commit now, lol.
+
