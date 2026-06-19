@@ -807,3 +807,13 @@ Also include a very short section about the base itself using `[base] [optional 
 ❯ Ah, add `> - [Raw log (`2 MB`)]($output-file)`, at the end, too. Make sure the _`NNN` chars_ and _`N UNIT`_ are calculated from the files/query strings/etc.
 ❯ An, first line shall be `❯ Task Notification:` and the `>` shall only happens on the lines after that.
 
+› Fix `d9f02a321021fee6f419d48b944f220a15009a1e` not working as expected:
+1. Query is empty.
+2. Format them all: [Text (`NNN` chars, `NN UNIT`)](…)
+3. Under the task add: > - Tool `$tool-use-id`
+4. Add last row: > - `6` tools, `67643` tokens, `1.16395 s`
+
+❯ Improve @scripts/°base/ai/settings/sync.py to list the changes it is doing directly/verbosely, and reduce the flags to just sync on default and have a `--dry-run` to not actually sync it.
+
+❯ update the `--apply` reference in `.claude/settings.json` too, and when mentioning it in the commit hook errors and skill templates.
+

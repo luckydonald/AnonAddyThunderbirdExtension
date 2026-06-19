@@ -81,6 +81,71 @@ class AiHooksBaseRoutingTests(unittest.TestCase):
             self.assertFalse((repo / "ai" / "query.md").exists())
             self.assertEqual(last_subject(repo), "[base] ai: updated prompt")
 
+    def test_claude_task_notification_writes_agent_files_and_summary_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "base"
+            output_file = Path(tmp) / "agent.output"
+            init_repo(repo, "https://luckydonald@github.com/luckydonald/base.git")
+            output_file.write_text(
+                json.dumps(
+                    {
+                        "message": {
+                            "content": [
+                                {
+                                    "type": "tool_use",
+                                    "id": "toolu_test",
+                                    "name": "Agent",
+                                    "input": {"prompt": "Inspect the compose window."},
+                                }
+                            ]
+                        }
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            run_hook(
+                repo,
+                PROMPT_HOOK,
+                {
+                    "prompt": (
+                        "<task-notification>\n"
+                        "<task-id>a6f364ce63ffebb84</task-id>\n"
+                        "<tool-use-id>toolu_test</tool-use-id>\n"
+                        f"<output-file>{output_file}</output-file>\n"
+                        "<status>completed</status>\n"
+                        "<summary>Agent came to rest</summary>\n"
+                        "<result>Done.</result>\n"
+                        "<usage><subagent_tokens>67643</subagent_tokens>"
+                        "<tool_uses>6</tool_uses><duration_ms>69837</duration_ms></usage>\n"
+                        "</task-notification>"
+                    )
+                },
+                "claude",
+            )
+
+            agent_dir = repo / "ai" / "°base" / "agents" / "001.a6f364ce63ffebb84"
+            self.assertEqual(
+                (agent_dir / "prompt.md").read_text(encoding="utf-8"),
+                "Inspect the compose window.",
+            )
+            self.assertEqual((agent_dir / "result.md").read_text(encoding="utf-8"), "Done.")
+            self.assertEqual(
+                (repo / "ai" / "°base" / "query.md").read_text(encoding="utf-8"),
+                "❯ Task Notification:\n"
+                "> - Task `a6f364ce63ffebb84` <kbd>completed</kbd>\n"
+                "> - Tool `toolu_test`\n"
+                "> - > Agent came to rest\n"
+                "> - [Query (`27` chars, `27 B`)](agents/001.a6f364ce63ffebb84/prompt.md)\n"
+                "> - [Answer (`5` chars, `5 B`)](agents/001.a6f364ce63ffebb84/result.md)\n"
+                f"> - [Raw log (`{len(output_file.read_text(encoding='utf-8'))}` chars, "
+                f"`{output_file.stat().st_size} B`)]({output_file})\n"
+                "> - `6` tools, `67643` tokens, `1.16395 s`\n"
+                "\n",
+            )
+            self.assertEqual(last_subject(repo), "[base] ai: updated prompt")
+
     def test_codex_plan_in_base_repo_routes_and_prefixes(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp) / "base"
